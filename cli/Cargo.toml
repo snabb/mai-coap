@@ -1,0 +1,34 @@
+[package]
+name = "mai-coap-cli"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.97"
+license = "MIT OR Apache-2.0"
+description = "curl-like command-line client for CoAP and EDHOC-secured OSCORE"
+repository = "https://github.com/snabb/mai-coap"
+# The library's Git dependencies block crates.io publication.
+publish = false
+
+[[bin]]
+name = "mai-coap"
+path = "src/main.rs"
+
+[workspace]
+
+[dependencies]
+mai-coap = { path = "..", features = ["std", "client", "block", "block1", "observe", "edhoc", "software-crypto", "log"] }
+async-io = "2.6.0"
+async-signal = "0.2.14"
+blocking = "1.7.0"
+clap = { version = "4.6.7", features = ["derive"] }
+futures-lite = "2.6.1"
+log = "0.4.35"
+nix = { version = "0.31.3", default-features = false, features = ["net"] }
+rand = "0.10.3"
+zeroize = "1.9.1"
+
+[dev-dependencies]
+mai-coap = { path = "..", features = ["server", "proxy", "block"] }
+
+[lints.rust]
+unsafe_code = "forbid"

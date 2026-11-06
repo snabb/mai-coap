@@ -76,7 +76,11 @@ class MsrvTests(unittest.TestCase):
             commands[2],
             base + ["--target", "thumbv6m-none-eabi", "--features", MODULE.FULL],
         )
-        self.assertEqual(len(commands), 3 + 2 * len(MODULE.OWNED_BUILD_PROFILES))
+        self.assertEqual(len(commands), 4 + 2 * len(MODULE.OWNED_BUILD_PROFILES))
+        self.assertEqual(
+            commands[-1],
+            ["cargo", "check", "--locked", "--manifest-path", "cli/Cargo.toml"],
+        )
         for profile in MODULE.OWNED_BUILD_PROFILES:
             self.assertIn(base + ["--features", profile], commands)
             self.assertIn(

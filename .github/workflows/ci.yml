@@ -58,6 +58,7 @@ jobs:
           cargo fmt --manifest-path fuzz/Cargo.toml --check
           cargo fmt --manifest-path target-tests/Cargo.toml --check
           cargo fmt --manifest-path embedded-example/Cargo.toml --check
+          cargo fmt --manifest-path cli/Cargo.toml --check
       - name: Lint and format Python tools
         run: |
           uv tool run ruff==0.17.3 check tools
@@ -116,6 +117,11 @@ jobs:
           cargo run --locked --example streaming-upload --features std,server,client,block1
       - name: Black-box EDHOC, OSCORE, Observe, block and proxy interoperability
         run: uv run --with 'aiocoap[oscore]==0.4.17' tools/interop-aiocoap.py
+      - name: Lint and test the command-line client, including libcoap and aiocoap interoperability
+        run: |
+          cargo clippy --locked --manifest-path cli/Cargo.toml --all-targets -- -D warnings
+          cargo test --locked --manifest-path cli/Cargo.toml
+          uv run --with 'aiocoap[oscore]==0.4.17' tools/interop-aiocoap.py --cli
       - name: Independent native and Embassy xarxa interoperability over the loopback test link
         run: |
           cargo build --locked --example secured-server --features std,server,client,block,block1,observe,proxy,edhoc,software-crypto,multicast,discovery,xarxa-ipv4,xarxa/medium-ip,embassy-net-xarxa-ipv4,embassy-net-xarxa/medium-ip

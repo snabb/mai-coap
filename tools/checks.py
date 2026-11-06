@@ -110,6 +110,7 @@ def msrv_checks():
     for features in OWNED_BUILD_PROFILES:
         for target in [[], ["--target", "thumbv6m-none-eabi"]]:
             run(base + target + ["--features", features])
+    run(["cargo", "check", "--locked", "--manifest-path", "cli/Cargo.toml"])
 
 
 def main():

@@ -22,6 +22,7 @@ MANIFESTS = [
     ROOT / "Cargo.toml",
     ROOT / "target-tests/Cargo.toml",
     ROOT / "embedded-example/Cargo.toml",
+    ROOT / "cli/Cargo.toml",
 ]
 # These dev dependencies are linked by runnable host examples, unlike proptest.
 EXAMPLE_DEV_DEPENDENCIES = {"embassy-time", "futures-lite", "rand"}

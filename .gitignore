@@ -2,6 +2,7 @@
 /target-tests/target/
 /embedded-example/target/
 /fuzz/target/
+/cli/target/
 /fuzz/artifacts/
 /fuzz/corpus/
 /.venv/

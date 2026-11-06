@@ -308,6 +308,76 @@ class PublicEcho(resource.Resource):
         )
 
 
+async def run_cli(arguments, timeout=30):
+    child = await asyncio.create_subprocess_exec(
+        str(ROOT / "cli/target/debug/mai-coap"),
+        *arguments,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    try:
+        stdout, stderr = await asyncio.wait_for(child.communicate(), timeout)
+    except BaseException:
+        if child.returncode is None:
+            child.kill()
+            await child.wait()
+        raise
+    return child.returncode, stdout, stderr.decode()
+
+
+async def command_line_client(directory, combined):
+    port = free_port()
+    origin = f"coap://127.0.0.1:{port}"
+    site = resource.Site()
+    site.add_resource(["hello"], Echo())
+    site.add_resource(["echo"], Echo())
+    site.add_resource(["large"], Large())
+    clock = Clock()
+    site.add_resource(["clock"], clock)
+    credentials = edhoc_credentials(origin, directory, "r", server=True)
+    context = await aiocoap.Context.create_server_context(
+        OscoreSiteWrapper(site, credentials),
+        bind=("127.0.0.1", port),
+        server_credentials=credentials,
+        transports=["oscore", "udp6"],
+    )
+    ticker = asyncio.create_task(clock.tick())
+    secured = [
+        "--identity",
+        str(directory / "i.ccs"),
+        "--key",
+        str(directory / "i.raw"),
+        "--peer",
+        str(directory / "r.ccs"),
+    ]
+    if not combined:
+        secured.append("--sequential-edhoc")
+    try:
+        code, stdout, stderr = await run_cli([*secured, f"{origin}/hello"])
+        assert (code, stdout) == (0, b"hello secured"), (code, stdout, stderr)
+        code, stdout, stderr = await run_cli(
+            [*secured, "-m", "post", "-t", "plain", "-e", "sealed", f"{origin}/echo"]
+        )
+        assert (code, stdout) == (0, b"sealed"), (code, stdout, stderr)
+        code, stdout, stderr = await run_cli([*secured, f"{origin}/large"])
+        assert (code, stdout) == (0, b"z" * 3000), (code, len(stdout), stderr)
+        code, stdout, stderr = await run_cli(
+            [*secured, "-s", "2", "-w", f"{origin}/clock"]
+        )
+        values = [int(line) for line in stdout.splitlines()]
+        assert code == 0 and len(values) >= 2, (code, stdout, stderr)
+        assert values == sorted(set(values)), values
+        code, stdout, stderr = await run_cli(
+            [*secured, "-B", "20", f"{origin}/no-such-resource"]
+        )
+        assert code == 1 and "4.04" in stderr, (code, stdout, stderr)
+    finally:
+        ticker.cancel()
+        await asyncio.gather(ticker, return_exceptions=True)
+        await context.shutdown()
+    print(f"mai-coap CLI -> aiocoap server: combined={combined}: PASS", flush=True)
+
+
 async def independent_proxy(directory, combined):
     origin_port = free_port()
     proxy_port = free_port()
@@ -498,11 +568,15 @@ async def concurrent_proxy_clients(directory, combined):
     )
 
 
-async def main(profile, xarxa=None):
+async def main(profile, xarxa=None, command_line=False):
     with tempfile.TemporaryDirectory(prefix="mai-coap-interop-") as temporary:
         directory = pathlib.Path(temporary)
         for role in ["i", "r"]:
             identity_files(directory, role, profile)
+        if command_line:
+            for combined in [True, False]:
+                await command_line_client(directory, combined)
+            return
         if xarxa:
             for combined in [True, False]:
                 await independent_client(directory, combined, "127.0.0.1", xarxa=xarxa)
@@ -527,6 +601,11 @@ if __name__ == "__main__":
         choices=["native", "embassy"],
         help="exercise xarxa through the IPv4 loopback UDP/IP test link",
     )
+    parser.add_argument(
+        "--cli",
+        action="store_true",
+        help="exercise cli/target/debug/mai-coap against an aiocoap server",
+    )
     args = parser.parse_args()
     logging.basicConfig(level=logging.WARNING)
-    asyncio.run(main(args.profile, args.xarxa))
+    asyncio.run(main(args.profile, args.xarxa, args.cli))
