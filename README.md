@@ -58,6 +58,17 @@ The server also works with any CoAP client, for example libcoap:
 coap-client-notls -m get coap://127.0.0.1/hello
 ```
 
+### Command-line client
+
+`mai-coap` is a curl-like client built on the library, including EDHOC and OSCORE. It uses
+libcoap's and aiocoap's flag names where they make sense. See the [guide](docs/cli.md):
+
+```sh
+cargo install --locked --git https://github.com/snabb/mai-coap mai-coap-cli
+mai-coap coap://127.0.0.1/hello
+mai-coap -m put -t json -e '{"on":true}' coap://127.0.0.1/config
+```
+
 ### Use it in your project
 
 mai-coap is not on crates.io yet, because some dependencies are pinned to Git revisions.
@@ -123,6 +134,7 @@ integration](docs/integration.md#bare-metal-requirements).
 | Document | Use it to |
 |---|---|
 | [User guide](docs/guide.md) | Write clients and servers, and use security, block-wise transfers, Observe, discovery and the proxy |
+| [Command-line client](docs/cli.md) | Make CoAP requests from a shell, secured or not |
 | [Integration guide](docs/integration.md) | Choose features and network adapters, size storage, write custom transports and drivers |
 | [Troubleshooting](docs/troubleshooting.md) | Look up build errors and runtime symptoms |
 | [Development](docs/development.md) | Build, test and contribute to the project |

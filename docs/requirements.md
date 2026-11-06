@@ -23,7 +23,8 @@ the [README](../README.md).
   specifications listed in section 3.
 - **MUST NOT** copy code from existing CoAP, OSCORE or "EDHOC over CoAP"
   implementations, in any language. Do not read their source while implementing.
-  Their public APIs MUST NOT be used as the model for this crate's API.
+  Their public APIs MUST NOT be used as the model for this crate's API. The one
+  exception is CLI-2, for command-line flags of the separate `cli/` tool.
 - Running an independent implementation as a **black-box interop peer** is
   allowed and required (TST-6).
 - The one external protocol implementation used is **Lakers**, for EDHOC
@@ -1060,7 +1061,38 @@ These principles and acceptance examples define what "usable" means. The example
 - **API-10 Documentation:** every public item has rustdoc. The crate root explains the
   layers and links each requirement area to its module.
 
-## 19. Testing and acceptance
+## 19. Command-line client
+
+The `cli/` workspace builds `mai-coap`, a curl-like client on the library's public API. It
+is a Linux host tool with `std` dependencies, and the library never depends on it.
+
+- **CLI-1** Requests: all methods of SRV-2, block-wise transfer in both directions, Observe,
+  a forward proxy, and raw options other than those the library or another flag manages.
+- **CLI-2** Flags SHOULD match the public documentation of libcoap's `coap-client` for short
+  forms and of `aiocoap-client` for long forms, where they don't conflict. Behavior comes
+  from the RFCs, not from those tools.
+- **CLI-3** Security: EDHOC method 3, cipher suite 2, with the credentials given on the
+  command line and one trusted server. A hostname never selects a credential. With
+  credentials given, a request MUST NOT fall back to an unprotected exchange. The responder
+  role is disabled. A private key comes only from a file, and one accessible by other users
+  is refused.
+- **CLI-4** URIs MUST have a scheme. A scheme without a transport here (`coaps`, `coap+tcp`,
+  `coaps+tcp`, `coap+ws`, `coaps+ws`) is an error that names the missing transport, and
+  never falls back to `coap`.
+- **CLI-5** Output: the payload goes to stdout or a file, and status goes to stderr. Exit
+  codes distinguish success, a 4.xx or 5.xx response, a usage or local error, a network
+  failure, a security failure and an interruption.
+- **CLI-6** Everything received is untrusted. Diagnostics escape control characters, and
+  binary data isn't written to a terminal unless requested. Complete tokens, keys and
+  plaintext stay out of diagnostics other than the payload itself.
+- **CLI-7** A response body has an explicit size limit, and only a complete, consistent body
+  is written (BLK-3).
+- **CLI-8** Ending an observation sends the deregistration and waits a bounded time for it,
+  on a duration ending and on SIGINT or SIGTERM (OBS-8).
+- **CLI-9** A FETCH MUST have a Content-Format ([RFC 8132 section
+  2.3.1](https://www.rfc-editor.org/rfc/rfc8132.html#section-2.3.1)).
+
+## 20. Testing and acceptance
 
 - **TST-1** Unit tests for every MUST in sections 4–17, named or commented with the
   requirement ID.

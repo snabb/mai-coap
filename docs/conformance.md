@@ -567,6 +567,14 @@ Where requirement wording needed an RFC-based interpretation.
 - **Uri-Host case:** [RFC 7252 section 6.4](https://www.rfc-editor.org/rfc/rfc7252.html#section-6.4)
   step 5 lowercases before percent-decoding. This implementation decodes first, so `%41`
   also becomes `a`. Host names compare case-insensitively, so this only normalizes further.
+- **CLI-2:** where the two tools' flags conflict, `-v` counts as in aiocoap (`-vv`), and
+  `-q` and `-h` mean quiet and help. libcoap uses those for a verbosity number, a TLS
+  configuration file and PSK hints, none of which apply here. A non-file `--payload` with a
+  CBOR Content-Format is refused, because aiocoap reads it as CBOR diagnostic notation and
+  this tool has no parser for that. A file or stdin is sent as given.
+- **CLI-3:** credentials are explicit flags rather than aiocoap's credential files, which
+  select credentials by URI pattern and would contradict "a hostname never selects a
+  credential".
 - **Dot segments** (no requirement ID): Uri-Path and Location-Path values are never `.`
   or `..` ([RFC 7252 sections 5.10.1 and
   5.10.7](https://www.rfc-editor.org/rfc/rfc7252.html#section-5.10.1)). URI
@@ -701,7 +709,7 @@ supplement the explicit boundary cases. Paths below are relative to the reposito
 | Requirements | Implementation | Verification |
 |---|---|---|
 | PLT-1–4, PLT-6–10 | Feature-gated no_std modules, bounded tables, public clock/transport/provider traits | `tools/checks.py`: stable library Clippy for every profile on host and all four cross targets; representative narrow host test profiles, full-profile example lint, strict public/private rustdoc and example builds |
-| PLT-5 | Checked codec, block/URI/CBOR readers, fallible provider bridge | `tests/codec.rs`, EDHOC unit tests, eight targets in `fuzz/` with URI decompose/compose and OSCORE option round-trip oracles, bounded Kani harnesses |
+| PLT-5 | Checked codec, block/URI/CBOR readers, fallible provider bridge | `tests/codec.rs`, EDHOC unit tests, nine targets in `fuzz/` with URI decompose/compose and OSCORE option round-trip oracles, bounded Kani harnesses |
 | TR-1–4, TR-6–8 | `transport`, Linux packet-info, released Embassy, native xarxa, xarxa-backed Embassy adapters; shared endpoint; optional owned packet storage | `tests/transport.rs`: real IPv4/IPv6 destination/source selection, oversize handling and send-error continuation; `tests/driver_wait.rs`: receive priority, cancellation and metadata across restart; host/embedded/MSRV single-family, dual-family and adapter-coexistence builds; `tests/xarxa_transport.rs` / `tests/owned_driver.rs`: owned-buffer identity, scope, cancellation, exact retries and pool pressure; native M4/M33 raw-IP QEMU exchanges/loss/reclamation; both adapters interoperate with aiocoap over the IPv4 loopback UDP/IP test link; physical driver/hardware validation remains pending |
 | TR-5 | Adapter-specific transport errors; no ICMP requirement imposed on adapters | `tests/simulation.rs`: unreachable indication and operation without indications |
 | MSG-1–9 | `codec`: borrowed validated view, open typed numbers, ordered builder | `tests/codec.rs`: malformed headers/options, uints, repeatability, 1024-case round-trip and arbitrary-byte properties; codec fuzz target; Kani parse, builder round-trip and option-extension proofs |
@@ -710,8 +718,8 @@ supplement the explicit boundary cases. Paths below are relative to the reposito
 | REL-6–9 | Peer/token/MID matching, separate responses, ping/RST, random token generation | `tests/endpoint.rs`, proxy and interop tests |
 | SRV-1–4, SRV-6–7 | `server::Router`, immediate/deferred handlers, representation source, response builder | `tests/endpoint.rs` includes response-capacity error replies and deferred-ticket retry; block/interop tests, minimal and deferred-upload examples |
 | SRV-5 | Accept/Content-Format and conditional representation helpers | Representation and independent Block2 tests |
-| BLK-1–3, BLK-7 | `block`: offset-preserving server slicing, render-on-demand windows/full-pass ETags, buffered/streamed client download, bounded restarts/resume | `tests/block.rs` covers window boundaries, snapshot mutations, ETags and failures; libcoap and aiocoap Block2 at SZX 0 and 6; Kani option-value, capping and slicing proofs |
-| BLK-4–6 | `block1`: buffered/transactional streaming upload, request match keys, Request-Tag, client size negotiation | `tests/block.rs`, streaming upload simulation with loss/duplication, libcoap Block1 both directions; deferred worker example and feature-isolation checks |
+| BLK-1–3, BLK-7 | `block`: offset-preserving server slicing, render-on-demand windows/full-pass ETags, buffered/streamed client download, bounded restarts/resume | `tests/client_transfer.rs` scripted peer, `client_transfer` fuzz oracle, `tests/block.rs` covers window boundaries, snapshot mutations, ETags and failures; libcoap and aiocoap Block2 at SZX 0 and 6; Kani option-value, capping and slicing proofs |
+| BLK-4–6 | `block1`: buffered/transactional streaming upload, request match keys, Request-Tag, client size negotiation | `tests/client_transfer.rs`, `tests/block.rs`, streaming upload simulation with loss/duplication, libcoap Block1 both directions; deferred worker example and feature-isolation checks |
 | BLK-8 | Opaque proxy options and payload forwarding | `src/proxy/tests.rs`, independent proxy tests |
 | OSC-1–6, OSC-19 | `oscore`: derivation, deterministic CBOR/AAD/nonce, option classes and outer codes | Unit tests for RFC 8613 C.1–C.8, both roles; aiocoap protected GET/POST/Observe; Kani option parse/round-trip and nonce-layout proofs |
 | OSC-7–14 | Reserved sender sequence numbers, replay window, request binding, retained exact response bytes | OSCORE unit tests, protected lossy proxy simulation, parser fuzzing, plaintext protect/unprotect fuzz oracle with tamper and replay checks; Kani replay-window and sequence-reservation proofs |
@@ -727,8 +735,9 @@ supplement the explicit boundary cases. Paths below are relative to the reposito
 | OBS-6 | First-block notifications and ETag-checked `Observation::next_blocks` follow-up GETs without Observe | `obs_6_client_fetches_complete_notification_with_matching_etag`, `obs_6_negotiated_size_reaches_registration_and_followups_drop_observe` |
 | DOS-1–3 | Bounded per-IP/aggregate response budgets, EDHOC admission, default unprotected Block2 cap of SZX 2 (64 bytes), explicit override up to SZX 6 where datagram capacity permits | Rate-limit and multicast tests, independent lazy-refill admission model and negative mutation check, block-size interop, bounded table admission |
 | API-1–10 | Public unsealed layers, bounded handle/driver/work queue, typed errors, counters and event-only optional logs | Examples, strict rustdoc, feature isolation and integration tests; `tests/upload_worker.rs` verifies continued service after reply failures |
+| CLI-1–9 | `cli/`: flags, URI routing, sink, deregistration, credential handling and exit codes over the public API | `cli/tests/cli.rs` runs the binary against library servers, including a scripted deregistration peer; `cli/tests/libcoap.rs`; `tools/interop-aiocoap.py --cli`; unit tests in `cli/src`. These don't count as independent evidence for the library's own behavior beyond the two peers |
 | TST-1–4 | Unit/property/vector tests and controllable fault transport | `cargo test --features std,server,client,block,block1,observe,proxy,edhoc,software-crypto,multicast,discovery` |
-| TST-5 | Eight cargo-fuzz targets, reproducible seeds, buffered and streaming Block1 sequences | `tools/fuzz-smoke.py`; bounded smoke duration is not exhaustive fuzz coverage |
+| TST-5 | Nine cargo-fuzz targets, reproducible seeds, buffered and streaming Block1 sequences, block-wise client exchanges against arbitrary responses | `tools/fuzz-smoke.py`; bounded smoke duration is not exhaustive fuzz coverage |
 | TST-6 | Black-box libcoap and aiocoap, no peer implementation code imported | `tests/interop.rs`, `tools/interop-aiocoap.py` |
 | TST-7 | Host/target profile matrix, emulated runtime tests, linked M4 workload sizes and symbol reports | `.github/workflows/ci.yml`, `tools/target-runtime.py`, `tools/firmware-size.py` |
 | TST-8 | Seven host examples and board-independent Embassy task body | Host example builds/runs; `embedded-example` Cortex-M4 build |

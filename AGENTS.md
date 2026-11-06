@@ -16,7 +16,9 @@ holds the constraints a change must preserve.
   overrides conflicting requirement wording; record the decision in the conformance document.
 - Do not read other CoAP/OSCORE/EDHOC-over-CoAP stacks' source or model APIs on theirs.
   Independent stacks are black-box interoperability peers. Lakers is the exception: use its
-  public API and pinned dependency without vendoring or modifying it.
+  public API and pinned dependency without vendoring or modifying it. The `cli/` flags may
+  follow the public `--help` and man pages of libcoap's and aiocoap's clients, and nothing
+  else of those tools.
 - Static OSCORE contexts, proxy Observe forwarding and Echo challenges are deferred. Do not
   expand scope incidentally. Ask before implementing an ambiguous request or choosing between
   materially different designs.
@@ -62,8 +64,8 @@ holds the constraints a change must preserve.
 - Run `python3 tools/checks.py --docs --test`, plus the
   [checks for the affected area](docs/development.md#checks). Use the feature matrix in
   `tools/checks.py`, not `--all-features`: `log` and `defmt` are mutually exclusive.
-- `fuzz/`, `target-tests/` and `embedded-example/` are independent workspaces with their own
-  lockfiles. Format and validate each affected one through its manifest.
+- `fuzz/`, `target-tests/`, `embedded-example/` and `cli/` are independent workspaces with their
+  own lockfiles. Format and validate each affected one through its manifest.
 - Use deterministic clocks and transports for state-machine tests. Cover relevant loss,
   duplication, reordering, expiry, cancellation, capacity and error-cleanup cases. Use published
   vectors and independent interoperability checks for wire changes.

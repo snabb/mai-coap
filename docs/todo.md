@@ -189,6 +189,20 @@ From an independent review of the Kani harnesses and fuzz oracles against the RF
   contract before adding macOS/Windows runtime support; do not invent destination
   addresses or silently claim multicast/source-selection support.
 
+## Command-line client
+
+- [ ] **Multicast discovery:** accept multicast destinations for `/.well-known/core` through
+  `Handle::discover_multicast`, with `-B` as the collection time. Other multicast requests
+  stay unsupported (section 13).
+- [ ] **EDHOC context cache (`--session-cache`):** optional reuse of derived contexts between
+  runs, to avoid one handshake per process. Store them in `$XDG_RUNTIME_DIR`, not `~/.cache`,
+  since a restored counter means nonce reuse, and don't cache if it's unset. Reserve a
+  sequence range under a file lock, fsynced before first use and never rolled back. Key
+  entries by the own and peer credential hashes, with mode `0600`, an ownership check and
+  a lifetime of about an hour. This needs library context export and import and a sequence
+  limit behind a feature, Kani coverage, and an RFC 8613 Appendix B.1 interpretation:
+  `requirements.md` exempts EDHOC contexts because they live only in RAM.
+
 ## Conditional work
 
 - [ ] **Static and persistent OSCORE contexts (OSC-20):** add only for deployments

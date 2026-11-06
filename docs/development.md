@@ -27,6 +27,7 @@ its own manifest.
 | `embedded-example/` | Separate workspace: board-independent Embassy and xarxa servers |
 | `target-tests/` | Separate workspace: no_std fixtures run under QEMU |
 | `fuzz/` | Separate workspace: cargo-fuzz targets (nightly) |
+| `cli/` | Separate workspace: the `mai-coap` command-line client |
 | `tools/` | Python check, measurement and notice scripts |
 | `tests/fixtures/` | [Published RFC credential vectors](../tests/fixtures/README.md) |
 | `docs/` | Documentation and generated resource reports |
@@ -53,7 +54,7 @@ changed:
 ```sh
 python3 tools/checks.py --docs --test
 cargo fmt --check
-cargo fmt --manifest-path embedded-example/Cargo.toml --check   # likewise fuzz/ and target-tests/
+cargo fmt --manifest-path embedded-example/Cargo.toml --check   # likewise cli/, fuzz/ and target-tests/
 ```
 
 Then add the checks for the affected area:
@@ -68,6 +69,7 @@ Then add the checks for the affected area:
 | Wire behavior | Build the examples (below), then `uv run --with 'aiocoap[oscore]==0.4.17' tools/interop-aiocoap.py` |
 | Flash, static RAM, stack | [Resource checks](sizes.md#checking-a-change) |
 | Dependencies or lockfiles | `python3 tools/notices.py --check` |
+| Command-line client | `cargo clippy --locked --manifest-path cli/Cargo.toml --all-targets -- -D warnings`, `cargo test --locked --manifest-path cli/Cargo.toml` (needs `coap-server-notls`), then `cargo build --manifest-path cli/Cargo.toml` and `uv run --with 'aiocoap[oscore]==0.4.17' tools/interop-aiocoap.py --cli` |
 | Examples | `cargo build --locked --examples --features std,server,client,block,block1,observe,proxy,edhoc,software-crypto,multicast,discovery`, then `python3 tools/example-smoke.py` |
 
 Use the feature matrix in `tools/checks.py`, not `--all-features`. Documentation-only
@@ -96,7 +98,7 @@ regression test and a seed.
 
 | Run | Trigger | Jobs |
 |---|---|---|
-| Routine | Pull requests, merge queue, `master` pushes | Embedded (Cortex-M0, Cortex-M33), then `CI passed`: formatting, Python lint, Actions lint, host feature matrix and tests, Windows compile check, notices, examples, libcoap and aiocoap interop, xarxa interop, MSRV |
+| Routine | Pull requests, merge queue, `master` pushes | Embedded (Cortex-M0, Cortex-M33), then `CI passed`: formatting, Python lint, Actions lint, host feature matrix and tests, Windows compile check, notices, examples, libcoap and aiocoap interop, command-line client, xarxa interop, MSRV |
 | Full | Mondays 04:23 UTC, manual | Also Cortex-M4 and RISC-V, fuzzing each target for 30 s, and Kani |
 
 - `CI passed` requires the embedded jobs. It also requires fuzzing and Kani on full
@@ -131,6 +133,7 @@ abstractions, and don't introduce another `rand_core` major into the protocol gr
 |---|---|---|
 | [README](../README.md) | New users | Capabilities, platforms or the quick start change |
 | [guide.md](guide.md) | Application developers | Public APIs change |
+| [cli.md](cli.md) | Users of the command-line client | Its flags, output or exit codes change |
 | [integration.md](integration.md) | Firmware and platform integrators | Features, adapters, capacities or extension points change |
 | [troubleshooting.md](troubleshooting.md) | All users | A real problem has a known cause |
 | [requirements.md](requirements.md) | Maintainers | Scope changes |
