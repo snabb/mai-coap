@@ -117,9 +117,10 @@ impl<
     /// Bounds live responder handshakes per source IP, independently of UDP ports.
     /// Defaults to `min(2, HANDSHAKES)`. Keeping this below the total capacity
     /// leaves room for other sources; proxy clients share their proxy's allowance.
-    /// Rejects zero or a limit greater than the handshake capacity.
+    /// Zero disables the responder role: EDHOC requests get 4.04, for an endpoint that
+    /// only initiates. Rejects a limit greater than the handshake capacity.
     pub fn set_responder_limit(&mut self, limit: usize) -> Result<(), Error> {
-        if limit == 0 || limit > HANDSHAKES {
+        if limit > HANDSHAKES {
             return Err(Error::Malformed);
         }
         self.responder_limit = limit;
@@ -255,6 +256,10 @@ impl<
         now: Instant,
         response: &mut ResponseWriter<'_, DATAGRAM_BYTES>,
     ) -> Result<bool, Error> {
+        if self.responder_limit == 0 {
+            response.set_code(Code::NOT_FOUND);
+            return Ok(true);
+        }
         let payload = request.message.payload();
         if !self.oscore.has_capacity() {
             response.set_code(Code::TOO_MANY_REQUESTS);
@@ -1026,7 +1031,6 @@ mod tests {
         let shared = Shared::<512, 2>::new();
         let mut protection = responder::<4>();
         assert_eq!(protection.responder_limit, 2);
-        assert_eq!(protection.set_responder_limit(0), Err(Error::Malformed));
         assert_eq!(protection.set_responder_limit(5), Err(Error::Malformed));
         let mut endpoint = Endpoint::<_, 512, 2, 8>::new(&shared, protection).unwrap();
         for (i, remote) in [
@@ -1074,6 +1078,21 @@ mod tests {
             first(&mut endpoint, "192.0.2.9:2000", 9, 100_000),
             Code::CHANGED
         );
+    }
+
+    #[test]
+    fn edh_11_zero_responder_limit_refuses_handshakes_without_state() {
+        let shared = Shared::<512, 2>::new();
+        let mut protection = responder::<4>();
+        protection.set_responder_limit(0).unwrap();
+        let mut endpoint = Endpoint::<_, 512, 2, 8>::new(&shared, protection).unwrap();
+        assert_eq!(
+            first(&mut endpoint, "192.0.2.1:5683", 0, 0),
+            Code::NOT_FOUND
+        );
+        assert!(endpoint.protection_mut().sessions.is_empty());
+        assert_eq!(endpoint.protection_mut().contexts(), 0);
+        assert_eq!(endpoint.protection_mut().runs(), 0);
     }
 
     #[test]

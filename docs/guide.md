@@ -357,7 +357,9 @@ peers. These are its generic parameters, for example `Edhoc<P, 2, 2, TrustedPeer
 - **Per-source limit.** Each source IP can hold two responder sessions, whatever its UDP
   port, and clients behind one proxy share that allowance. At the limit, new handshakes
   receive 4.29 with Max-Age 1 and existing sessions continue. Change it with
-  `set_responder_limit`, and keep the global bound larger so other sources have room.
+  `set_responder_limit`, and keep the global bound larger so other sources have room. Zero
+  disables the responder role, so an endpoint that only initiates answers EDHOC requests
+  with 4.04.
 - **Table full.** The oldest responder session is replaced. Initiator sessions are
   retained.
 - **No free context slot at completion:** the responder answers 5.03 with Max-Age 1 and
