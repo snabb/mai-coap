@@ -696,6 +696,9 @@ struct Slot<const DATAGRAM_BYTES: usize> {
     data: SlotData<DATAGRAM_BYTES>,
     active: bool,
     cancelled: bool,
+    /// The observer waits for the Observe=1 exchange, unlike a dropped observation.
+    #[cfg(feature = "observe")]
+    deregister: bool,
     waker: Option<Waker>,
     #[cfg(feature = "multicast")]
     replies: heapless::Deque<Reply<DATAGRAM_BYTES>, 8>,
@@ -707,6 +710,8 @@ impl<const DATAGRAM_BYTES: usize> Slot<DATAGRAM_BYTES> {
             data: SlotData::Empty,
             active: false,
             cancelled: false,
+            #[cfg(feature = "observe")]
+            deregister: false,
             waker: None,
             #[cfg(feature = "multicast")]
             replies: heapless::Deque::new(),
@@ -820,6 +825,10 @@ impl<const DATAGRAM_BYTES: usize, const COMMANDS: usize> Shared<DATAGRAM_BYTES, 
                 .ok_or(Error::Capacity)?;
             let slot = &mut s.slots[index];
             slot.generation = slot.generation.checked_add(1).ok_or(Error::Capacity)?;
+            #[cfg(feature = "observe")]
+            {
+                slot.deregister = false;
+            }
             slot.data = SlotData::Command(command);
             s.revision = s.revision.wrapping_add(1);
             Ok::<_, Error>((index, slot.generation, s.driver.take()))
@@ -860,6 +869,13 @@ impl<const DATAGRAM_BYTES: usize, const COMMANDS: usize> Shared<DATAGRAM_BYTES, 
     }
     fn cancelled(&self, index: usize, generation: u64) -> bool {
         self.lock(|s| s.slots[index].generation != generation || s.slots[index].cancelled)
+    }
+    #[cfg(feature = "observe")]
+    fn deregistering(&self, index: usize, generation: u64) -> bool {
+        self.lock(|s| {
+            let slot = &s.slots[index];
+            slot.generation == generation && slot.deregister && !slot.cancelled
+        })
     }
     #[cfg(feature = "server")]
     fn response_handoff(
@@ -3560,10 +3576,12 @@ impl<
         self.protection.expire(now);
         let mut i = 0;
         while i < self.exchanges.len() {
-            if self.exchanges[i]
+            let stopping = self.exchanges[i]
                 .slot
-                .is_some_and(|(slot, generation)| self.shared.cancelled(slot, generation))
-            {
+                .is_some_and(|(slot, generation)| self.shared.cancelled(slot, generation));
+            #[cfg(feature = "observe")]
+            let stopping = stopping || self.deregistration_due(i);
+            if stopping {
                 #[cfg(feature = "observe")]
                 if self.exchanges[i].observation.is_some() {
                     if !self.observation_ready(i, now) {

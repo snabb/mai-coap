@@ -64,13 +64,54 @@ impl<const DATAGRAM_BYTES: usize, const COMMANDS: usize> Observation<'_, DATAGRA
         Some(result)
     }
     /// Queues an explicit Observe cancellation; the endpoint sends it on its next poll.
+    /// The driver must keep running for that; [`Self::deregister`] reports when it did.
     pub fn cancel(self) {
         drop(self);
     }
-    /// Delivers a complete notification body, fetching later blocks without Observe.
+    /// Sends the Observe=1 request and waits for that exchange to end, so the driver can
+    /// stop afterwards. Later notifications are discarded. `Ok(None)` means the observation
+    /// had already ended, and errors such as [`Error::Timeout`] mean the server may still
+    /// list this client. Dropping the future stops retransmitting a request already sent.
+    pub async fn deregister(self) -> Result<Option<Reply<DATAGRAM_BYTES>>, Error> {
+        if self.ended {
+            return Ok(None);
+        }
+        let mut operation = self.operation;
+        operation.shared.lock(|s| {
+            let slot = &mut s.slots[operation.index];
+            if slot.generation == operation.generation {
+                slot.deregister = true;
+            }
+        });
+        operation.shared.wake_driver();
+        let result = poll_fn(|cx| {
+            operation.shared.lock(|s| {
+                let slot = &mut s.slots[operation.index];
+                if slot.generation != operation.generation {
+                    return Poll::Ready(Err(Error::Cancelled));
+                }
+                match slot.take_result() {
+                    Some(result) if !slot.active => Poll::Ready(result),
+                    _ => {
+                        slot.waker = Some(cx.waker().clone());
+                        Poll::Pending
+                    }
+                }
+            })
+        })
+        .await;
+        operation.finished = true;
+        operation.shared.wake_driver();
+        result.map(Some)
+    }
+    /// Streams a complete notification body, fetching later blocks without Observe.
     /// `RepresentationChanged` discards a notification whose ETag changed (OBS-6).
+    /// A non-success final response is delivered as for [`RequestBuilder::transfer`].
     #[cfg(all(feature = "client", feature = "block"))]
-    pub async fn next_blocks(&mut self, output: &mut [u8]) -> Option<Result<usize, Error>> {
+    pub async fn next_into(
+        &mut self,
+        sink: &mut impl super::client::DownloadSink,
+    ) -> Option<Result<super::client::Transfer<DATAGRAM_BYTES>, Error>> {
         let first = match self.next().await? {
             Ok(reply) => reply,
             Err(error) => return Some(Err(error)),
@@ -78,9 +119,17 @@ impl<const DATAGRAM_BYTES: usize, const COMMANDS: usize> Observation<'_, DATAGRA
         let client = self.operation.shared.handle().client(self.target);
         Some(
             client
-                .complete_blocks(self.follow_up.as_slice(), first, output)
+                .complete_notification(self.follow_up.as_slice(), first, sink)
                 .await,
         )
+    }
+    /// As [`Self::next_into`], reassembling the body into caller storage.
+    #[cfg(all(feature = "client", feature = "block"))]
+    pub async fn next_blocks(
+        &mut self,
+        output: &mut [u8],
+    ) -> Option<Result<super::client::Transfer<DATAGRAM_BYTES>, Error>> {
+        self.next_into(&mut super::client::Buffer(output)).await
     }
 }
 impl<'a, const DATAGRAM_BYTES: usize, const COMMANDS: usize> Handle<'a, DATAGRAM_BYTES, COMMANDS> {
@@ -180,9 +229,19 @@ impl<
                 && (exchange
                     .slot
                     .is_some_and(|(slot, generation)| self.shared.cancelled(slot, generation))
+                    || self.deregistration_due(index)
                     || exchange.retry.is_none() && exchange.deadline <= now)
                 && self.observation_ready(index, now)
         })
+    }
+
+    /// The Observe=1 request is still to be sent for an explicit deregistration.
+    pub(super) fn deregistration_due(&self, index: usize) -> bool {
+        let exchange = &self.exchanges[index];
+        exchange.observation.is_some()
+            && exchange
+                .slot
+                .is_some_and(|(slot, generation)| self.shared.deregistering(slot, generation))
     }
 
     pub(super) fn refresh_observation(
@@ -341,8 +400,10 @@ impl<
         ));
         exchange.deadline = now.after(exchange.target.parameters.exchange_lifetime());
         if refresh.cancel
-            && let Some((slot, generation)) = exchange.slot.take()
+            && let Some((slot, generation)) = exchange.slot
+            && !self.shared.deregistering(slot, generation)
         {
+            exchange.slot = None;
             self.shared
                 .complete(slot, generation, Err(Error::Cancelled));
         }

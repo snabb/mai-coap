@@ -620,32 +620,9 @@ fn tst_4_blk_4b_streaming_upload_with_lost_and_duplicate_datagrams_commits_once(
 #[test]
 fn tst_4_obs_8_osc_17_reboot_refresh_reestablishes_keys_and_accepts_reset_sequence() {
     use mai_coap::{
-        crypto::SoftwareCrypto,
-        edhoc::{Identity, TrustedPeer, endpoint::Edhoc},
         security::{PeerId, ProtectedOnly},
         time::{Clock, Instant},
     };
-    fn protection(initiator: bool) -> Edhoc<SoftwareCrypto<rand::rngs::ThreadRng>, 4, 2> {
-        let (own, other, private) = if initiator {
-            (
-                include_bytes!("fixtures/i.ccs").as_slice(),
-                include_bytes!("fixtures/r.ccs").as_slice(),
-                "fb13adeb6518cee5f88417660841142e830a81fe334380a953406a1305e8706b",
-            )
-        } else {
-            (
-                include_bytes!("fixtures/r.ccs").as_slice(),
-                include_bytes!("fixtures/i.ccs").as_slice(),
-                "72cc4761dbd4c78f758931aa589d348d1ef874a7e303ede2f140dcf3e6aa4aac",
-            )
-        };
-        let mut crypto = SoftwareCrypto::new(rand::rng());
-        let identity = Identity::new(own, support::hex(private), &mut crypto).unwrap();
-        let mut p = Edhoc::new(crypto, identity).unwrap();
-        p.trust(TrustedPeer::new(PeerId(1), other).unwrap())
-            .unwrap();
-        p
-    }
     struct RebootClock<'a>(&'a Network, Instant);
     impl Clock for RebootClock<'_> {
         fn now(&self) -> Instant {
@@ -663,7 +640,7 @@ fn tst_4_obs_8_osc_17_reboot_refresh_reestablishes_keys_and_accepts_reset_sequen
         let mut a = network.socket("192.0.2.1:5683");
         let mut b = network.socket("192.0.2.2:5683");
         let remote = b.local;
-        let cp = protection(true);
+        let cp = edhoc_peer(true);
         let mut client = Endpoint::<_, 512, 4, 16>::new(&cs, cp).unwrap();
         let mut unused = |_: Request<'_>, _: &mut ResponseWriter<'_, 512>| Err(Code::NOT_FOUND);
         let mut handler = |_: Request<'_>, response: &mut ResponseWriter<'_, 512>| {
@@ -684,7 +661,7 @@ fn tst_4_obs_8_osc_17_reboot_refresh_reestablishes_keys_and_accepts_reset_sequen
         let handle = cs.handle();
         let mut observation = handle.client(remote).peer(PeerId(1)).observe("/x").unwrap();
         for phase in 0..3 {
-            let mut server = Endpoint::<_, 512, 4, 16>::new(&ss, protection(false)).unwrap();
+            let mut server = Endpoint::<_, 512, 4, 16>::new(&ss, edhoc_peer(false)).unwrap();
             let clock = RebootClock(
                 &network,
                 if phase == 0 {
@@ -725,6 +702,169 @@ fn tst_4_obs_8_osc_17_reboot_refresh_reestablishes_keys_and_accepts_reset_sequen
         assert_eq!(client.protection_mut().contexts(), 2);
         client.protection_mut().unpin_epoch(1);
         observation.cancel();
+    });
+}
+
+#[cfg(all(feature = "edhoc", feature = "software-crypto"))]
+fn edhoc_peer(
+    initiator: bool,
+) -> mai_coap::edhoc::endpoint::Edhoc<mai_coap::crypto::SoftwareCrypto<rand::rngs::ThreadRng>, 4, 2>
+{
+    use mai_coap::{
+        crypto::SoftwareCrypto,
+        edhoc::{Identity, TrustedPeer, endpoint::Edhoc},
+        security::PeerId,
+    };
+    let (own, other, private) = if initiator {
+        (
+            include_bytes!("fixtures/i.ccs").as_slice(),
+            include_bytes!("fixtures/r.ccs").as_slice(),
+            "fb13adeb6518cee5f88417660841142e830a81fe334380a953406a1305e8706b",
+        )
+    } else {
+        (
+            include_bytes!("fixtures/r.ccs").as_slice(),
+            include_bytes!("fixtures/i.ccs").as_slice(),
+            "72cc4761dbd4c78f758931aa589d348d1ef874a7e303ede2f140dcf3e6aa4aac",
+        )
+    };
+    let mut crypto = SoftwareCrypto::new(rand::rng());
+    let identity = Identity::new(own, support::hex(private), &mut crypto).unwrap();
+    let mut protection = Edhoc::new(crypto, identity).unwrap();
+    protection
+        .trust(TrustedPeer::new(PeerId(1), other).unwrap())
+        .unwrap();
+    protection
+}
+
+/// RFC 7641 section 3.6 under RFC 8613: the protected Observe=1 ends notifications.
+#[cfg(all(feature = "edhoc", feature = "software-crypto"))]
+#[test]
+fn obs_8_osc_protected_deregister_ends_notifications() {
+    use mai_coap::security::{PeerId, ProtectedOnly};
+    block_on(async {
+        let network = Network::default();
+        let cs = Shared::<512, 4>::new();
+        let ss = Shared::<512, 4>::new();
+        let mut a = network.socket("192.0.2.1:5683");
+        let mut b = network.socket("192.0.2.2:5683");
+        let (client_address, remote) = (a.local, b.local);
+        let mut client = Endpoint::<_, 512, 4, 16>::new(&cs, edhoc_peer(true)).unwrap();
+        let mut server = Endpoint::<_, 512, 4, 16>::new(&ss, edhoc_peer(false)).unwrap();
+        let mut unused = |_: Request<'_>, _: &mut ResponseWriter<'_, 512>| Err(Code::NOT_FOUND);
+        let mut handler = |_: Request<'_>, response: &mut ResponseWriter<'_, 512>| {
+            response.set_payload(b"alive").unwrap();
+            Ok(Disposition::Complete)
+        };
+        let mut router = Router::<512, 1>::new(&ProtectedOnly);
+        router.route("/x", &[Code::GET], &mut handler).unwrap();
+        router
+            .observable(
+                "/x",
+                Settings::new(1).with_minimum_ms(100).with_maximum_ms(500),
+            )
+            .unwrap();
+        let drivers = race(
+            client.run(&mut a, &network, &mut unused, &ProtectedOnly),
+            server.run(&mut b, &network, &mut router, &ProtectedOnly),
+        );
+        let mut drivers = core::pin::pin!(drivers);
+        let handle = cs.handle();
+        let mut observation = handle.client(remote).peer(PeerId(1)).observe("/x").unwrap();
+        let mut registered = false;
+        for _ in 0..2000 {
+            assert!(poll_once(drivers.as_mut()).await.is_none());
+            if let Some(Some(reply)) = poll_once(observation.next()).await {
+                let reply = reply.unwrap();
+                let message = reply.message().unwrap();
+                assert!(
+                    message
+                        .option(mai_coap::codec::OptionNumber::OBSERVE)
+                        .is_some()
+                );
+                registered = true;
+                break;
+            }
+            network.advance(10);
+        }
+        assert!(registered);
+        let mut deregister = core::pin::pin!(observation.deregister());
+        let mut answered = false;
+        for _ in 0..2000 {
+            assert!(poll_once(drivers.as_mut()).await.is_none());
+            if let Some(result) = poll_once(deregister.as_mut()).await {
+                let reply = result.unwrap().unwrap();
+                let message = reply.message().unwrap();
+                assert_eq!(message.code(), Code::CONTENT);
+                assert_eq!(message.payload(), b"alive");
+                assert!(
+                    message
+                        .option(mai_coap::codec::OptionNumber::OBSERVE)
+                        .is_none()
+                );
+                answered = true;
+                break;
+            }
+            network.advance(10);
+        }
+        assert!(answered);
+        let from_server = || {
+            network
+                .sent()
+                .iter()
+                .filter(|p| p.from == remote && p.from != client_address)
+                .count()
+        };
+        let before = from_server();
+        // Longer than the maximum notification interval of the removed observer.
+        for _ in 0..200 {
+            assert!(poll_once(drivers.as_mut()).await.is_none());
+            network.advance(10);
+        }
+        assert_eq!(from_server(), before);
+    });
+}
+
+/// No keys exist yet, so there is nothing to deregister under; the handshake isn't abandoned
+/// in a state that blocks later work.
+#[cfg(all(feature = "edhoc", feature = "software-crypto"))]
+#[test]
+fn obs_8_deregister_during_edhoc_reports_cancellation_and_releases_the_slot() {
+    use mai_coap::security::{PeerId, ProtectedOnly};
+    block_on(async {
+        let network = Network::default();
+        let cs = Shared::<512, 4>::new();
+        let mut a = network.socket("192.0.2.1:5683");
+        let silent = network.socket("192.0.2.2:5683");
+        let remote = silent.local;
+        let mut client = Endpoint::<_, 512, 4, 16>::new(&cs, edhoc_peer(true)).unwrap();
+        let mut unused = |_: Request<'_>, _: &mut ResponseWriter<'_, 512>| Err(Code::NOT_FOUND);
+        let driver = client.run(&mut a, &network, &mut unused, &ProtectedOnly);
+        let mut driver = core::pin::pin!(driver);
+        let handle = cs.handle();
+        let observation = handle.client(remote).peer(PeerId(1)).observe("/x").unwrap();
+        assert!(poll_once(driver.as_mut()).await.is_none());
+        let mut deregister = core::pin::pin!(observation.deregister());
+        let mut result = None;
+        for _ in 0..200 {
+            if let Some(outcome) = poll_once(deregister.as_mut()).await {
+                result = Some(outcome);
+                break;
+            }
+            assert!(poll_once(driver.as_mut()).await.is_none());
+            network.advance(10);
+        }
+        assert_eq!(result.unwrap().err(), Some(mai_coap::Error::Cancelled));
+        for _ in 0..4 {
+            drop(
+                handle
+                    .client(remote)
+                    .request(Code::GET, "/x")
+                    .unwrap()
+                    .send()
+                    .unwrap(),
+            );
+        }
     });
 }
 
@@ -783,7 +923,7 @@ fn obs_6_client_fetches_complete_notification_with_matching_etag() {
             for _ in 0..1000 {
                 assert!(poll_once(drivers.as_mut()).await.is_none());
                 if let Some(result) = poll_once(next.as_mut()).await {
-                    assert_eq!(result.unwrap().unwrap(), body.len());
+                    assert_eq!(result.unwrap().unwrap().length, body.len());
                     complete = true;
                     break;
                 }

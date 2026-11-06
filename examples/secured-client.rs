@@ -49,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .ok_or(mai_coap::Error::Cancelled)??;
                 println!("{}", String::from_utf8_lossy(reply.message()?.payload()));
             }
-            observation.cancel();
+            observation.deregister().await?;
         } else if let Some(payload) = args.get(7) {
             let operation = client
                 .request(Code::POST, &args[6])?

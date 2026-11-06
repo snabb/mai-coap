@@ -535,6 +535,38 @@ Where requirement wording needed an RFC-based interpretation.
   and 7, omitting Uri-Host and Uri-Port that repeat the destination. Through a proxy both
   are always sent, because the forward proxy reads an absent Uri-Port as 5683 rather than
   its own port: receive metadata has no local port.
+- **BLK-3, BLK-6:** `RequestBuilder::transfer` splits a body only when it exceeds the
+  block size, so servers without Block1 work with small bodies. Requests for later response
+  blocks carry the initial options without Block1 or Size1 ([RFC 7959 section
+  2.7](https://www.rfc-editor.org/rfc/rfc7959.html#section-2.7)), keep the Block1 phase's
+  Request-Tag ([RFC 9175 section
+  3.4](https://www.rfc-editor.org/rfc/rfc9175.html#section-3.4)) and send no payload (RFC
+  7959 figures 10 and 11). A FETCH sent without Block1 repeats its payload, which selects
+  the response ([RFC 8132 section
+  2](https://www.rfc-editor.org/rfc/rfc8132.html#section-2)). RFC 7959 doesn't address
+  a POST sent without Block1 that gets a block-wise response; it follows the same figures
+  and sends no payload, because repeating it could repeat the action. Requests after the
+  first omit If-None-Match ([section
+  2.10](https://www.rfc-editor.org/rfc/rfc7959.html#section-2.10)), because the exchange
+  itself would make them fail.
+- **Client reactions the RFCs leave open (BLK-3, BLK-6):** these abort with `Malformed`
+  rather than risk a corrupt body: a Block1 acknowledgement for another block, 2.31 for
+  the last block, a block with M set and a short payload, a block other than the one
+  requested, a larger block size than requested, and a Content-Format change within a
+  response. A plain request answered by 4.13 with a smaller Block1 size is retried in
+  blocks ([section 2.9.3](https://www.rfc-editor.org/rfc/rfc7959.html#section-2.9.3)).
+  Each retry strictly shrinks the size, and any other 4.13 is the final answer. A 2.xx
+  with M unset for a non-final block continues the upload, and the last response carries
+  the final code ([section 2.3](https://www.rfc-editor.org/rfc/rfc7959.html#section-2.3)).
+- **OBS-8 deregistration:** `Observation::deregister` waits for the Observe=1 exchange.
+  RFC 7641 doesn't cover notifications arriving meanwhile: those already delivered are
+  discarded, and one that matches the outstanding exchange ends it, since the Observe=1
+  request was already sent. After a failed deregistration the token is forgotten anyway,
+  so later confirmable notifications get Reset ([section
+  3.6](https://www.rfc-editor.org/rfc/rfc7641.html#section-3.6)).
+- **Uri-Host case:** [RFC 7252 section 6.4](https://www.rfc-editor.org/rfc/rfc7252.html#section-6.4)
+  step 5 lowercases before percent-decoding. This implementation decodes first, so `%41`
+  also becomes `a`. Host names compare case-insensitively, so this only normalizes further.
 - **Dot segments** (no requirement ID): Uri-Path and Location-Path values are never `.`
   or `..` ([RFC 7252 sections 5.10.1 and
   5.10.7](https://www.rfc-editor.org/rfc/rfc7252.html#section-5.10.1)). URI
@@ -692,7 +724,7 @@ supplement the explicit boundary cases. Paths below are relative to the reposito
 | CRY-1–5 | Public fallible `crypto::CryptoProvider`, including borrowing incremental SHA-256 state, without optional features; optional RustCrypto backend using one rand_core 0.10. The EDHOC adapter streams every transcript slice through the provider; software hash state erases buffered input on drop | SHA-256 vectors and chunk boundaries, EDHOC provider-failure/cancellation tests, RFC OSCORE and EDHOC vectors, end-to-end interop, no_std feature matrix and emulated exchanges |
 | PRX-1–7, PRX-9 | Default-deny routing, optional name hook, opaque forwarding table, immediate ACK, separate response, Hop-Limit and rate limits | `src/proxy/tests.rs`, independent proxies in both arrangements, slow protected proxy and timeout simulations |
 | OBS-1–5, OBS-7–8 | Bounded registration, nonblocking change mailbox, schedules, CON reliability, ordering and refresh/cancel | Observe simulation and repeated reboot/rekey test; independent protected Observe |
-| OBS-6 | First-block notifications and ETag-checked `Observation::next_blocks` follow-up GETs without Observe | `obs_6_client_fetches_complete_notification_with_matching_etag` |
+| OBS-6 | First-block notifications and ETag-checked `Observation::next_blocks` follow-up GETs without Observe | `obs_6_client_fetches_complete_notification_with_matching_etag`, `obs_6_negotiated_size_reaches_registration_and_followups_drop_observe` |
 | DOS-1–3 | Bounded per-IP/aggregate response budgets, EDHOC admission, default unprotected Block2 cap of SZX 2 (64 bytes), explicit override up to SZX 6 where datagram capacity permits | Rate-limit and multicast tests, independent lazy-refill admission model and negative mutation check, block-size interop, bounded table admission |
 | API-1–10 | Public unsealed layers, bounded handle/driver/work queue, typed errors, counters and event-only optional logs | Examples, strict rustdoc, feature isolation and integration tests; `tests/upload_worker.rs` verifies continued service after reply failures |
 | TST-1–4 | Unit/property/vector tests and controllable fault transport | `cargo test --features std,server,client,block,block1,observe,proxy,edhoc,software-crypto,multicast,discovery` |
@@ -701,7 +733,7 @@ supplement the explicit boundary cases. Paths below are relative to the reposito
 | TST-7 | Host/target profile matrix, emulated runtime tests, linked M4 workload sizes and symbol reports | `.github/workflows/ci.yml`, `tools/target-runtime.py`, `tools/firmware-size.py` |
 | TST-8 | Seven host examples and board-independent Embassy task body | Host example builds/runs; `embedded-example` Cortex-M4 build |
 
-Combined Block1/Block2 responses are supported by `Client::upload_blocks` with `block1`;
+Combined Block1/Block2 responses are supported by `RequestBuilder::transfer` with `block1`;
 applications retain the response representation while serving its later blocks. Slow upload
 workers own their inactive transaction and abort it on I/O failure or timeout.
 

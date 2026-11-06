@@ -164,8 +164,29 @@ let n = client.get_blocks("/large", 6, &mut buffer).await?;          // preferre
 let reply = client.upload(Code::PUT, "/image", ContentFormat::OCTET_STREAM, &body, 6).await?;
 ```
 
-`download` streams into a sink, and `upload_blocks` also retrieves a block-wise
-response. `Error::RepresentationChanged` means the ETag changed mid-transfer.
+These helpers report a non-success response as `Error::Response`. For anything else,
+use a request builder, so options, NON and proxying combine with block-wise transfer in
+both directions:
+
+```rust,ignore
+let transfer = client
+    .request(Code::FETCH, "/log")?
+    .uint_option(OptionNumber::CONTENT_FORMAT, 60)?
+    .uint_option(OptionNumber::ACCEPT, 60)?
+    .block_size(4)?
+    .transfer(&query, &mut sink) // or transfer_into(&query, &mut buffer)
+    .await?;
+let message = transfer.reply.message()?; // the last response, with its code and options
+```
+
+- `transfer` uses Block1 only when the body exceeds the block size.
+- A non-success response is `Ok`: its diagnostic payload is in `reply`, and the sink keeps
+  no body. Call `into_success` to turn it into `Error::Response`.
+- `DownloadSink` receives ordered bytes without blocking the driver. Only a complete,
+  consistent body reaches `finish`.
+- `resume_block` continues a GET or FETCH from a block number.
+- `Error::RepresentationChanged` means the ETag changed mid-transfer. GET and FETCH
+  restart a bounded number of times first; other methods can't be repeated safely.
 
 **Server, large responses.** Use `Router::representation` with a `SliceBody`, or render
 on demand with `BodyWindow`:
@@ -217,12 +238,14 @@ while let Some(reply) = observation.next().await {
     let reply = reply?;
     // use reply.message()?.payload()
 }
-observation.cancel();
+observation.deregister().await?;
 ```
 
 - Resource IDs are unique within one endpoint. `Router` rejects duplicates, but composed
   applications must ensure this themselves.
-- `Observation::next_blocks` fetches the rest of a block-wise notification.
+- `Observation::next_blocks` and `next_into` fetch the rest of a block-wise notification.
+- `deregister` sends the Observe=1 request and waits for its exchange, so the driver can
+  stop afterwards. `cancel` or dropping the observation only queues it.
 - Applications must tolerate dropped notifications. Resource changes coalesce while a
   confirmable notification is pending.
 - An endpoint with zero outbound capacity declines registration and returns a normal

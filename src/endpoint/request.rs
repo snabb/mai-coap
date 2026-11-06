@@ -90,6 +90,8 @@ impl<'a, const DATAGRAM_BYTES: usize, const COMMANDS: usize> Client<'a, DATAGRAM
             ty: MessageType::Confirmable,
             token_len: 8,
             wait: true,
+            #[cfg(feature = "block")]
+            block: Default::default(),
         })
     }
     /// Borrows an encoded request; `send` copies it and replaces its MID and token.
@@ -153,11 +155,13 @@ impl<'a, const DATAGRAM_BYTES: usize, const COMMANDS: usize>
 }
 /// Bounded request content with named reliability controls and generated MID/token.
 pub struct RequestBuilder<'a, const DATAGRAM_BYTES: usize, const COMMANDS: usize> {
-    client: Client<'a, DATAGRAM_BYTES, COMMANDS>,
-    content: Response<DATAGRAM_BYTES>,
+    pub(super) client: Client<'a, DATAGRAM_BYTES, COMMANDS>,
+    pub(super) content: Response<DATAGRAM_BYTES>,
     ty: MessageType,
-    token_len: u8,
-    wait: bool,
+    pub(super) token_len: u8,
+    pub(super) wait: bool,
+    #[cfg(feature = "block")]
+    pub(super) block: super::client::BlockPlan,
 }
 impl<'a, const DATAGRAM_BYTES: usize, const COMMANDS: usize>
     RequestBuilder<'a, DATAGRAM_BYTES, COMMANDS>
@@ -221,6 +225,11 @@ impl<'a, const DATAGRAM_BYTES: usize, const COMMANDS: usize>
             return Err(Error::Malformed);
         }
         self.content.set_uint_option(OptionNumber::OBSERVE, 0)?;
+        // A negotiated size applies to all notifications (RFC 7959 section 2.6).
+        #[cfg(feature = "block")]
+        if let Some(block2) = self.block.observe_option()? {
+            self.content.set_uint_option(OptionNumber::BLOCK2, block2)?;
+        }
         let packet: crate::Packet<DATAGRAM_BYTES> =
             crate::Packet::encoded(|bytes| self.encode(bytes))?;
         let operation = self.client.handle.submit_request(
