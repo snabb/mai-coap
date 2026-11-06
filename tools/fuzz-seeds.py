@@ -86,6 +86,47 @@ def main():
         seed("edhoc", name, value)
     body = struct.pack("!IH", 8, 16) + b"a" * 16 + struct.pack("!IH", 16, 3) + b"end"
     seed("block1", "two-blocks", body)
+    # RFC 7959: a three-block GET, an ETag change, a combined POST and a shrinking 4.13.
+    block2 = lambda number, more: bytes([0, number, 0x20 | more << 3, 0, 0, 16])
+    seed(
+        "client_transfer",
+        "download",
+        bytes([0x1C, 0]) + block2(0, 1) + block2(1, 1) + block2(2, 0),
+    )
+    seed(
+        "client_transfer",
+        "changed-etag",
+        bytes([0x1C, 0])
+        + bytes([0, 0, 0x28, 0x81, 0, 16])
+        + bytes([0, 1, 0x28, 0x82, 0, 16])
+        + block2(0, 0),
+    )
+    seed(
+        "client_transfer",
+        "combined",
+        bytes([0x0E, 100])
+        + bytes([2, 0, 0x1B, 0, 0, 0])
+        + bytes([3, 1, 0x20, 0, 0, 16]),
+    )
+    # Regression: a stray Block2 on a 2.31 doesn't change the negotiated response size.
+    seed(
+        "client_transfer",
+        "block2-on-continue",
+        bytes.fromhex("0f24626262009d00001c22001a"),
+    )
+    # Regression: a FETCH that fits one larger block repeats its body on later requests.
+    seed(
+        "client_transfer",
+        "large-fetch-sent-whole",
+        bytes.fromhex("312e000028000010850128820810ed"),
+    )
+    seed(
+        "client_transfer",
+        "too-large",
+        bytes([0x0F, 100])
+        + bytes([4, 0, 0x12, 0, 0, 0])
+        + bytes([3, 0, 0x12, 0, 0, 0]),
+    )
 
 
 if __name__ == "__main__":

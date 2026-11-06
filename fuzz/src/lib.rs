@@ -1,4 +1,7 @@
+mod client_transfer;
 pub mod response_writer;
+
+pub use client_transfer::client_transfer;
 
 use mai_coap::{
     codec::{MessageBuilder, MessageView},

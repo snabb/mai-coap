@@ -69,3 +69,10 @@ path = "fuzz_targets/response_writer.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "client_transfer"
+path = "fuzz_targets/client_transfer.rs"
+test = false
+doc = false
+bench = false

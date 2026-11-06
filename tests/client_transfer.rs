@@ -380,6 +380,36 @@ fn blk_3_only_fetch_repeats_its_payload_for_later_response_blocks() {
     }
 }
 
+/// Found by the `client_transfer` fuzz target, as an oracle mistake: whether a FETCH repeats
+/// its body depends on whether it used Block1, not on any particular body length.
+#[test]
+fn blk_3_fetch_sent_whole_at_a_larger_block_size_repeats_its_body() {
+    let shared = Shared::<D, 4>::new();
+    let mut rig = Rig::new(&shared);
+    let query = body(184);
+    let representation = body(40);
+    let mut sink = Sink::default();
+    let handle = shared.handle();
+    let transfer = async {
+        handle
+            .client(remote())
+            .request(Code::FETCH, "/x")?
+            .block_size(4)?
+            .transfer(&query, &mut sink)
+            .await
+    };
+    let result = rig.pump(transfer, &mut |request| {
+        vec![serve(request, Code::CONTENT, &representation, 0, None)]
+    });
+    assert_eq!(result.unwrap().length, 40);
+    let requests: Vec<_> = rig.requests().collect();
+    assert_eq!(requests.len(), 3);
+    for request in requests {
+        assert!(request.option(OptionNumber::BLOCK1).is_none());
+        assert_eq!(request.payload(), query);
+    }
+}
+
 /// RFC 7959 section 2.4: after a changed ETag, retrieve fresh values from block zero.
 #[test]
 fn blk_3_changed_etag_restarts_at_zero_and_discards_the_old_blocks() {
@@ -1213,6 +1243,42 @@ mod block1 {
         });
         assert_eq!(result.err(), Some(Error::RepresentationChanged));
         assert_eq!(sink.restarts, 0);
+    }
+
+    /// Found by the `client_transfer` fuzz target: RFC 7959 section 2.3 forbids Block2 beside
+    /// a provisional Block1 response, and it doesn't change the size this client asked for.
+    #[test]
+    fn blk_6_stray_block2_on_a_continue_keeps_the_negotiated_size() {
+        let shared = Shared::<D, 4>::new();
+        let mut rig = Rig::new(&shared);
+        let content = body(144);
+        let mut sink = Sink::default();
+        let handle = shared.handle();
+        let transfer = async {
+            handle
+                .client(remote())
+                .request(Code::PUT, "/x")?
+                .block_size(3)?
+                .transfer(&content, &mut sink)
+                .await
+        };
+        let result = rig.pump(transfer, &mut |request| {
+            if block_of(request, OptionNumber::BLOCK1).is_some_and(|b| b.more) {
+                let stray = Block::new(6, false, 2).unwrap();
+                vec![respond(request, Code::CONTINUE, b"", |r| {
+                    r.uint_option(OptionNumber::BLOCK2, stray.encode().unwrap())
+                        .unwrap();
+                })]
+            } else {
+                vec![receive_body(request)]
+            }
+        });
+        assert_eq!(
+            result.unwrap().reply.message().unwrap().code(),
+            Code::CHANGED
+        );
+        let requests: Vec<_> = rig.requests().collect();
+        assert_eq!(block_of(requests[1], OptionNumber::BLOCK2).unwrap().szx, 3);
     }
 
     /// The Block1 phase can't be repeated, so a changed response is reported.

@@ -868,13 +868,23 @@ impl<const DATAGRAM_BYTES: usize, const COMMANDS: usize> Shared<DATAGRAM_BYTES, 
         }
     }
     fn cancelled(&self, index: usize, generation: u64) -> bool {
-        self.lock(|s| s.slots[index].generation != generation || s.slots[index].cancelled)
+        self.stopping(index, generation).0
     }
     #[cfg(feature = "observe")]
     fn deregistering(&self, index: usize, generation: u64) -> bool {
+        self.stopping(index, generation).1
+    }
+    /// Whether the slot is cancelled, and whether its observer awaits deregistration.
+    /// One lookup, since a critical section is costly to inline at each call site.
+    fn stopping(&self, index: usize, generation: u64) -> (bool, bool) {
         self.lock(|s| {
             let slot = &s.slots[index];
-            slot.generation == generation && slot.deregister && !slot.cancelled
+            let cancelled = slot.generation != generation || slot.cancelled;
+            #[cfg(feature = "observe")]
+            let deregistering = slot.deregister && !cancelled;
+            #[cfg(not(feature = "observe"))]
+            let deregistering = false;
+            (cancelled, deregistering)
         })
     }
     #[cfg(feature = "server")]

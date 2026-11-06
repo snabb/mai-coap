@@ -23,6 +23,7 @@ def main():
         "proxy_uri",
         "endpoint",
         "response_writer",
+        "client_transfer",
     ]:
         subprocess.run(
             [
