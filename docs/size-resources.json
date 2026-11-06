@@ -1,0 +1,191 @@
+{
+  "base": {
+    "features": "client,test-support",
+    "flash_bytes": 52776,
+    "static_ram_bytes": 296
+  },
+  "block": {
+    "features": "client,test-support,block",
+    "flash_bytes": 60444,
+    "static_ram_bytes": 296
+  },
+  "block1": {
+    "features": "client,test-support,block1",
+    "flash_bytes": 53972,
+    "static_ram_bytes": 304
+  },
+  "observe": {
+    "features": "client,test-support,observe",
+    "flash_bytes": 64436,
+    "static_ram_bytes": 368
+  },
+  "oscore": {
+    "features": "client,test-support,oscore",
+    "flash_bytes": 77424,
+    "static_ram_bytes": 296
+  },
+  "edhoc": {
+    "features": "client,test-support,edhoc",
+    "flash_bytes": 132288,
+    "static_ram_bytes": 296
+  },
+  "proxy": {
+    "features": "client,test-support,proxy",
+    "flash_bytes": 106308,
+    "static_ram_bytes": 1920
+  },
+  "discovery": {
+    "features": "client,test-support,discovery",
+    "flash_bytes": 97220,
+    "static_ram_bytes": 296
+  },
+  "full-block1": {
+    "features": "client,test-support,edhoc,block1,observe,proxy,discovery,multicast",
+    "flash_bytes": 270672,
+    "static_ram_bytes": 12856
+  },
+  "get-server": {
+    "features": "get-server",
+    "flash_bytes": 49904,
+    "static_ram_bytes": 24
+  },
+  "get-server-shared-counters": {
+    "features": "get-server,shared-counters",
+    "flash_bytes": 51480,
+    "static_ram_bytes": 144
+  },
+  "get-server-block1": {
+    "features": "get-server-block1",
+    "flash_bytes": 64216,
+    "static_ram_bytes": 24
+  },
+  "measurement": {
+    "date": "2026-11-04",
+    "toolchain": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "build_host": "aarch64-unknown-linux-gnu",
+    "target": "thumbv7em-none-eabihf",
+    "profile": "release opt-level=s, LTO, codegen-units=1",
+    "boundary": "Reachable test workloads, not whole-feature upper bounds. Static RAM excludes stack. Two-role EDHOC and protocol tables use stack storage; this is not a peak RAM measurement.",
+    "counter_snapshot_bytes": 120
+  },
+  "layouts": {
+    "unicast": {
+      "build_host": "aarch64-unknown-linux-gnu",
+      "shared_counters": false,
+      "target": "thumbv7em-none-eabihf",
+      "boundary": "Target ABI layouts including collection metadata and padding. Nested rows are included in parent totals. Enum alternatives overlap and are reported once through their containing field. Packet wire capacity is separated from pool and endpoint metadata. Excludes runtime stack, network/executor storage and application I/O.",
+      "profiles": {
+        "default": {
+          "capacities": {
+            "D": 1152,
+            "OUTBOUND": 8,
+            "DEDUP": 32,
+            "OBS": 8,
+            "CACHED": 8,
+            "SEND": 16,
+            "COMMANDS": 8,
+            "DEFERRED": 8,
+            "BODY_CONTEXTS": 8,
+            "PACKETS": 40
+          },
+          "endpoint_bytes": 72432,
+          "shared_bytes": 10472,
+          "packet_pool_bytes": 46320
+        },
+        "small": {
+          "capacities": {
+            "D": 1152,
+            "OUTBOUND": 4,
+            "DEDUP": 16,
+            "OBS": 4,
+            "CACHED": 4,
+            "SEND": 4,
+            "COMMANDS": 4,
+            "DEFERRED": 4,
+            "BODY_CONTEXTS": 4,
+            "PACKETS": 16
+          },
+          "endpoint_bytes": 34976,
+          "shared_bytes": 5288,
+          "packet_pool_bytes": 18528
+        },
+        "server": {
+          "capacities": {
+            "D": 1152,
+            "OUTBOUND": 0,
+            "DEDUP": 8,
+            "OBS": 0,
+            "CACHED": 2,
+            "SEND": 2,
+            "COMMANDS": 0,
+            "DEFERRED": 0,
+            "BODY_CONTEXTS": 0,
+            "PACKETS": 2
+          },
+          "endpoint_bytes": 10416,
+          "shared_bytes": 104,
+          "packet_pool_bytes": 2316
+        }
+      }
+    },
+    "multicast": {
+      "build_host": "aarch64-unknown-linux-gnu",
+      "shared_counters": false,
+      "target": "thumbv7em-none-eabihf",
+      "boundary": "Target ABI layouts including collection metadata and padding. Nested rows are included in parent totals. Enum alternatives overlap and are reported once through their containing field. Packet wire capacity is separated from pool and endpoint metadata. Excludes runtime stack, network/executor storage and application I/O.",
+      "profiles": {
+        "default": {
+          "capacities": {
+            "D": 1152,
+            "OUTBOUND": 8,
+            "DEDUP": 32,
+            "OBS": 8,
+            "CACHED": 8,
+            "SEND": 16,
+            "COMMANDS": 8,
+            "DEFERRED": 8,
+            "BODY_CONTEXTS": 8,
+            "PACKETS": 40
+          },
+          "endpoint_bytes": 73976,
+          "shared_bytes": 86696,
+          "packet_pool_bytes": 46320
+        },
+        "small": {
+          "capacities": {
+            "D": 1152,
+            "OUTBOUND": 4,
+            "DEDUP": 16,
+            "OBS": 4,
+            "CACHED": 4,
+            "SEND": 4,
+            "COMMANDS": 4,
+            "DEFERRED": 4,
+            "BODY_CONTEXTS": 4,
+            "PACKETS": 16
+          },
+          "endpoint_bytes": 35400,
+          "shared_bytes": 43400,
+          "packet_pool_bytes": 18528
+        },
+        "server": {
+          "capacities": {
+            "D": 1152,
+            "OUTBOUND": 0,
+            "DEDUP": 8,
+            "OBS": 0,
+            "CACHED": 2,
+            "SEND": 2,
+            "COMMANDS": 0,
+            "DEFERRED": 0,
+            "BODY_CONTEXTS": 0,
+            "PACKETS": 2
+          },
+          "endpoint_bytes": 10600,
+          "shared_bytes": 104,
+          "packet_pool_bytes": 2316
+        }
+      }
+    }
+  }
+}

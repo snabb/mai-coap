@@ -1,0 +1,14 @@
+{
+  "thumbv7em-none-eabihf": {
+    "combined/handshake": 26368,
+    "combined/traffic": 16384,
+    "sequential/handshake": 26368,
+    "sequential/traffic": 16384
+  },
+  "thumbv8m.main-none-eabihf": {
+    "combined/handshake": 26368,
+    "combined/traffic": 16384,
+    "sequential/handshake": 26368,
+    "sequential/traffic": 16384
+  }
+}

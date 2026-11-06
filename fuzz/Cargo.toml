@@ -1,0 +1,71 @@
+[package]
+name = "mai-coap-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4.13"
+rand = "0.10.3"
+mai-coap = { path = "..", features = ["_test-support", "std", "server", "client", "block1", "link-format", "observe", "proxy", "multicast", "edhoc", "software-crypto"] }
+
+[[bin]]
+name = "codec"
+path = "fuzz_targets/codec.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "link_format"
+path = "fuzz_targets/link_format.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "oscore"
+path = "fuzz_targets/oscore.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "edhoc"
+path = "fuzz_targets/edhoc.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "block1"
+path = "fuzz_targets/block1.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "proxy_uri"
+path = "fuzz_targets/proxy_uri.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "endpoint"
+path = "fuzz_targets/endpoint.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "response_writer"
+path = "fuzz_targets/response_writer.rs"
+test = false
+doc = false
+bench = false

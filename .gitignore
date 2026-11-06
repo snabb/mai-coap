@@ -1,0 +1,10 @@
+/target/
+/target-tests/target/
+/embedded-example/target/
+/fuzz/target/
+/fuzz/artifacts/
+/fuzz/corpus/
+/.venv/
+__pycache__/
+# Private keys from the guide's EDHOC walkthrough.
+*.key

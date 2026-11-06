@@ -1,0 +1,119 @@
+[package]
+name = "mai-coap"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.97"
+license = "MIT OR Apache-2.0"
+description = "Bounded, executor-independent CoAP and OSCORE for devices and hosts"
+repository = "https://github.com/snabb/mai-coap"
+readme = "README.md"
+
+[features]
+default = []
+# Unstable repository-only fuzz and target hooks; not a supported application API.
+_test-support = ["server", "client"]
+server = []
+client = []
+shared-counters = []
+block = ["dep:sha2"]
+block1 = ["block"]
+observe = []
+proxy = ["client", "server"]
+oscore = []
+edhoc = ["oscore", "dep:lakers", "dep:digest-legacy"]
+multicast = []
+link-format = []
+discovery = ["server", "block", "link-format"]
+software-crypto = ["oscore", "dep:aes", "dep:ccm", "dep:sha2", "sha2/zeroize", "dep:hkdf", "dep:p256"]
+std = ["critical-section/std", "dep:async-io", "dep:nix"]
+embassy-net = ["dep:embassy-net"]
+embassy-net-ipv4 = ["embassy-net", "embassy-net/proto-ipv4"]
+embassy-net-ipv6 = ["embassy-net", "embassy-net/proto-ipv6"]
+_xarxa = ["dep:xarxa"]
+xarxa = ["_xarxa"]
+xarxa-ipv4 = ["xarxa", "xarxa/ipv4"]
+xarxa-ipv6 = ["xarxa", "xarxa/ipv6"]
+embassy-net-xarxa = ["_xarxa", "dep:embassy-net-xarxa"]
+embassy-net-xarxa-ipv4 = ["embassy-net-xarxa", "embassy-net-xarxa/ipv4"]
+embassy-net-xarxa-ipv6 = ["embassy-net-xarxa", "embassy-net-xarxa/ipv6"]
+embassy-time = ["dep:embassy-time"]
+log = ["dep:log"]
+# No weak `xarxa?/defmt` or `embassy-net-xarxa?/defmt`: Cargo locks weak
+# dependencies even when disabled, and the Git Embassy's `embassy-time` then
+# conflicts (`links`) with a downstream's released or differently pinned one.
+defmt = ["dep:defmt", "embassy-net?/defmt"]
+
+[dependencies]
+critical-section = "1.2.0"
+heapless = { version = "0.9.3", default-features = false }
+rand_core = { version = "0.10.1", default-features = false }
+zeroize = { version = "1.9.1", default-features = false }
+# Lockfiles hold 0.9.3; see "AES version" in docs/conformance.md before updating.
+aes = { version = "0.9.3", default-features = false, optional = true }
+ccm = { version = "0.6.1", default-features = false, optional = true }
+sha2 = { version = "0.11.1", default-features = false, optional = true }
+hkdf = { version = "0.13.0", default-features = false, optional = true }
+p256 = { version = "0.14.0", default-features = false, features = ["arithmetic", "ecdh"], optional = true }
+lakers = { git = "https://github.com/lake-rs/lakers", rev = "de1bf6bdb562eda7e29db47ec8540e759e68375d", default-features = false, optional = true }
+# Lakers' public streaming-hash contract uses digest 0.10 (EDH-2).
+digest-legacy = { package = "digest", version = "0.10.7", default-features = false, optional = true }
+embassy-net = { version = "0.9.1", default-features = false, features = ["udp"], optional = true }
+# Keep these sources aligned: both adapters exchange the same owned PacketBuf.
+xarxa = { git = "https://github.com/embassy-rs/xarxa", rev = "8f6f33b131deb9ff3290e0e01079537e1ed7b2ad", default-features = false, features = ["udp", "async", "iface-bind"], optional = true }
+embassy-net-xarxa = { package = "embassy-net", git = "https://github.com/embassy-rs/embassy", rev = "cf9beb7173159ce1b60dadb9be11583c20c7949a", default-features = false, features = ["udp", "iface-bind"], optional = true }
+embassy-time = { version = "0.5.1", default-features = false, optional = true }
+log = { version = "0.4.35", default-features = false, optional = true }
+defmt = { version = "1.2.0", optional = true }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+nix = { version = "0.31.3", default-features = false, features = ["socket", "net", "uio"], optional = true }
+async-io = { version = "2.6.0", optional = true }
+
+[dev-dependencies]
+proptest = "1.12.0"
+futures-lite = "2.6.1"
+rand = "0.10.3"
+critical-section = { version = "1.2.0", features = ["std"] }
+embassy-time = { version = "0.5.1", features = ["std", "generic-queue-8"] }
+
+# The Git network stack and released adapters must share one global time driver.
+[patch."https://github.com/embassy-rs/embassy"]
+embassy-time = { version = "0.5.1" }
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(kani)"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = "s"
+
+[[example]]
+name = "minimal-server"
+required-features = ["server", "std"]
+
+[[example]]
+name = "minimal-client"
+required-features = ["client", "std"]
+
+[[example]]
+name = "secured-server"
+required-features = ["server", "std", "edhoc", "software-crypto", "observe", "block"]
+
+[[example]]
+name = "secured-client"
+required-features = ["client", "std", "edhoc", "software-crypto", "observe", "block"]
+
+[[example]]
+name = "proxy"
+required-features = ["proxy", "std"]
+
+[[example]]
+name = "observe"
+required-features = ["client", "server", "observe", "std"]
+
+[[example]]
+name = "streaming-upload"
+required-features = ["client", "server", "block1", "std"]

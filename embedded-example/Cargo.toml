@@ -1,0 +1,23 @@
+[package]
+name = "mai-coap-embassy-example"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[features]
+default = []
+xarxa = ["dep:xarxa", "mai-coap/xarxa-ipv4", "mai-coap/xarxa-ipv6"]
+embassy-xarxa = ["dep:embassy-net-xarxa", "mai-coap/embassy-net-xarxa-ipv4", "mai-coap/embassy-net-xarxa-ipv6"]
+
+[dependencies]
+mai-coap = { path = "..", features = ["server", "embassy-net-ipv4", "embassy-net-ipv6", "embassy-time"] }
+embassy-net = { version = "0.9.1", default-features = false, features = ["udp", "proto-ipv4", "proto-ipv6", "medium-ip"] }
+rand_core = { version = "0.10.1", default-features = false }
+xarxa = { git = "https://github.com/embassy-rs/xarxa", rev = "8f6f33b131deb9ff3290e0e01079537e1ed7b2ad", default-features = false, features = ["udp", "async", "medium-ip", "ipv4", "ipv6", "iface-bind"], optional = true }
+embassy-net-xarxa = { package = "embassy-net", git = "https://github.com/embassy-rs/embassy", rev = "cf9beb7173159ce1b60dadb9be11583c20c7949a", default-features = false, features = ["udp", "medium-ip", "ipv4", "ipv6", "iface-bind"], optional = true }
+
+# Share the released time driver with Git Embassy.
+[patch."https://github.com/embassy-rs/embassy"]
+embassy-time = { version = "0.5.1" }

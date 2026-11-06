@@ -1,0 +1,58 @@
+[package]
+name = "mai-coap-target-tests"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[features]
+default = ["client", "test-support", "block1", "observe"]
+client = ["mai-coap/client"]
+test-support = ["mai-coap/_test-support"]
+get-server = ["mai-coap/server"]
+shared-counters = ["mai-coap/shared-counters"]
+get-server-block1 = ["get-server", "block1"]
+block = ["mai-coap/block"]
+block1 = ["mai-coap/block1"]
+observe = ["mai-coap/observe", "test-support"]
+proxy = ["mai-coap/proxy"]
+discovery = ["mai-coap/discovery"]
+multicast = ["mai-coap/multicast"]
+oscore = ["mai-coap/software-crypto"]
+edhoc = ["oscore", "mai-coap/edhoc"]
+stack-profile = ["client", "test-support", "edhoc", "block1", "observe", "proxy", "discovery", "multicast"]
+xarxa-profile = ["client", "edhoc", "mai-coap/xarxa-ipv4", "dep:xarxa", "dep:heapless"]
+memory-layout = ["client", "test-support", "edhoc", "proxy", "discovery"]
+
+[dependencies]
+mai-coap = { path = "..", features = ["server"] }
+rand_core = { version = "0.10.1", default-features = false }
+xarxa = { git = "https://github.com/embassy-rs/xarxa", rev = "8f6f33b131deb9ff3290e0e01079537e1ed7b2ad", default-features = false, features = ["udp", "async", "iface-bind", "ipv4", "medium-ip"], optional = true }
+heapless = { version = "0.9.3", default-features = false, optional = true }
+semihosting = { version = "0.1.25", features = ["panic-handler", "stdio"] }
+
+[target.'cfg(target_arch = "arm")'.dependencies]
+cortex-m-rt = "0.7.7"
+cortex-m = { version = "0.7.10", features = ["critical-section-single-core"] }
+
+[target.'cfg(target_arch = "riscv32")'.dependencies]
+riscv-rt = { version = "0.18.0", features = ["single-hart"] }
+riscv = { version = "0.16.1", features = ["critical-section-single-hart"] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+debug = true
+
+[[bin]]
+name = "mai-coap-stack-profile"
+path = "src/stack_main.rs"
+required-features = ["stack-profile"]
+
+
+[[bin]]
+name = "mai-coap-xarxa-profile"
+path = "src/xarxa_main.rs"
+required-features = ["xarxa-profile"]

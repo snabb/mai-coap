@@ -1,0 +1,32 @@
+{
+  "thumbv7em-none-eabihf": {
+    "stack": {
+      "plain/handshake": 18944,
+      "plain/traffic": 18944,
+      "plain/non": 18944,
+      "combined/handshake": 31488,
+      "combined/traffic": 21760,
+      "combined/non": 21760,
+      "sequential/handshake": 31488,
+      "sequential/traffic": 21760,
+      "sequential/non": 21760
+    },
+    "driver_future_bytes": 512,
+    "static_ram_bytes": 36608
+  },
+  "thumbv8m.main-none-eabihf": {
+    "stack": {
+      "plain/handshake": 18944,
+      "plain/traffic": 18944,
+      "plain/non": 18944,
+      "combined/handshake": 31488,
+      "combined/traffic": 21760,
+      "combined/non": 21760,
+      "sequential/handshake": 31488,
+      "sequential/traffic": 21760,
+      "sequential/non": 21760
+    },
+    "driver_future_bytes": 512,
+    "static_ram_bytes": 36608
+  }
+}

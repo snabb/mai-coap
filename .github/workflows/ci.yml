@@ -1,0 +1,294 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+  pull_request:
+  merge_group:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 4 * * 1"
+
+# Keep weekly/manual coverage independent of superseded routine runs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' }}
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+  RUST_BACKTRACE: "1"
+  RUSTUP_TOOLCHAIN: stable
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  ci:
+    name: CI passed
+    # Failed prerequisites fail the gate; superseded runs need no gate runner.
+    if: ${{ !cancelled() }}
+    needs: [embedded, fuzz, kani]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Require prerequisite checks
+        env:
+          JOB_RESULTS: ${{ toJSON(needs) }}
+        run: python3 tools/ci.py
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          cache-dependency-glob: .github/workflows/ci.yml
+      - name: Install stable Rust and validation targets
+        run: rustup toolchain install stable --profile minimal --component rustfmt,clippy --target thumbv6m-none-eabi,x86_64-pc-windows-msvc
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - name: Format all Rust workspaces
+        run: |
+          cargo fmt --check
+          cargo fmt --manifest-path fuzz/Cargo.toml --check
+          cargo fmt --manifest-path target-tests/Cargo.toml --check
+          cargo fmt --manifest-path embedded-example/Cargo.toml --check
+      - name: Lint and format Python tools
+        run: |
+          uv tool run ruff==0.17.3 check tools
+          uv tool run ruff==0.17.3 format --check tools
+      - name: Test resource summaries, baseline selection and shared feature profiles
+        run: |
+          python3 tools/test-resource-metadata.py
+          python3 tools/test-resource-summary.py
+          python3 tools/test-checks.py
+          python3 tools/test-ci.py
+          python3 tools/test-target-runtime.py
+          python3 tools/test-storage-layout.py
+      - name: Cache pinned workflow linter
+        id: actionlint-cache
+        uses: actions/cache@v6.1.0
+        with:
+          path: ~/.local/bin/actionlint
+          key: actionlint-1.7.12-${{ runner.os }}-${{ runner.arch }}
+      - name: Install pinned workflow linter
+        if: steps.actionlint-cache.outputs.cache-hit != 'true'
+        run: |
+          archive="$RUNNER_TEMP/actionlint.tar.gz"
+          curl --fail --location --retry 3 --output "$archive" https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $archive" | sha256sum --check --strict
+          mkdir -p "$HOME/.local/bin"
+          tar -xzf "$archive" -C "$HOME/.local/bin" actionlint
+      - name: Lint GitHub Actions workflows
+        run: ~/.local/bin/actionlint
+      - name: Install independent CoAP peers
+        run: |
+          if ! command -v coap-client-notls >/dev/null || ! command -v coap-server-notls >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -y libcoap3-bin
+          fi
+      - name: Test standalone core without optional features
+        run: cargo test --locked --no-default-features
+      - name: Clippy feature matrix, strict rustdoc and host tests
+        run: python3 tools/checks.py --docs --test
+      - name: Check std without the Linux host adapter
+        run: cargo check --locked --lib --target x86_64-pc-windows-msvc --features std,server,client,block,block1,observe,proxy,edhoc,software-crypto,multicast,discovery
+      - name: Check internal fuzz and target hooks
+        run: cargo check --locked --lib --features _test-support,server,client,block,block1,observe,proxy,edhoc,software-crypto,multicast,discovery
+      - name: Verify dependency notices
+        run: |
+          python3 tools/test-notices.py
+          python3 tools/notices.py --check
+      - name: Verify lockfiles and generated notices are unchanged
+        run: git diff --exit-code
+
+      - name: Build host examples
+        run: cargo build --locked --examples --features std,server,client,block,block1,observe,proxy,edhoc,software-crypto,multicast,discovery
+      - name: Exercise example commands
+        run: |
+          python3 tools/example-smoke.py
+          cargo run --locked --example observe --features std,server,client,observe
+          cargo run --locked --example streaming-upload --features std,server,client,block1
+      - name: Black-box EDHOC, OSCORE, Observe, block and proxy interoperability
+        run: uv run --with 'aiocoap[oscore]==0.4.17' tools/interop-aiocoap.py
+      - name: Independent native and Embassy xarxa interoperability over the loopback test link
+        run: |
+          cargo build --locked --example secured-server --features std,server,client,block,block1,observe,proxy,edhoc,software-crypto,multicast,discovery,xarxa-ipv4,xarxa/medium-ip,embassy-net-xarxa-ipv4,embassy-net-xarxa/medium-ip
+          uv run --with 'aiocoap[oscore]==0.4.17' tools/interop-aiocoap.py --xarxa native
+          uv run --with 'aiocoap[oscore]==0.4.17' tools/interop-aiocoap.py --xarxa embassy
+
+      - name: Install minimum supported Rust and Cortex-M0 target
+        run: rustup toolchain install 1.97 --profile minimal --target thumbv6m-none-eabi
+      - name: Check minimum supported Rust profiles
+        env:
+          RUSTUP_TOOLCHAIN: '1.97'
+          CARGO_TARGET_DIR: target/msrv
+        run: python3 tools/checks.py --msrv
+      - name: Verify validation leaves tracked files unchanged
+        run: git diff --exit-code
+
+  embedded:
+    name: Embedded (${{ matrix.target }})
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    env:
+      # A failed build must not publish measurements restored from an older cache.
+      RESOURCE_REPORT_DIR: target/resource-reports/${{ github.run_id }}-${{ github.run_attempt }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target: >-
+          ${{ fromJSON(
+            (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+            && '["thumbv6m-none-eabi","thumbv7em-none-eabihf","thumbv8m.main-none-eabihf","riscv32imac-unknown-none-elf"]'
+            || '["thumbv6m-none-eabi","thumbv8m.main-none-eabihf"]'
+          ) }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install stable Rust and target
+        run: rustup toolchain install stable --profile minimal --component clippy --target '${{ matrix.target }}'
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          key: ${{ matrix.target }}
+          workspaces: |
+            . -> target
+            target-tests -> target
+            embedded-example -> target
+      - name: Install target emulator and size tools
+        env:
+          QEMU_PACKAGE: ${{ matrix.target == 'riscv32imac-unknown-none-elf' && 'qemu-system-riscv' || 'qemu-system-arm' }}
+          QEMU_BINARY: ${{ matrix.target == 'riscv32imac-unknown-none-elf' && 'qemu-system-riscv32' || 'qemu-system-arm' }}
+        run: |
+          if ! command -v "$QEMU_BINARY" >/dev/null || ! command -v nm >/dev/null || ! command -v readelf >/dev/null || ! command -v size >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -y "$QEMU_PACKAGE" binutils
+          fi
+      - name: Clippy no_std feature matrix
+        run: python3 tools/checks.py --target '${{ matrix.target }}'
+      - name: Execute no_std protocol fixtures in QEMU
+        run: |
+          python3 tools/target-runtime.py --target '${{ matrix.target }}'
+          python3 tools/target-runtime.py --target '${{ matrix.target }}' --no-default-features --features get-server,shared-counters
+      - name: Enforce Cortex-M driver stack budgets
+        if: matrix.target == 'thumbv7em-none-eabihf' || matrix.target == 'thumbv8m.main-none-eabihf'
+        run: python3 tools/target-runtime.py --target '${{ matrix.target }}' --stack-check --output "$RESOURCE_REPORT_DIR"
+      - name: Enforce owned xarxa resource budgets
+        if: matrix.target == 'thumbv7em-none-eabihf' || matrix.target == 'thumbv8m.main-none-eabihf'
+        run: python3 tools/target-runtime.py --target '${{ matrix.target }}' --xarxa-check --output "$RESOURCE_REPORT_DIR"
+      - name: Upload Cortex-M stack measurements
+        if: ${{ !cancelled() && (matrix.target == 'thumbv7em-none-eabihf' || matrix.target == 'thumbv8m.main-none-eabihf') }}
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: stack-${{ matrix.target }}
+          path: |
+            ${{ env.RESOURCE_REPORT_DIR }}/stack-*
+            ${{ env.RESOURCE_REPORT_DIR }}/xarxa-*
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Check and build Embassy example
+        if: matrix.target == 'thumbv7em-none-eabihf'
+        run: |
+          cargo clippy --locked --manifest-path embedded-example/Cargo.toml --target thumbv7em-none-eabihf -- -D warnings
+          cargo build --locked --manifest-path embedded-example/Cargo.toml --target thumbv7em-none-eabihf
+      - name: Check native and Embassy xarxa examples
+        if: matrix.target == 'thumbv7em-none-eabihf'
+        run: |
+          for features in xarxa embassy-xarxa xarxa,embassy-xarxa; do
+            cargo clippy --locked --manifest-path embedded-example/Cargo.toml --target thumbv7em-none-eabihf --features "$features" -- -D warnings
+          done
+      - name: Measure linked Cortex-M4 workloads
+        if: matrix.target == 'thumbv7em-none-eabihf'
+        run: python3 tools/firmware-size.py --output "$RESOURCE_REPORT_DIR"
+      - name: Measure realistic datagram storage and client futures
+        if: matrix.target == 'thumbv7em-none-eabihf'
+        run: |
+          python3 tools/target-runtime.py --target thumbv7em-none-eabihf --features memory-layout | tee "$RESOURCE_REPORT_DIR/memory-layout.txt"
+          python3 tools/storage-layout.py target-tests/target/thumbv7em-none-eabihf/release/mai-coap-target-tests --runtime-log "$RESOURCE_REPORT_DIR/memory-layout.txt" --profile "release opt-level=s, LTO, codegen-units=1" --output "$RESOURCE_REPORT_DIR/storage-unicast.json"
+          python3 tools/target-runtime.py --target thumbv7em-none-eabihf --features memory-layout,multicast | tee "$RESOURCE_REPORT_DIR/memory-layout-multicast.txt"
+          python3 tools/storage-layout.py target-tests/target/thumbv7em-none-eabihf/release/mai-coap-target-tests --runtime-log "$RESOURCE_REPORT_DIR/memory-layout-multicast.txt" --profile "release opt-level=s, LTO, codegen-units=1" --output "$RESOURCE_REPORT_DIR/storage-multicast.json"
+          python3 tools/target-runtime.py --target thumbv7em-none-eabihf --features memory-layout,shared-counters | tee "$RESOURCE_REPORT_DIR/memory-layout-shared-counters.txt"
+          python3 tools/storage-layout.py target-tests/target/thumbv7em-none-eabihf/release/mai-coap-target-tests --runtime-log "$RESOURCE_REPORT_DIR/memory-layout-shared-counters.txt" --profile "release opt-level=s, LTO, codegen-units=1" --output "$RESOURCE_REPORT_DIR/storage-shared-counters.json"
+      - name: Summarize resource measurements against master
+        if: ${{ !cancelled() && (matrix.target == 'thumbv7em-none-eabihf' || matrix.target == 'thumbv8m.main-none-eabihf') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/resource-summary.py --reports "$RESOURCE_REPORT_DIR" --target '${{ matrix.target }}' --fetch-baseline >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload resource metrics for future comparisons
+        if: ${{ !cancelled() && (matrix.target == 'thumbv7em-none-eabihf' || matrix.target == 'thumbv8m.main-none-eabihf') }}
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: resource-metrics-${{ matrix.target }}
+          path: ${{ env.RESOURCE_REPORT_DIR }}/*.json
+          if-no-files-found: warn
+          retention-days: 90
+      - name: Upload Cortex-M4 ELF, section and symbol reports
+        if: matrix.target == 'thumbv7em-none-eabihf'
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: cortex-m4-sizes
+          path: ${{ env.RESOURCE_REPORT_DIR }}
+          if-no-files-found: error
+          retention-days: 14
+      - name: Verify embedded lockfiles are unchanged
+        run: git diff --exit-code
+
+  fuzz:
+    name: Network-input fuzz smoke tests
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    env:
+      RUSTUP_TOOLCHAIN: nightly
+      FUZZ_SECONDS: '30'
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install nightly instrumentation toolchain
+        run: rustup toolchain install nightly --profile minimal
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: fuzz -> target
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --version 0.13.2 --locked
+      - name: Exercise every fuzz target with reproducible seeds
+        run: python3 tools/fuzz-smoke.py --seconds "$FUZZ_SECONDS"
+      - name: Upload failing fuzz inputs
+        if: failure()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: fuzz-failures
+          path: fuzz/artifacts
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Verify fuzz lockfile is unchanged
+        run: git diff --exit-code
+
+  # Full validation includes proofs on both weekly and manual runs.
+  kani:
+    name: Kani bounded proofs
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install stable Rust
+        run: rustup toolchain install stable --profile minimal
+      - name: Install Kani and its pinned nightly toolchain
+        run: |
+          cargo install kani-verifier --version 0.68.0 --locked
+          cargo kani setup
+      - name: Verify codec, block, OSCORE, response-size and URI harnesses
+        run: python3 tools/kani.py

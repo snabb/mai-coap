@@ -1,0 +1,20 @@
+{
+  "cortex-m-0.7.10.txt": "https://raw.githubusercontent.com/rust-embedded/cortex-m/main/LICENSE-MIT",
+  "cortex-m-0.7.9.txt": "https://raw.githubusercontent.com/rust-embedded/cortex-m/master/LICENSE-MIT",
+  "cortex-m-rt-0.7.7.txt": "https://raw.githubusercontent.com/rust-embedded/cortex-m/main/LICENSE-MIT",
+  "defmt-0.3.101.txt": "https://raw.githubusercontent.com/knurling-rs/defmt/main/LICENSE-MIT",
+  "defmt-or-log-0.2.3.txt": "https://raw.githubusercontent.com/t-moe/defmt-or-log/master/LICENSE-MIT.txt",
+  "embassy-executor-timer-queue-0.1.0.txt": "https://raw.githubusercontent.com/embassy-rs/embassy/main/LICENSE-MIT",
+  "embassy-net-0.9.1.txt": "https://raw.githubusercontent.com/embassy-rs/embassy/main/LICENSE-MIT",
+  "embassy-net-driver-0.2.0.txt": "https://raw.githubusercontent.com/embassy-rs/embassy/main/LICENSE-MIT",
+  "embassy-sync-0.8.0.txt": "https://raw.githubusercontent.com/embassy-rs/embassy/main/LICENSE-MIT",
+  "embassy-time-0.5.1.txt": "https://raw.githubusercontent.com/embassy-rs/embassy/main/LICENSE-MIT",
+  "embassy-time-driver-0.2.2.txt": "https://raw.githubusercontent.com/embassy-rs/embassy/main/LICENSE-MIT",
+  "embassy-time-queue-utils-0.3.2.txt": "https://raw.githubusercontent.com/embassy-rs/embassy/main/LICENSE-MIT",
+  "embedded-nal-async-0.9.0.txt": "https://raw.githubusercontent.com/rust-embedded-community/embedded-nal/master/LICENSE-MIT",
+  "hax-lib-0.3.7.txt": "https://raw.githubusercontent.com/hacspec/hax/main/LICENSE",
+  "riscv-0.16.1.txt": "https://raw.githubusercontent.com/rust-embedded/riscv/master/LICENSE-MIT.md",
+  "riscv-rt-0.18.0.txt": "https://raw.githubusercontent.com/rust-embedded/riscv/master/LICENSE-MIT.md",
+  "riscv-types-0.1.0.txt": "https://raw.githubusercontent.com/rust-embedded/riscv/master/LICENSE-MIT.md",
+  "void-1.0.2.txt": "https://raw.githubusercontent.com/reem/rust-void/master/LICENSE-MIT"
+}
