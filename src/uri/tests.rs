@@ -137,3 +137,62 @@ fn resolved_targets_need_a_builder_byte_per_segment() {
         Err(Error::Capacity)
     );
 }
+
+fn request_authority(uri: &str, destination: Option<&str>) -> (Option<Vec<u8>>, Option<u64>) {
+    let destination = destination.map(|d| d.parse().unwrap());
+    let bytes =
+        options(|b| Uri::parse(uri)?.request_options(b, &mut [0; 512], destination)).unwrap();
+    let message = MessageView::parse(&bytes).unwrap();
+    (
+        message
+            .option(OptionNumber::URI_HOST)
+            .map(|o| o.value.to_vec()),
+        message
+            .option(OptionNumber::URI_PORT)
+            .map(|o| o.uint().unwrap()),
+    )
+}
+
+/// RFC 7252 section 6.4 steps 5 and 7: authority options name what the destination doesn't.
+#[test]
+fn request_options_omit_authority_that_repeats_the_destination() {
+    let local = Some("192.0.2.1:5683");
+    assert_eq!(request_authority("coap://192.0.2.1/x", local), (None, None));
+    assert_eq!(
+        request_authority("coap://[2001:db8::1]:5700/x", Some("[2001:db8::1]:5700")),
+        (None, None)
+    );
+    assert_eq!(
+        request_authority("coap://192.0.2.1/x", Some("[::ffff:192.0.2.1]:5683")),
+        (None, None)
+    );
+    assert_eq!(
+        request_authority("coap://192.0.2.1:5700/x", Some("192.0.2.1:5700")),
+        (None, None)
+    );
+    // A URI without a port means 5683, which is not the destination's default here.
+    assert_eq!(
+        request_authority("coap://192.0.2.1/x", Some("192.0.2.1:5700")),
+        (None, Some(5683))
+    );
+    assert_eq!(
+        request_authority("coap://192.0.2.1:5700/x", local),
+        (None, Some(5700))
+    );
+    assert_eq!(
+        request_authority("coap://192.0.2.9/x", local),
+        (Some(b"192.0.2.9".to_vec()), None)
+    );
+    assert_eq!(
+        request_authority("coap://Node.Example/x", local),
+        (Some(b"node.example".to_vec()), None)
+    );
+}
+
+#[test]
+fn request_options_name_the_origin_through_a_proxy() {
+    assert_eq!(
+        request_authority("coap://192.0.2.1/x", None),
+        (Some(b"192.0.2.1".to_vec()), Some(5683))
+    );
+}

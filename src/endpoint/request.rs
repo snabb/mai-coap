@@ -64,7 +64,12 @@ impl<'a, const DATAGRAM_BYTES: usize, const COMMANDS: usize> Client<'a, DATAGRAM
         let mut bytes = [0; DATAGRAM_BYTES];
         let mut b = MessageBuilder::new(&mut bytes, MessageType::Confirmable, method, 0, &[])?;
         if uri.contains("://") {
-            crate::uri::Uri::parse(uri)?.options_with_scratch(&mut b, &mut [0; DATAGRAM_BYTES])?;
+            let destination = (!self.proxy).then_some(self.target.remote);
+            crate::uri::Uri::parse(uri)?.request_options(
+                &mut b,
+                &mut [0; DATAGRAM_BYTES],
+                destination,
+            )?;
             if self.proxy {
                 b.option(OptionNumber::PROXY_SCHEME, b"coap")?;
             }

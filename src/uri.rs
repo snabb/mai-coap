@@ -75,6 +75,13 @@ impl<'a> Uri<'a> {
         scratch: &mut [u8],
     ) -> Result<(), Error> {
         self.authority_options(builder)?;
+        self.path_query_options(builder, scratch)
+    }
+    fn path_query_options(
+        self,
+        builder: &mut MessageBuilder<'_>,
+        scratch: &mut [u8],
+    ) -> Result<(), Error> {
         let n = normalize_path(self.path.as_bytes(), scratch)?;
         path_options(
             core::str::from_utf8(&scratch[..n]).map_err(|_| Error::Malformed)?,
@@ -82,15 +89,43 @@ impl<'a> Uri<'a> {
         )?;
         query_options(self.query, builder)
     }
+    /// Decomposes a URI for a request sent to `destination` (RFC 7252 section 6.4).
+    ///
+    /// Uri-Host and Uri-Port are omitted when they repeat the destination. `None` means
+    /// the next hop is a proxy, so both are always sent: a proxy can't otherwise tell a
+    /// default port from its own. `scratch` is as for [`Self::options_with_scratch`].
+    pub fn request_options(
+        self,
+        builder: &mut MessageBuilder<'_>,
+        scratch: &mut [u8],
+        destination: Option<core::net::SocketAddr>,
+    ) -> Result<(), Error> {
+        let same_host = destination.is_some_and(|d| {
+            self.host
+                .parse::<core::net::IpAddr>()
+                .is_ok_and(|host| host.to_canonical() == d.ip().to_canonical())
+        });
+        if !same_host {
+            self.host_option(builder)?;
+        }
+        if destination.is_none_or(|d| d.port() != self.port) {
+            builder.uint_option(OptionNumber::URI_PORT, self.port.into())?;
+        }
+        self.path_query_options(builder, scratch)
+    }
     /// Adds authority options before Observe or Uri-Path options.
     pub fn authority_options(self, builder: &mut MessageBuilder<'_>) -> Result<(), Error> {
+        self.host_option(builder)?;
+        if self.port != 5683 {
+            builder.uint_option(OptionNumber::URI_PORT, self.port.into())?;
+        }
+        Ok(())
+    }
+    fn host_option(self, builder: &mut MessageBuilder<'_>) -> Result<(), Error> {
         let mut host = [0; 255];
         let n = percent_decode(self.host.as_bytes(), &mut host)?;
         host[..n].make_ascii_lowercase();
         builder.option(OptionNumber::URI_HOST, &host[..n])?;
-        if self.port != 5683 {
-            builder.uint_option(OptionNumber::URI_PORT, self.port.into())?;
-        }
         Ok(())
     }
 }

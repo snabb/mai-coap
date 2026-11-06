@@ -530,6 +530,11 @@ Where requirement wording needed an RFC-based interpretation.
   its public API, so this doesn't guarantee every dependency-created copy is erased.
 - **OBS-7:** protected observation requests use outer FETCH; notifications use outer
   2.05 (RFC 8613 section 4.1.3.5).
+- **Request authority** (no requirement ID): `Client::request` decomposes absolute URIs per
+  [RFC 7252 section 6.4](https://www.rfc-editor.org/rfc/rfc7252.html#section-6.4) steps 5
+  and 7, omitting Uri-Host and Uri-Port that repeat the destination. Through a proxy both
+  are always sent, because the forward proxy reads an absent Uri-Port as 5683 rather than
+  its own port: receive metadata has no local port.
 - **Dot segments** (no requirement ID): Uri-Path and Location-Path values are never `.`
   or `..` ([RFC 7252 sections 5.10.1 and
   5.10.7](https://www.rfc-editor.org/rfc/rfc7252.html#section-5.10.1)). URI

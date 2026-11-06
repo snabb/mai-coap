@@ -82,8 +82,12 @@ impl<const DATAGRAM_BYTES: usize, const COMMANDS: usize> Client<'_, DATAGRAM_BYT
                 return Err(Error::Malformed);
             }
             if absolute {
-                crate::uri::Uri::parse(path)?
-                    .options_with_scratch(&mut b, &mut [0; DATAGRAM_BYTES])?;
+                let destination = (!proxy).then_some(self.target.remote);
+                crate::uri::Uri::parse(path)?.request_options(
+                    &mut b,
+                    &mut [0; DATAGRAM_BYTES],
+                    destination,
+                )?;
             } else {
                 crate::uri::resolved_path_query_options(path, &mut b)?;
             }
