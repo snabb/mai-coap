@@ -76,8 +76,17 @@ fn describe(request: Request<'_>) -> Vec<u8> {
     text
 }
 
-/// Serves test resources forever on a detached thread; the process exit ends it.
 fn spawn_server<P, F, G>(make: F, policy: G) -> SocketAddr
+where
+    P: Protection + 'static,
+    F: FnOnce() -> P + Send + 'static,
+    G: Policy + Send + Sync + 'static,
+{
+    spawn_server_at("127.0.0.1:0".parse().unwrap(), make, policy)
+}
+
+/// Serves test resources forever on a detached thread; the process exit ends it.
+fn spawn_server_at<P, F, G>(bind: SocketAddr, make: F, policy: G) -> SocketAddr
 where
     P: Protection + 'static,
     F: FnOnce() -> P + Send + 'static,
@@ -162,7 +171,7 @@ where
         router
             .representation("/large", &mut representation)
             .unwrap();
-        let mut socket = StdTransport::bind("127.0.0.1:0".parse().unwrap()).unwrap();
+        let mut socket = StdTransport::bind(bind).unwrap();
         sender.send(socket.local_addr().unwrap()).unwrap();
         let shared = DefaultShared::new();
         let mut endpoint = DefaultEndpoint::new(&shared, make()).unwrap();
@@ -562,52 +571,46 @@ fn observe_ends_on_interrupt_with_code_130() {
     assert!(!output.stdout.is_empty());
 }
 
-/// RFC 7641 section 3.6 seen from a scripted server: the token and options repeat with
-/// Observe=1, on both ways of ending the run.
-#[test]
-fn observe_deregisters_before_exiting() {
+/// Answers an observation until its deregistration arrives, as RFC 7641 section 3.6 describes:
+/// the token and options repeat with Observe=1. With `flood`, it also sends enough large
+/// notifications to fill a pipe. `registered` runs once, after the registration is answered.
+fn answer_until_deregistered(
+    socket: &std::net::UdpSocket,
+    flood: bool,
+    mut registered: impl FnMut(),
+) {
     use mai_coap::{
         codec::{MessageType, MessageView},
         endpoint::Response,
     };
-    for interrupt in [false, true] {
-        let socket = std::net::UdpSocket::bind("127.0.0.1:0").unwrap();
-        socket
-            .set_read_timeout(Some(Duration::from_secs(10)))
-            .unwrap();
-        let target = uri(socket.local_addr().unwrap(), "/x");
-        let arguments: &[&str] = if interrupt {
-            &["--observe", &target]
-        } else {
-            &["-s", "1", &target]
-        };
-        let child = binary()
-            .args(arguments)
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn()
-            .unwrap();
-        let mut token = None;
-        let mut deregistered = false;
-        let mut bytes = [0; 256];
-        let mut answer = [0; 256];
-        while !deregistered {
-            let (length, from) = socket.recv_from(&mut bytes).unwrap();
+    socket
+        .set_read_timeout(Some(Duration::from_millis(2)))
+        .unwrap();
+    let deadline = Instant::now() + Duration::from_secs(20);
+    let mut registration: Option<(Vec<u8>, SocketAddr)> = None;
+    let mut bytes = [0; 256];
+    let mut answer = [0; 1152];
+    let mut sequence = 1u64;
+    loop {
+        assert!(Instant::now() < deadline, "no deregistration arrived");
+        if let Ok((length, from)) = socket.recv_from(&mut bytes) {
             let request = MessageView::parse(&bytes[..length]).unwrap();
-            let observe = request
-                .option(OptionNumber::OBSERVE)
-                .unwrap()
-                .uint()
-                .unwrap();
-            let mut response = Response::<256>::new(Code::CONTENT);
+            let Some(observe) = request.option(OptionNumber::OBSERVE) else {
+                // The empty ACK of a confirmable notification, which this peer doesn't send.
+                continue;
+            };
+            let observe = observe.uint().unwrap();
+            let mut response = Response::<1152>::new(Code::CONTENT);
             if observe == 0 {
-                token = Some(request.token().to_vec());
-                response.uint_option(OptionNumber::OBSERVE, 1).unwrap();
+                registration = Some((request.token().to_vec(), from));
+                response
+                    .uint_option(OptionNumber::OBSERVE, sequence)
+                    .unwrap();
             } else {
                 assert_eq!(observe, 1);
-                assert_eq!(token.as_deref(), Some(request.token()));
+                let (token, _) = registration.as_ref().unwrap();
+                assert_eq!(token, request.token());
                 assert_eq!(request.option(OptionNumber::URI_PATH).unwrap().value, b"x");
-                deregistered = true;
             }
             let n = response
                 .encode(
@@ -618,20 +621,168 @@ fn observe_deregisters_before_exiting() {
                 )
                 .unwrap();
             socket.send_to(&answer[..n], from).unwrap();
-            if interrupt && observe == 0 {
-                std::thread::sleep(Duration::from_millis(300));
-                let pid = child.id().to_string();
-                assert!(
-                    Command::new("kill")
-                        .args(["-TERM", &pid])
-                        .status()
-                        .unwrap()
-                        .success()
-                );
+            if observe == 1 {
+                return;
             }
+            registered();
         }
+        if flood && let Some((token, from)) = &registration {
+            sequence += 1;
+            let mut notification = Response::<1152>::new(Code::CONTENT);
+            notification
+                .uint_option(OptionNumber::OBSERVE, sequence)
+                .unwrap();
+            notification.set_payload(&[b'x'; 1024]).unwrap();
+            let n = notification
+                .encode(
+                    &mut answer,
+                    MessageType::NonConfirmable,
+                    sequence as u16,
+                    token,
+                )
+                .unwrap();
+            socket.send_to(&answer[..n], from).unwrap();
+        }
+    }
+}
+
+fn observe_child(arguments: &[&str], stdout: Stdio) -> std::process::Child {
+    binary()
+        .args(arguments)
+        .stdout(stdout)
+        .stderr(Stdio::null())
+        .spawn()
+        .unwrap()
+}
+
+fn terminate(child: &std::process::Child) {
+    let pid = child.id().to_string();
+    assert!(
+        Command::new("kill")
+            .args(["-TERM", &pid])
+            .status()
+            .unwrap()
+            .success()
+    );
+}
+
+#[test]
+fn observe_deregisters_before_exiting() {
+    for interrupt in [false, true] {
+        let socket = std::net::UdpSocket::bind("127.0.0.1:0").unwrap();
+        let target = uri(socket.local_addr().unwrap(), "/x");
+        let arguments: &[&str] = if interrupt {
+            &["--observe", &target]
+        } else {
+            &["-s", "1", &target]
+        };
+        let child = observe_child(arguments, Stdio::null());
+        answer_until_deregistered(&socket, false, || {
+            if interrupt {
+                std::thread::sleep(Duration::from_millis(300));
+                terminate(&child);
+            }
+        });
         assert_code(&wait(child), if interrupt { 130 } else { 0 });
     }
+}
+
+/// A FIFO without a reader blocks in open, so the first write never returns.
+#[test]
+fn stalled_file_output_does_not_delay_stopping_or_deregistering() {
+    for interrupt in [false, true] {
+        let directory = Directory::new("stalled-file");
+        let fifo = directory.file("fifo");
+        assert!(
+            Command::new("mkfifo")
+                .arg(&fifo)
+                .status()
+                .unwrap()
+                .success()
+        );
+        let socket = std::net::UdpSocket::bind("127.0.0.1:0").unwrap();
+        let target = uri(socket.local_addr().unwrap(), "/x");
+        let fifo = fifo.to_str().unwrap();
+        let arguments: &[&str] = if interrupt {
+            &["--observe", "-o", fifo, &target]
+        } else {
+            &["-s", "1", "-o", fifo, &target]
+        };
+        let started = Instant::now();
+        let child = observe_child(arguments, Stdio::null());
+        answer_until_deregistered(&socket, false, || {
+            if interrupt {
+                std::thread::sleep(Duration::from_millis(300));
+                terminate(&child);
+            }
+        });
+        let output = wait(child);
+        assert_code(&output, if interrupt { 130 } else { 0 });
+        assert!(started.elapsed() < Duration::from_secs(15));
+    }
+}
+
+/// Nothing reads this pipe until the process has exited.
+#[test]
+fn full_stdout_pipe_does_not_delay_stopping_or_deregistering() {
+    let socket = std::net::UdpSocket::bind("127.0.0.1:0").unwrap();
+    let target = uri(socket.local_addr().unwrap(), "/x");
+    let started = Instant::now();
+    let child = observe_child(&["-s", "2", &target], Stdio::piped());
+    answer_until_deregistered(&socket, true, || {});
+    let output = wait(child);
+    assert_code(&output, 0);
+    assert!(started.elapsed() < Duration::from_secs(15));
+    // The pipe really did fill, or this test proves nothing.
+    assert!(output.stdout.len() >= 16 * 1024, "{}", output.stdout.len());
+}
+
+fn link_local_address() -> Option<(std::net::Ipv6Addr, String, u32)> {
+    nix::ifaddrs::getifaddrs().ok()?.find_map(|interface| {
+        let address = interface.address?.as_sockaddr_in6()?.ip();
+        let index = nix::net::if_::if_nametoindex(interface.interface_name.as_str()).ok()?;
+        address
+            .is_unicast_link_local()
+            .then_some((address, interface.interface_name, index))
+    })
+}
+
+/// Needs an interface with a link-local address. Unit tests cover the ordering without one.
+#[test]
+fn link_local_destinations_and_proxies_use_their_zone() {
+    let Some((address, name, index)) = link_local_address() else {
+        eprintln!("skipped: no interface has a link-local address");
+        return;
+    };
+    let scoped = |port| SocketAddr::V6(std::net::SocketAddrV6::new(address, port, 0, index));
+    let server = spawn_server_at(scoped(0), || Unsecured(rand::rng()), PUBLIC);
+    let (port, hello) = (server.port(), "/hello");
+
+    for zone in [name.as_str(), &index.to_string()] {
+        let target = format!("coap://[{address}%25{zone}]:{port}{hello}");
+        let output = run(&[&target]);
+        assert_code(&output, 0);
+        assert_eq!(output.stdout, b"world", "{zone}");
+    }
+    let target = format!("coap://[{address}%25{name}]:{port}/large");
+    let output = run(&[&target]);
+    assert_code(&output, 0);
+    assert_eq!(output.stdout, large());
+
+    let proxy = spawn_proxy_at(scoped(0), scoped(port));
+    let flag = format!("coap://[{address}%25{name}]:{}", proxy.port());
+    let origin = format!("coap://[{address}]:{port}{hello}");
+    let output = run(&["-P", &flag, &origin]);
+    assert_code(&output, 0);
+    assert_eq!(output.stdout, b"world");
+
+    let output = run(&[&format!("coap://[{address}]:{port}{hello}")]);
+    assert_code(&output, 3);
+    assert!(
+        stderr(&output).contains("needs a zone"),
+        "{}",
+        stderr(&output)
+    );
 }
 
 struct Allow(SocketAddr);
@@ -645,9 +796,13 @@ impl Routing for Allow {
 }
 
 fn spawn_proxy(origin: SocketAddr) -> SocketAddr {
+    spawn_proxy_at("127.0.0.1:0".parse().unwrap(), origin)
+}
+
+fn spawn_proxy_at(bind: SocketAddr, origin: SocketAddr) -> SocketAddr {
     let (sender, receiver) = mpsc::channel();
     std::thread::spawn(move || {
-        let mut socket = StdTransport::bind("127.0.0.1:0".parse().unwrap()).unwrap();
+        let mut socket = StdTransport::bind(bind).unwrap();
         sender.send(socket.local_addr().unwrap()).unwrap();
         let shared = DefaultShared::new();
         let local = |_: Request<'_>, _: &mut ResponseWriter<'_>| Err(Code::NOT_FOUND);

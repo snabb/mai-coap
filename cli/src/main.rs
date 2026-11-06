@@ -11,7 +11,7 @@ use args::Args;
 use clap::Parser;
 use exit::Failure;
 use mai_coap::{crypto::SoftwareCrypto, edhoc::endpoint::Edhoc, endpoint::Unsecured};
-use std::process::ExitCode;
+use std::{io::Write, process::ExitCode};
 
 /// Library logs on stderr for `-vv`. The library keeps secrets out of its records.
 struct StderrLogger;
@@ -20,7 +20,8 @@ impl log::Log for StderrLogger {
         true
     }
     fn log(&self, record: &log::Record<'_>) {
-        eprintln!("{}: {}", record.level(), record.args());
+        // A closed stderr must not panic the driver, which calls this.
+        let _ = writeln!(std::io::stderr(), "{}: {}", record.level(), record.args());
     }
     fn flush(&self) {}
 }
@@ -72,7 +73,7 @@ fn main() -> ExitCode {
         Ok(code) => ExitCode::from(code),
         Err(failure) => {
             if !args.quiet {
-                eprintln!("mai-coap: {}", failure.message);
+                let _ = writeln!(std::io::stderr(), "mai-coap: {}", failure.message);
             }
             ExitCode::from(failure.code)
         }

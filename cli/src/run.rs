@@ -21,7 +21,7 @@ use mai_coap::{
     time::StdClock,
     transport::linux::StdTransport,
 };
-use std::time::Duration;
+use std::{io::Write, pin::pin, time::Duration};
 
 /// How long to wait for the Observe=1 exchange before exiting anyway.
 const DEREGISTER_WAIT: Duration = Duration::from_secs(5);
@@ -38,18 +38,9 @@ type Handle<'a> = Client<'a, { mai_coap::DEFAULT_DATAGRAM }, { mai_coap::DEFAULT
 type Builder<'a> =
     RequestBuilder<'a, { mai_coap::DEFAULT_DATAGRAM }, { mai_coap::DEFAULT_OUTBOUND }>;
 
-fn status(args: &Args, line: &str) {
-    if !args.quiet {
-        eprintln!("{line}");
-    }
-}
-
-fn verbose(args: &Args, remote: std::net::SocketAddr, message: MessageView<'_>) {
-    if args.verbose > 0 {
-        for line in output::details(remote, message) {
-            eprintln!("{line}");
-        }
-    }
+fn diagnostic(line: &str) {
+    // Nothing can report a failed report, and it isn't worth a panic.
+    let _ = writeln!(std::io::stderr(), "{line}");
 }
 
 fn client<'a>(plan: &Plan<'_>, shared: &'a DefaultShared) -> Handle<'a> {
@@ -90,48 +81,57 @@ fn build<'a>(plan: &Plan<'_>, client: Handle<'a>) -> Result<Builder<'a>, Error> 
     Ok(request)
 }
 
-/// Writes off the driver's thread, so a stalled pipe can't stop retransmissions and ACKs.
-async fn write(output: Output, body: Vec<u8>) -> (Output, Result<(), Failure>) {
-    blocking::unblock(move || {
-        let mut output = output;
-        let result = output.write(&body);
-        (output, result)
-    })
-    .await
-}
-
-/// Reports a response and writes its payload. Returns the exit code it implies.
+/// Reports a response and writes its payload, returning the exit code it implies.
+///
+/// All of this runs off the driver's thread, including diagnostics: a stalled pipe must not
+/// stop retransmissions and ACKs. `note` is an extra status line.
 async fn deliver(
     plan: &Plan<'_>,
     output: Output,
     remote: std::net::SocketAddr,
     message: MessageView<'_>,
     body: Vec<u8>,
+    note: Option<&str>,
 ) -> (Output, Result<u8, Failure>) {
-    verbose(plan.args, remote, message);
+    let args = plan.args;
     let success = message.code().is_success();
-    let code = if success {
-        exit::SUCCESS
-    } else {
-        status(plan.args, &output::status_line(message.code()));
-        exit::ERROR_RESPONSE
-    };
+    let mut lines = Vec::new();
+    if args.verbose > 0 {
+        lines = output::details(remote, message);
+    }
+    if !args.quiet {
+        lines.extend(note.map(str::to_owned));
+        if !success {
+            lines.push(output::status_line(message.code()));
+        }
+    }
+    // A failure's diagnostic payload is in the reply; the sink holds no body.
     let body = if success {
         body
     } else {
-        // A diagnostic payload is in the reply; the sink holds no body.
         message.payload().to_vec()
     };
-    let (output, result) = write(output, body).await;
-    let result = match result {
-        // The response code stays the outcome even if its diagnostic can't be shown.
-        Err(failure) if !success => {
-            status(plan.args, &failure.message);
-            Ok(code)
+    let quiet = args.quiet;
+    blocking::unblock(move || {
+        let mut output = output;
+        for line in &lines {
+            diagnostic(line);
         }
-        other => other.map(|()| code),
-    };
-    (output, result)
+        let result = match output.write(&body) {
+            Ok(()) if success => Ok(exit::SUCCESS),
+            Ok(()) => Ok(exit::ERROR_RESPONSE),
+            // The response code stays the outcome even if its diagnostic can't be shown.
+            Err(failure) if !success => {
+                if !quiet {
+                    diagnostic(&failure.message);
+                }
+                Ok(exit::ERROR_RESPONSE)
+            }
+            Err(failure) => Err(failure),
+        };
+        (output, result)
+    })
+    .await
 }
 
 async fn single(plan: &Plan<'_>, shared: &DefaultShared) -> Result<u8, Failure> {
@@ -146,8 +146,15 @@ async fn single(plan: &Plan<'_>, shared: &DefaultShared) -> Result<u8, Failure> 
             .transfer(&plan.body, &mut sink)
             .await?;
         let message = transfer.reply.message()?;
-        let (returned, result) =
-            deliver(plan, output, transfer.reply.remote, message, sink.bytes).await;
+        let (returned, result) = deliver(
+            plan,
+            output,
+            transfer.reply.remote,
+            message,
+            sink.bytes,
+            None,
+        )
+        .await;
         output = returned;
         outcome = outcome.max(result?);
     }
@@ -155,7 +162,7 @@ async fn single(plan: &Plan<'_>, shared: &DefaultShared) -> Result<u8, Failure> 
 }
 
 enum Step<T> {
-    Notification(T),
+    Ready(T),
     Stop(u8),
 }
 
@@ -177,54 +184,74 @@ async fn observe(plan: &Plan<'_>, shared: &DefaultShared) -> Result<u8, Failure>
     let mut observation = request.observe()?;
     let duration = plan.args.subscribe.map(Duration::from_secs);
     let expiry = duration.map(|duration| std::time::Instant::now() + duration);
+    // One future for the whole run, also raced against writes: stopping and deregistering
+    // never wait for output, and a write abandoned here ends with the process.
+    let mut stop = pin!(race(
+        async {
+            let _ = signals.next().await;
+            exit::INTERRUPTED
+        },
+        async {
+            match expiry {
+                Some(expiry) => {
+                    Timer::at(expiry).await;
+                    exit::SUCCESS
+                }
+                None => future::pending().await,
+            }
+        },
+    ));
     let mut first = true;
     let outcome = loop {
         let mut sink = BodySink::new(plan.args.max_size);
         let step = race(
-            async { Step::Notification(observation.next_into(&mut sink).await) },
-            race(
-                async {
-                    let _ = signals.next().await;
-                    Step::Stop(exit::INTERRUPTED)
-                },
-                async {
-                    match expiry {
-                        Some(expiry) => {
-                            Timer::at(expiry).await;
-                            Step::Stop(exit::SUCCESS)
-                        }
-                        None => future::pending().await,
-                    }
-                },
-            ),
+            async { Step::Ready(observation.next_into(&mut sink).await) },
+            async { Step::Stop(stop.as_mut().await) },
         )
         .await;
         let result = match step {
             Step::Stop(code) => break Ok(code),
-            Step::Notification(None) => break Ok(exit::SUCCESS),
+            Step::Ready(None) => break Ok(exit::SUCCESS),
             // OBS-6: an inconsistent notification is discarded; the next one is complete.
-            Step::Notification(Some(Err(Error::RepresentationChanged))) => continue,
-            Step::Notification(Some(result)) => result,
+            Step::Ready(Some(Err(Error::RepresentationChanged))) => continue,
+            Step::Ready(Some(result)) => result,
         };
         let transfer = match result {
             Ok(transfer) => transfer,
             Err(error) => break Err(Failure::from(error)),
         };
         let message = transfer.reply.message()?;
-        if first
+        let refused = first
             && message.code().is_success()
             && message.option(OptionNumber::OBSERVE).is_none()
-            && message.option(OptionNumber::BLOCK2).is_none()
-        {
-            status(plan.args, "the server did not accept the observation");
-        }
+            && message.option(OptionNumber::BLOCK2).is_none();
         first = false;
-        let (returned, delivered) =
-            deliver(plan, output, transfer.reply.remote, message, sink.bytes).await;
-        output = returned;
-        match delivered {
-            Ok(exit::SUCCESS) => {}
-            other => break other,
+        let delivery = race(
+            async {
+                Step::Ready(
+                    deliver(
+                        plan,
+                        output,
+                        transfer.reply.remote,
+                        message,
+                        sink.bytes,
+                        refused.then_some("the server did not accept the observation"),
+                    )
+                    .await,
+                )
+            },
+            async { Step::Stop(stop.as_mut().await) },
+        )
+        .await;
+        match delivery {
+            Step::Stop(code) => break Ok(code),
+            Step::Ready((returned, delivered)) => {
+                output = returned;
+                match delivered {
+                    Ok(exit::SUCCESS) => {}
+                    other => break other,
+                }
+            }
         }
     };
     let deregistered = race(
@@ -238,7 +265,7 @@ async fn observe(plan: &Plan<'_>, shared: &DefaultShared) -> Result<u8, Failure>
     if let Err(error) = deregistered
         && plan.args.verbose > 0
     {
-        eprintln!("deregistering: {error}");
+        diagnostic(&format!("deregistering: {error}"));
     }
     outcome
 }

@@ -80,7 +80,7 @@ ends the observation. Each notification is written as it arrives, and a newline 
 on a terminal or with `-w`. A slow reader sees the latest value, not every value.
 
 On expiry, SIGINT or SIGTERM, the client sends the deregistration and waits up to five
-seconds for it. If a server doesn't accept the observation, its normal response is written
+seconds for it, even if a reader has stopped reading its output. If a server doesn't accept the observation, its normal response is written
 with a note on stderr, and the client exits.
 
 ## Output and exit codes
@@ -99,7 +99,7 @@ with a note on stderr, and the client exits.
 - Binary data isn't written to a terminal unless you pass `-o -` or `-o FILE`. Text with
   control characters counts as binary, so a server can't send terminal escape sequences.
 - `-v` shows the response code and options on stderr, with tokens shortened. `-vv` adds
-  library logs.
+  library logs, which the protocol driver writes directly, so keep stderr drained with it.
 
 ## Timeouts
 

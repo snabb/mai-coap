@@ -68,7 +68,12 @@ fn family_allowed(address: &IpAddr, args: &Args) -> bool {
 }
 
 /// Picks the first resolved address with a route, without sending anything.
-fn resolve(host: &str, port: u16, args: &Args) -> Result<SocketAddr, Failure> {
+fn resolve(
+    host: &str,
+    port: u16,
+    interface: Option<u32>,
+    args: &Args,
+) -> Result<SocketAddr, Failure> {
     let unresolved = |e: &dyn std::fmt::Display| Failure::network(format!("{host}: {e}"));
     let addresses: Vec<SocketAddr> = if let Ok(ip) = host.parse::<IpAddr>() {
         vec![SocketAddr::new(ip, port)]
@@ -83,23 +88,41 @@ fn resolve(host: &str, port: u16, args: &Args) -> Result<SocketAddr, Failure> {
             .map_err(|e| unresolved(&e))?
             .collect()
     };
-    let mut allowed = addresses
-        .iter()
+    let allowed: Vec<SocketAddr> = addresses
+        .into_iter()
         .filter(|a| family_allowed(&a.ip(), args))
-        .peekable();
-    if allowed.peek().is_none() {
+        .collect();
+    if allowed.is_empty() {
         return Err(unresolved(&"no address of the requested family"));
     }
+    first_routable(&allowed, interface, route_exists).map_err(|e| unresolved(&e))
+}
+
+/// Applies the zone before probing: the kernel can't route a link-local address without one.
+fn first_routable(
+    addresses: &[SocketAddr],
+    interface: Option<u32>,
+    mut probe: impl FnMut(SocketAddr) -> std::io::Result<()>,
+) -> Result<SocketAddr, String> {
     let mut last = None;
-    for address in allowed {
-        match route_exists(*address) {
-            Ok(()) => return Ok(*address),
-            Err(error) => last = Some(error),
+    for address in addresses {
+        let scoped = with_scope(*address, interface);
+        match probe(scoped) {
+            Ok(()) => return Ok(scoped),
+            Err(error) => last = Some((scoped, error)),
         }
     }
-    Err(unresolved(
-        &last.map_or_else(|| "no address".to_owned(), |e| e.to_string()),
-    ))
+    let Some((address, error)) = last else {
+        return Err("no address".to_owned());
+    };
+    let unscoped_link_local = interface.is_none()
+        && matches!(address, SocketAddr::V6(v6) if v6.ip().is_unicast_link_local());
+    if unscoped_link_local {
+        return Err(format!(
+            "{error}; a link-local address needs a zone, such as [fe80::1%25eth0]"
+        ));
+    }
+    Err(error.to_string())
 }
 
 fn route_exists(address: SocketAddr) -> std::io::Result<()> {
@@ -133,20 +156,23 @@ pub fn route(args: &Args) -> Result<Route, Failure> {
     let (uri, zone) = split_zone(input)?;
     let parsed = Uri::parse(&uri).map_err(|_| invalid_uri(input))?;
 
-    let (next_hop, zone) = if let Some(proxy) = &args.proxy {
+    // A zone belongs to the next hop's address; one on a proxied origin has no meaning here.
+    let (remote, interface) = if let Some(proxy) = &args.proxy {
         let (proxy_uri, proxy_zone) = split_zone(proxy)?;
         let parsed = Uri::parse(&proxy_uri).map_err(|_| invalid_uri(proxy))?;
-        (resolve(parsed.host, parsed.port, args)?, proxy_zone)
+        let interface = proxy_zone.map(interface_index).transpose()?;
+        let remote = resolve(parsed.host, parsed.port, interface, args)?;
+        (remote, interface)
     } else {
-        (resolve(parsed.host, parsed.port, args)?, zone)
+        let interface = zone.map(interface_index).transpose()?;
+        let remote = resolve(parsed.host, parsed.port, interface, args)?;
+        (remote, interface)
     };
-    if next_hop.ip().is_multicast() {
+    if remote.ip().is_multicast() {
         return Err(Failure::local(
             "multicast destinations are not supported yet",
         ));
     }
-    let interface = zone.map(interface_index).transpose()?;
-    let remote = with_scope(next_hop, interface);
 
     let mut target = Target::new(remote);
     target.interface = interface;
@@ -231,6 +257,50 @@ mod tests {
         assert_eq!(v6.scope_id(), 7);
         assert_eq!(route.uri, "coap://[::1]/x");
         assert!(interface_index("no-such-interface-exists").is_err());
+    }
+
+    #[test]
+    fn the_zone_is_applied_before_the_route_probe() {
+        let address: SocketAddr = "[fe80::1]:5683".parse().unwrap();
+        let mut probed = Vec::new();
+        let chosen = first_routable(&[address], Some(7), |candidate| {
+            probed.push(candidate);
+            Ok(())
+        })
+        .unwrap();
+        let scope = |address: SocketAddr| match address {
+            SocketAddr::V6(v6) => v6.scope_id(),
+            SocketAddr::V4(_) => panic!("expected IPv6"),
+        };
+        assert_eq!(probed.iter().copied().map(scope).collect::<Vec<_>>(), [7]);
+        assert_eq!(scope(chosen), 7);
+    }
+
+    #[test]
+    fn the_next_address_is_tried_and_unscoped_link_local_failures_explain_the_zone() {
+        let invalid = || std::io::Error::from(std::io::ErrorKind::InvalidInput);
+        let addresses: Vec<SocketAddr> = vec![
+            "[2001:db8::1]:5683".parse().unwrap(),
+            "192.0.2.1:5683".parse().unwrap(),
+        ];
+        let mut failures = 0;
+        let chosen = first_routable(&addresses, None, |_| {
+            failures += 1;
+            if failures == 1 {
+                Err(invalid())
+            } else {
+                Ok(())
+            }
+        });
+        assert_eq!(chosen, Ok(addresses[1]));
+
+        let link_local: SocketAddr = "[fe80::1]:5683".parse().unwrap();
+        let error = first_routable(&[link_local], None, |_| Err(invalid())).unwrap_err();
+        assert!(error.contains("needs a zone"), "{error}");
+        let error = first_routable(&[link_local], Some(7), |_| Err(invalid())).unwrap_err();
+        assert!(!error.contains("needs a zone"), "{error}");
+        let error = first_routable(&addresses[..1], None, |_| Err(invalid())).unwrap_err();
+        assert!(!error.contains("needs a zone"), "{error}");
     }
 
     #[test]
