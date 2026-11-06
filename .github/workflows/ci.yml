@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Require prerequisite checks
@@ -72,7 +72,7 @@ jobs:
           python3 tools/test-storage-layout.py
       - name: Cache pinned workflow linter
         id: actionlint-cache
-        uses: actions/cache@v6.1.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.local/bin/actionlint
           key: actionlint-1.7.12-${{ runner.os }}-${{ runner.arch }}
@@ -152,7 +152,7 @@ jobs:
             || '["thumbv6m-none-eabi","thumbv8m.main-none-eabihf"]'
           ) }}
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Install stable Rust and target
@@ -187,7 +187,7 @@ jobs:
         run: python3 tools/target-runtime.py --target '${{ matrix.target }}' --xarxa-check --output "$RESOURCE_REPORT_DIR"
       - name: Upload Cortex-M stack measurements
         if: ${{ !cancelled() && (matrix.target == 'thumbv7em-none-eabihf' || matrix.target == 'thumbv8m.main-none-eabihf') }}
-        uses: actions/upload-artifact@v7.0.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: stack-${{ matrix.target }}
           path: |
@@ -225,7 +225,7 @@ jobs:
         run: python3 tools/resource-summary.py --reports "$RESOURCE_REPORT_DIR" --target '${{ matrix.target }}' --fetch-baseline >> "$GITHUB_STEP_SUMMARY"
       - name: Upload resource metrics for future comparisons
         if: ${{ !cancelled() && (matrix.target == 'thumbv7em-none-eabihf' || matrix.target == 'thumbv8m.main-none-eabihf') }}
-        uses: actions/upload-artifact@v7.0.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: resource-metrics-${{ matrix.target }}
           path: ${{ env.RESOURCE_REPORT_DIR }}/*.json
@@ -233,7 +233,7 @@ jobs:
           retention-days: 90
       - name: Upload Cortex-M4 ELF, section and symbol reports
         if: matrix.target == 'thumbv7em-none-eabihf'
-        uses: actions/upload-artifact@v7.0.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cortex-m4-sizes
           path: ${{ env.RESOURCE_REPORT_DIR }}
@@ -251,7 +251,7 @@ jobs:
       RUSTUP_TOOLCHAIN: nightly
       FUZZ_SECONDS: '30'
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Install nightly instrumentation toolchain
@@ -265,7 +265,7 @@ jobs:
         run: python3 tools/fuzz-smoke.py --seconds "$FUZZ_SECONDS"
       - name: Upload failing fuzz inputs
         if: failure()
-        uses: actions/upload-artifact@v7.0.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: fuzz-failures
           path: fuzz/artifacts
@@ -281,7 +281,7 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Install stable Rust
