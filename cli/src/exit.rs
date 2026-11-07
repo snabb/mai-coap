@@ -1,5 +1,9 @@
 //! Process exit codes and failures that map onto them.
 use mai_coap::Error;
+use std::{io::Write, sync::mpsc, thread, time::Duration};
+
+/// Normally the write finishes at once; this only bounds a stalled stderr.
+const REPORT_WAIT: Duration = Duration::from_secs(1);
 
 pub const SUCCESS: u8 = 0;
 pub const ERROR_RESPONSE: u8 = 1;
@@ -55,6 +59,17 @@ impl From<std::io::Error> for Failure {
     fn from(error: std::io::Error) -> Self {
         Self::local(error.to_string())
     }
+}
+
+/// Writes a message on the way out. A reader that stopped reading must not keep the process
+/// alive, so the write is abandoned after a while and ends with the process.
+pub fn report(message: String) {
+    let (written, finished) = mpsc::channel::<()>();
+    thread::spawn(move || {
+        let _written = written;
+        let _ = writeln!(std::io::stderr(), "{message}");
+    });
+    let _ = finished.recv_timeout(REPORT_WAIT);
 }
 
 #[cfg(test)]

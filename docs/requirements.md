@@ -1088,7 +1088,8 @@ is a Linux host tool with `std` dependencies, and the library never depends on i
 - **CLI-7** A response body has an explicit size limit, and only a complete, consistent body
   is written (BLK-3).
 - **CLI-8** Ending an observation sends the deregistration and waits a bounded time for it,
-  on a duration ending and on SIGINT or SIGTERM (OBS-8). Stalled output MUST NOT delay this.
+  on a duration ending and on SIGINT or SIGTERM (OBS-8). Stalled output MUST NOT delay this
+  or the exit after it, apart from `-vv` library logs, which the driver writes directly.
 - **CLI-9** A FETCH MUST have a Content-Format ([RFC 8132 section
   2.3.1](https://www.rfc-editor.org/rfc/rfc8132.html#section-2.3.1)).
 

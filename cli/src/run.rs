@@ -265,7 +265,7 @@ async fn observe(plan: &Plan<'_>, shared: &DefaultShared) -> Result<u8, Failure>
     if let Err(error) = deregistered
         && plan.args.verbose > 0
     {
-        diagnostic(&format!("deregistering: {error}"));
+        exit::report(format!("deregistering: {error}"));
     }
     outcome
 }

@@ -73,7 +73,7 @@ fn main() -> ExitCode {
         Ok(code) => ExitCode::from(code),
         Err(failure) => {
             if !args.quiet {
-                let _ = writeln!(std::io::stderr(), "mai-coap: {}", failure.message);
+                exit::report(format!("mai-coap: {}", failure.message));
             }
             ExitCode::from(failure.code)
         }

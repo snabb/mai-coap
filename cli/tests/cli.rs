@@ -229,7 +229,11 @@ fn run_with_stdin(arguments: &[&str], input: &[u8]) -> Output {
 fn wait(mut child: std::process::Child) -> Output {
     let deadline = Instant::now() + Duration::from_secs(60);
     while child.try_wait().unwrap().is_none() {
-        assert!(Instant::now() < deadline, "the CLI did not exit");
+        if Instant::now() >= deadline {
+            let _ = child.kill();
+            let _ = child.wait();
+            panic!("the CLI did not exit");
+        }
         std::thread::sleep(Duration::from_millis(10));
     }
     child.wait_with_output().unwrap()
@@ -573,10 +577,12 @@ fn observe_ends_on_interrupt_with_code_130() {
 
 /// Answers an observation until its deregistration arrives, as RFC 7641 section 3.6 describes:
 /// the token and options repeat with Observe=1. With `flood`, it also sends enough large
-/// notifications to fill a pipe. `registered` runs once, after the registration is answered.
+/// notifications to fill a pipe. Without `acknowledge`, the deregistration goes unanswered.
+/// `registered` runs once, after the registration is answered.
 fn answer_until_deregistered(
     socket: &std::net::UdpSocket,
     flood: bool,
+    acknowledge: bool,
     mut registered: impl FnMut(),
 ) {
     use mai_coap::{
@@ -600,6 +606,9 @@ fn answer_until_deregistered(
                 continue;
             };
             let observe = observe.uint().unwrap();
+            if observe == 1 && !acknowledge {
+                return;
+            }
             let mut response = Response::<1152>::new(Code::CONTENT);
             if observe == 0 {
                 registration = Some((request.token().to_vec(), from));
@@ -677,7 +686,7 @@ fn observe_deregisters_before_exiting() {
             &["-s", "1", &target]
         };
         let child = observe_child(arguments, Stdio::null());
-        answer_until_deregistered(&socket, false, || {
+        answer_until_deregistered(&socket, false, true, || {
             if interrupt {
                 std::thread::sleep(Duration::from_millis(300));
                 terminate(&child);
@@ -710,7 +719,7 @@ fn stalled_file_output_does_not_delay_stopping_or_deregistering() {
         };
         let started = Instant::now();
         let child = observe_child(arguments, Stdio::null());
-        answer_until_deregistered(&socket, false, || {
+        answer_until_deregistered(&socket, false, true, || {
             if interrupt {
                 std::thread::sleep(Duration::from_millis(300));
                 terminate(&child);
@@ -729,12 +738,55 @@ fn full_stdout_pipe_does_not_delay_stopping_or_deregistering() {
     let target = uri(socket.local_addr().unwrap(), "/x");
     let started = Instant::now();
     let child = observe_child(&["-s", "2", &target], Stdio::piped());
-    answer_until_deregistered(&socket, true, || {});
+    answer_until_deregistered(&socket, true, true, || {});
     let output = wait(child);
     assert_code(&output, 0);
     assert!(started.elapsed() < Duration::from_secs(15));
     // The pipe really did fill, or this test proves nothing.
     assert!(output.stdout.len() >= 16 * 1024, "{}", output.stdout.len());
+}
+
+/// A pipe that stays full while the returned reader is held, as a stopped reader leaves it.
+/// Dropping the reader ends the filling thread.
+fn full_pipe() -> (std::io::PipeReader, std::io::PipeWriter) {
+    let (reader, writer) = std::io::pipe().unwrap();
+    let mut filler = writer.try_clone().unwrap();
+    std::thread::spawn(move || while filler.write_all(&[0; 4096]).is_ok() {});
+    std::thread::sleep(Duration::from_millis(200));
+    (reader, writer)
+}
+
+#[test]
+fn stalled_stderr_does_not_delay_exit_after_a_failed_deregistration() {
+    let socket = std::net::UdpSocket::bind("127.0.0.1:0").unwrap();
+    let target = uri(socket.local_addr().unwrap(), "/x");
+    let (_reader, writer) = full_pipe();
+    let started = Instant::now();
+    let child = binary()
+        .args(["-v", "-s", "1", &target])
+        .stdout(Stdio::null())
+        .stderr(writer)
+        .spawn()
+        .unwrap();
+    answer_until_deregistered(&socket, false, false, || {});
+    assert_code(&wait(child), 0);
+    assert!(started.elapsed() < Duration::from_secs(15));
+}
+
+#[test]
+fn stalled_stderr_does_not_delay_exit_after_a_failure() {
+    let socket = std::net::UdpSocket::bind("127.0.0.1:0").unwrap();
+    let target = uri(socket.local_addr().unwrap(), "/x");
+    let (_reader, writer) = full_pipe();
+    let started = Instant::now();
+    let child = binary()
+        .args(["-B", "1", &target])
+        .stdout(Stdio::null())
+        .stderr(writer)
+        .spawn()
+        .unwrap();
+    assert_code(&wait(child), 3);
+    assert!(started.elapsed() < Duration::from_secs(15));
 }
 
 fn link_local_address() -> Option<(std::net::Ipv6Addr, String, u32)> {
