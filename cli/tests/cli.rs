@@ -891,7 +891,7 @@ fn generate(directory: &Directory, name: &str) -> (PathBuf, PathBuf) {
     assert_code(&output, 0);
     (
         directory.file(&format!("{name}.ccs")),
-        directory.file(&format!("{name}.key")),
+        directory.file(&format!("{name}.cosekey")),
     )
 }
 
@@ -905,7 +905,7 @@ fn secured_server(own: (&Path, &Path), peer: &Path) -> SocketAddr {
         move || {
             let mut crypto = SoftwareCrypto::new(rand::rng());
             let identity =
-                Identity::new(&own_ccs, own_key.try_into().unwrap(), &mut crypto).unwrap();
+                Identity::new(&own_ccs, own_key[8..].try_into().unwrap(), &mut crypto).unwrap();
             let mut protection = Edhoc::<_>::new(crypto, identity).unwrap();
             protection
                 .trust(TrustedPeer::new(PeerId(1), &peer_ccs).unwrap())
@@ -1044,9 +1044,9 @@ fn generate_identity_refuses_to_overwrite_and_accepts_a_kid() {
     let name = name.to_str().unwrap();
     let output = run(&["--generate-identity", name, "--kid", "0a0b"]);
     assert_code(&output, 0);
-    let key = fs::read(directory.file("own.key")).unwrap();
+    let key = fs::read(directory.file("own.cosekey")).unwrap();
     assert_eq!(
-        fs::metadata(directory.file("own.key"))
+        fs::metadata(directory.file("own.cosekey"))
             .unwrap()
             .permissions()
             .mode()
@@ -1057,5 +1057,5 @@ fn generate_identity_refuses_to_overwrite_and_accepts_a_kid() {
     assert!(ccs.windows(2).any(|w| w == [0x0a, 0x0b]));
     let output = run(&["--generate-identity", name]);
     assert_code(&output, 2);
-    assert_eq!(fs::read(directory.file("own.key")).unwrap(), key);
+    assert_eq!(fs::read(directory.file("own.cosekey")).unwrap(), key);
 }

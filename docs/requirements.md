@@ -1074,8 +1074,9 @@ is a Linux host tool with `std` dependencies, and the library never depends on i
 - **CLI-3** Security: EDHOC method 3, cipher suite 2, with the credentials given on the
   command line and one trusted server. A hostname never selects a credential. With
   credentials given, a request MUST NOT fall back to an unprotected exchange. The responder
-  role is disabled. A private key comes only from a file, and one accessible by other users
-  is refused.
+  role is disabled. A private key comes only from a COSE_Key file
+  ([RFC 9052 section 7](https://www.rfc-editor.org/rfc/rfc9052.html#section-7)), and one
+  accessible by other users is refused.
 - **CLI-4** URIs MUST have a scheme. A scheme without a transport here (`coaps`, `coap+tcp`,
   `coaps+tcp`, `coap+ws`, `coaps+ws`) is an error that names the missing transport, and
   never falls back to `coap`.

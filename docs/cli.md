@@ -56,14 +56,16 @@ and give its `.ccs` file to the server:
 mai-coap --generate-identity client
 ```
 
-This writes `client.ccs` and `client.key`, and never replaces existing files. Get the
+This writes `client.ccs` and `client.cosekey`, and never replaces existing files. Get the
 server's `.ccs` file, then pass all three:
 
 ```sh
-mai-coap --identity client.ccs --key client.key --peer server.ccs coap://node.example/lamp
+mai-coap --identity client.ccs --key client.cosekey --peer server.ccs coap://node.example/lamp
 ```
 
-- `--key` is a file of 32 raw bytes, and one that others can read is refused.
+- `--key` is a COSE_Key file in the form `aiocoap-keygen` writes, so keys work in both
+  tools. One that others can read is refused. Other encodings of a COSE_Key, such as with
+  extra entries, aren't recognized.
 - The server must match `--peer`. The hostname in the URI plays no part in that decision.
 - A request never falls back to no protection. An unprotected answer exits with code 4.
 - `--sequential-edhoc` runs the handshake before the first request instead of combining

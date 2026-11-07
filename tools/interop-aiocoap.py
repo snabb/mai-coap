@@ -23,6 +23,7 @@ import aiocoap
 import aiocoap.credentials
 import cbor2
 from aiocoap import resource
+from aiocoap.edhoc import CoseKeyForEdhoc
 from aiocoap.oscore_sitewrapper import OscoreSiteWrapper
 from aiocoap.proxy.client import ProxyForwarder
 
@@ -100,8 +101,8 @@ def identity_files(directory, role, profile):
     return ccs_path, private_path, key_path
 
 
-def edhoc_credentials(origin, directory, role, server=False, combined=True):
-    other = "r" if role == "i" else "i"
+def edhoc_credentials(origin, directory, role, server=False, combined=True, other=None):
+    other = other or ("r" if role == "i" else "i")
     own = {14: cbor2.loads((directory / f"{role}.ccs").read_bytes())}
     peer = {14: cbor2.loads((directory / f"{other}.ccs").read_bytes())}
     own_settings = {
@@ -346,7 +347,7 @@ async def command_line_client(directory, combined):
         "--identity",
         str(directory / "i.ccs"),
         "--key",
-        str(directory / "i.raw"),
+        str(directory / "i.cosekey"),
         "--peer",
         str(directory / "r.ccs"),
     ]
@@ -376,6 +377,52 @@ async def command_line_client(directory, combined):
         await asyncio.gather(ticker, return_exceptions=True)
         await context.shutdown()
     print(f"mai-coap CLI -> aiocoap server: combined={combined}: PASS", flush=True)
+
+
+async def command_line_key_files(directory):
+    """Each tool loads the other's generated key in a real EDHOC exchange."""
+    keygen = pathlib.Path(sys.executable).parent / "aiocoap-keygen"
+    child = await asyncio.create_subprocess_exec(
+        keygen,
+        "generate",
+        directory / "a.cosekey",
+        "--kid",
+        "0c",
+        stdout=asyncio.subprocess.DEVNULL,
+    )
+    assert await asyncio.wait_for(child.wait(), 30) == 0
+    key = CoseKeyForEdhoc.from_file(directory / "a.cosekey")
+    ccs = key.as_ccs(kid=b"\x0c", subject=None)[14]
+    (directory / "a.ccs").write_bytes(cbor2.dumps(ccs, canonical=True))
+    code, stdout, stderr = await run_cli(["--generate-identity", str(directory / "g")])
+    assert code == 0, (code, stdout, stderr)
+    port = free_port()
+    origin = f"coap://127.0.0.1:{port}"
+    site = resource.Site()
+    site.add_resource(["hello"], Echo())
+    credentials = edhoc_credentials(origin, directory, "g", server=True, other="a")
+    context = await aiocoap.Context.create_server_context(
+        OscoreSiteWrapper(site, credentials),
+        bind=("127.0.0.1", port),
+        server_credentials=credentials,
+        transports=["oscore", "udp6"],
+    )
+    try:
+        code, stdout, stderr = await run_cli(
+            [
+                "--identity",
+                str(directory / "a.ccs"),
+                "--key",
+                str(directory / "a.cosekey"),
+                "--peer",
+                str(directory / "g.ccs"),
+                f"{origin}/hello",
+            ]
+        )
+        assert (code, stdout) == (0, b"hello secured"), (code, stdout, stderr)
+    finally:
+        await context.shutdown()
+    print("aiocoap-keygen key in the CLI, CLI key in aiocoap: PASS", flush=True)
 
 
 async def independent_proxy(directory, combined):
@@ -576,6 +623,7 @@ async def main(profile, xarxa=None, command_line=False):
         if command_line:
             for combined in [True, False]:
                 await command_line_client(directory, combined)
+            await command_line_key_files(directory)
             return
         if xarxa:
             for combined in [True, False]:

@@ -113,7 +113,7 @@ pub struct Args {
     /// Own EDHOC credential (CCS file)
     #[arg(long, value_name = "FILE", requires = "key", requires = "peer")]
     pub identity: Option<PathBuf>,
-    /// Own private key (file with 32 raw bytes, not readable by others)
+    /// Own private key (COSE_Key file as from aiocoap-keygen, not readable by others)
     #[arg(long, value_name = "FILE", requires = "identity", requires = "peer")]
     pub key: Option<PathBuf>,
     /// Trusted credential of the server (CCS file)
@@ -123,7 +123,7 @@ pub struct Args {
     #[arg(long, requires = "identity")]
     pub sequential_edhoc: bool,
 
-    /// Write a new credential to NAME.ccs and private key to NAME.key, then exit
+    /// Write a new credential to NAME.ccs and private key to NAME.cosekey, then exit
     #[arg(long, value_name = "NAME", conflicts_with = "uri")]
     pub generate_identity: Option<PathBuf>,
     /// Key identifier for --generate-identity in hexadecimal; default is random

@@ -574,7 +574,9 @@ Where requirement wording needed an RFC-based interpretation.
   this tool has no parser for that. A file or stdin is sent as given.
 - **CLI-3:** credentials are explicit flags rather than aiocoap's credential files, which
   select credentials by URI pattern and would contradict "a hostname never selects a
-  credential".
+  credential". A private key file must be exactly the COSE_Key `{1: 2, -1: 1, -4: d}` in
+  that order, as aiocoap 0.4.17's `aiocoap-keygen` writes it. Other valid COSE_Key
+  encodings of the same key, such as with `kid`, `x` or `y`, are refused rather than parsed.
 - **Dot segments** (no requirement ID): Uri-Path and Location-Path values are never `.`
   or `..` ([RFC 7252 sections 5.10.1 and
   5.10.7](https://www.rfc-editor.org/rfc/rfc7252.html#section-5.10.1)). URI
