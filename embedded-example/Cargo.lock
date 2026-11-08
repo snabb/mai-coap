@@ -61,10 +61,10 @@ dependencies = [
 [[package]]
 name = "embassy-net"
 version = "0.9.1"
-source = "git+https://github.com/embassy-rs/embassy?rev=cf9beb7173159ce1b60dadb9be11583c20c7949a#cf9beb7173159ce1b60dadb9be11583c20c7949a"
+source = "git+https://github.com/embassy-rs/embassy?rev=8a940dab0d56a910277b816987e45315ca7979aa#8a940dab0d56a910277b816987e45315ca7979aa"
 dependencies = [
  "document-features",
- "embassy-sync 0.8.0 (git+https://github.com/embassy-rs/embassy?rev=cf9beb7173159ce1b60dadb9be11583c20c7949a)",
+ "embassy-sync 0.8.0 (git+https://github.com/embassy-rs/embassy?rev=8a940dab0d56a910277b816987e45315ca7979aa)",
  "embassy-time",
  "embedded-io-async",
  "heapless",
@@ -95,7 +95,7 @@ dependencies = [
 [[package]]
 name = "embassy-sync"
 version = "0.8.0"
-source = "git+https://github.com/embassy-rs/embassy?rev=cf9beb7173159ce1b60dadb9be11583c20c7949a#cf9beb7173159ce1b60dadb9be11583c20c7949a"
+source = "git+https://github.com/embassy-rs/embassy?rev=8a940dab0d56a910277b816987e45315ca7979aa#8a940dab0d56a910277b816987e45315ca7979aa"
 dependencies = [
  "critical-section",
  "embedded-io-async",
@@ -231,7 +231,7 @@ version = "0.1.0"
 dependencies = [
  "critical-section",
  "embassy-net 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "embassy-net 0.9.1 (git+https://github.com/embassy-rs/embassy?rev=cf9beb7173159ce1b60dadb9be11583c20c7949a)",
+ "embassy-net 0.9.1 (git+https://github.com/embassy-rs/embassy?rev=8a940dab0d56a910277b816987e45315ca7979aa)",
  "embassy-time",
  "heapless",
  "rand_core",
@@ -244,7 +244,7 @@ name = "mai-coap-embassy-example"
 version = "0.0.0"
 dependencies = [
  "embassy-net 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "embassy-net 0.9.1 (git+https://github.com/embassy-rs/embassy?rev=cf9beb7173159ce1b60dadb9be11583c20c7949a)",
+ "embassy-net 0.9.1 (git+https://github.com/embassy-rs/embassy?rev=8a940dab0d56a910277b816987e45315ca7979aa)",
  "mai-coap",
  "rand_core",
  "xarxa",

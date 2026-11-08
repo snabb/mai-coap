@@ -79,7 +79,7 @@ revisions are:
 | Dependency | Revision |
 |---|---|
 | xarxa, xarxa-driver | `8f6f33b131deb9ff3290e0e01079537e1ed7b2ad` |
-| Embassy | `cf9beb7173159ce1b60dadb9be11583c20c7949a` |
+| Embassy | `8a940dab0d56a910277b816987e45315ca7979aa` |
 
 - Select the medium and bind each socket to one known interface, supplying its interface
   ID. Wildcard sockets spanning interfaces are not supported.
