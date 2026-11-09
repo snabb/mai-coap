@@ -247,7 +247,7 @@ def reported_profiles(runtime):
 
 
 def _profile_report(
-    layout, runtime, profile_name, capacities, multicast, shared_counters
+    layout, runtime, profile_name, capacities, multicast, shared_counters, observe
 ):
     datagram = 1152
     outbound = capacities["OUTBOUND"]
@@ -322,7 +322,11 @@ def _profile_report(
         "active",
         "cancelled",
         "waker",
-    } | ({"replies"} if multicast else set())
+    }
+    if multicast:
+        slot_members.add("replies")
+    if observe:
+        slot_members.add("deregister")
     slot = layout.find(lambda name: name == f"Slot<{datagram}>", slot_members)
     packet_pool = layout.find(
         lambda name: (
@@ -396,13 +400,14 @@ def report(text, runtime, profile, *, build_host=None):
         raise ValueError("build host must not be empty")
     layout = Layout(text)
     header = re.findall(
-        r"memory layout: D=1152 multicast=(true|false) shared_counters=(true|false)",
+        r"memory layout: D=1152 multicast=(true|false) shared_counters=(true|false) observe=(true|false)",
         runtime,
     )
     if len(header) != 1:
         raise ValueError("expected exactly one memory-layout fixture layout header")
     multicast = header[0][0] == "true"
     shared_counters = header[0][1] == "true"
+    observe = header[0][2] == "true"
     reported_profiles(runtime)
     for name in PROFILES:
         if len(re.findall(rf"memory sizes: name={name} ", runtime)) != 1:
@@ -414,9 +419,16 @@ def report(text, runtime, profile, *, build_host=None):
         "profile": profile,
         "multicast": multicast,
         "shared_counters": shared_counters,
+        "observe": observe,
         "profiles": {
             name: _profile_report(
-                layout, runtime, name, capacities, multicast, shared_counters
+                layout,
+                runtime,
+                name,
+                capacities,
+                multicast,
+                shared_counters,
+                observe,
             )
             for name, capacities in PROFILES.items()
         },

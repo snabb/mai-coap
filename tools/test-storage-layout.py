@@ -4,6 +4,7 @@
 import contextlib
 import importlib.util
 import io
+import itertools
 import json
 import pathlib
 import tempfile
@@ -63,12 +64,13 @@ DWARF = """
 """
 
 
-def memory_runtime(multicast=False, shared_counters=False):
+def memory_runtime(multicast=False, shared_counters=False, observe=True):
     lines = [
         (
             "memory layout: D=1152 "
             f"multicast={str(multicast).lower()} "
-            f"shared_counters={str(shared_counters).lower()}"
+            f"shared_counters={str(shared_counters).lower()} "
+            f"observe={str(observe).lower()}"
         )
     ]
     for name, capacities in MODULE.PROFILES.items():
@@ -150,42 +152,47 @@ class LayoutTests(unittest.TestCase):
     def test_default_small_and_server_profiles_are_explicit(self):
         self.assertEqual(MODULE.reported_profiles(memory_runtime()), MODULE.PROFILES)
 
-    def test_layout_header_selects_multicast_and_shared_counter_profiles(self):
-        for multicast in (False, True):
-            for shared_counters in (False, True):
-                with self.subTest(multicast=multicast, shared_counters=shared_counters):
-                    runtime = memory_runtime(multicast, shared_counters)
-                    with patch.object(
-                        MODULE, "_profile_report", return_value={}
-                    ) as extract:
-                        result = MODULE.report(
-                            DWARF,
+    def test_layout_header_selects_feature_dependent_profiles(self):
+        for multicast, shared_counters, observe in itertools.product(
+            (False, True), repeat=3
+        ):
+            with self.subTest(
+                multicast=multicast, shared_counters=shared_counters, observe=observe
+            ):
+                runtime = memory_runtime(multicast, shared_counters, observe)
+                with patch.object(
+                    MODULE, "_profile_report", return_value={}
+                ) as extract:
+                    result = MODULE.report(
+                        DWARF,
+                        runtime,
+                        "release opt-level=s",
+                        build_host="aarch64-unknown-linux-gnu",
+                    )
+                self.assertEqual(
+                    result["toolchain"], "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+                )
+                self.assertEqual(result["profile"], "release opt-level=s")
+                self.assertEqual(result["build_host"], "aarch64-unknown-linux-gnu")
+                self.assertEqual(result["multicast"], multicast)
+                self.assertEqual(result["shared_counters"], shared_counters)
+                self.assertEqual(result["observe"], observe)
+                self.assertEqual(set(result["profiles"]), set(MODULE.PROFILES))
+                self.assertEqual(extract.call_count, len(MODULE.PROFILES))
+                extract.assert_has_calls(
+                    [
+                        call(
+                            ANY,
                             runtime,
-                            "release opt-level=s",
-                            build_host="aarch64-unknown-linux-gnu",
+                            name,
+                            capacities,
+                            multicast,
+                            shared_counters,
+                            observe,
                         )
-                    self.assertEqual(
-                        result["toolchain"], "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
-                    )
-                    self.assertEqual(result["profile"], "release opt-level=s")
-                    self.assertEqual(result["build_host"], "aarch64-unknown-linux-gnu")
-                    self.assertEqual(result["multicast"], multicast)
-                    self.assertEqual(result["shared_counters"], shared_counters)
-                    self.assertEqual(set(result["profiles"]), set(MODULE.PROFILES))
-                    self.assertEqual(extract.call_count, len(MODULE.PROFILES))
-                    extract.assert_has_calls(
-                        [
-                            call(
-                                ANY,
-                                runtime,
-                                name,
-                                capacities,
-                                multicast,
-                                shared_counters,
-                            )
-                            for name, capacities in MODULE.PROFILES.items()
-                        ]
-                    )
+                        for name, capacities in MODULE.PROFILES.items()
+                    ]
+                )
 
     def test_missing_invalid_and_duplicate_layout_headers_are_rejected(self):
         runtime = memory_runtime()
@@ -193,6 +200,8 @@ class LayoutTests(unittest.TestCase):
         for invalid in (
             runtime.replace(header, ""),
             runtime.replace(" shared_counters=false", ""),
+            runtime.replace(" observe=true", ""),
+            runtime.replace("observe=true", "observe=unknown"),
             runtime.replace("shared_counters=false", "shared_counters=unknown"),
             runtime + "\n" + header,
         ):

@@ -160,9 +160,10 @@ fn memory_profile() {
         6,
     );
     semihosting::println!(
-        "memory layout: D=1152 multicast={} shared_counters={}",
+        "memory layout: D=1152 multicast={} shared_counters={} observe={}",
         cfg!(feature = "multicast"),
-        cfg!(feature = "shared-counters")
+        cfg!(feature = "shared-counters"),
+        cfg!(feature = "observe")
     );
     semihosting::println!(
         "memory profile: name=default OUTBOUND=8 DEDUP=32 OBS=8 CACHED=8 SEND=16 COMMANDS=8 DEFERRED=8 BODY_CONTEXTS=8 PACKETS=40"
