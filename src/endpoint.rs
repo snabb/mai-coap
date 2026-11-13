@@ -1679,7 +1679,8 @@ impl<TransportError: core::error::Error + 'static> core::error::Error for RunErr
 /// and complete a borrowed outgoing packet only after sending succeeds. Recoverable
 /// send errors discard that packet; temporary backpressure retains it. Fatal
 /// errors retain it for restart. Use `poll_transmit` for bounded local scheduling. Pass the driver's
-/// task context to `poll_resources`. Wake for the earlier endpoint/application
+/// task context to `poll_resources` and call it on every task wake, including wakes
+/// with no new command or expired deadline. Wake for the earlier endpoint/application
 /// deadline, treating `deadline(now) == now` as immediate work, and arrange
 /// wakeups when commands are submitted. [`run`](Self::run) manages these wakeups
 /// and transport cancellation automatically.

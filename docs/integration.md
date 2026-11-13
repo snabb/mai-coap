@@ -281,7 +281,8 @@ control. The supported manual methods are `receive`, `poll`, `poll_resources`,
    transport accepts it, or `discard_outgoing` after a recoverable failure.
 3. Preserve transport metadata, and pass the driver's task context to `poll_resources`.
    It already includes notification polling, and it lets upstream completions wake a
-   proxy's receiving driver.
+   proxy's receiving driver. Call `poll_resources` on every task wake, including wakes
+   with no new command or expired deadline.
 4. Arrange command wakeups, and honor both endpoint and application deadlines, including
    immediate wakeups.
 

@@ -210,6 +210,10 @@ fn api_8_snapshots_are_readable_from_handlers_poll_and_other_tasks_without_comma
             let before = polls.get();
             assert!(driver.as_mut().poll(&mut cx).is_pending());
             let idle_polls = polls.get() - before;
+            assert_eq!(
+                idle_polls, 1,
+                "the control poll must stay inside the idle wait"
+            );
             let wakes = wake.0.load(Ordering::Relaxed);
             let before = polls.get();
             for _ in 0..4 {
