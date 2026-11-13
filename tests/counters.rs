@@ -206,16 +206,21 @@ fn api_8_snapshots_are_readable_from_handlers_poll_and_other_tasks_without_comma
             }
             assert_eq!(shared.counters().edhoc_runs, 9);
             assert_eq!(shared.counters().context_evictions, 5);
+            // Idle waits poll the application even when no new driver pass is needed.
+            let before = polls.get();
+            assert!(driver.as_mut().poll(&mut cx).is_pending());
+            let idle_polls = polls.get() - before;
             let wakes = wake.0.load(Ordering::Relaxed);
             let before = polls.get();
             for _ in 0..4 {
                 assert_eq!(shared.counters(), shared.handle().counters());
             }
             assert_eq!(wake.0.load(Ordering::Relaxed), wakes);
+            assert_eq!(polls.get(), before);
             assert!(driver.as_mut().poll(&mut cx).is_pending());
             assert_eq!(
-                polls.get(),
-                before,
+                polls.get() - before,
+                idle_polls,
                 "reading counters must not schedule another pass"
             );
         }

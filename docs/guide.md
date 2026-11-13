@@ -415,7 +415,8 @@ endpoint.run(&mut socket, &clock, &mut app, &policy).await?;
 - **Timeouts.** Forwarding has a processing budget from the destination's transmission
   profile, including time queued for congestion credit, and returns 5.04 on expiry.
 - **Bridging network stacks.** `ForwardProxy::with_outbound` forwards through another
-  endpoint's handle, with its own exchange capacity. Both drivers must run.
+  endpoint's handle, with its own exchange capacity. Both drivers must run. With
+  `Endpoint::run`, upstream completion resumes forwarding without periodic polling.
 - **Observe** is not forwarded.
 
 ## Errors and diagnostics

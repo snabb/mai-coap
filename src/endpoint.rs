@@ -4457,6 +4457,11 @@ impl<
                     if !receive_first && let Poll::Ready(packet) = receive.as_mut().poll(cx) {
                         return Poll::Ready(Event::Receive(packet));
                     }
+                    // External operations can wake this task without changing our revision.
+                    application.poll(clock.now(), cx);
+                    if application.deadline().is_some_and(|next| next < deadline) {
+                        return Poll::Ready(Event::Wake);
+                    }
                     wake.as_mut().poll(cx).map(|()| Event::Wake)
                 })
                 .await

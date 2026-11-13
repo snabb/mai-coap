@@ -1,5 +1,6 @@
 //! Receive priority and cancellation while waiting for driver work.
 #![cfg(all(feature = "server", feature = "client"))]
+mod support;
 
 use core::{
     future::{Future, poll_fn},
@@ -229,4 +230,92 @@ fn command_or_timer_wake_allows_send_while_receive_is_pending() {
         assert_eq!(state.timer_polls, if command { 1 } else { 2 });
         assert_eq!(state.sent, 1);
     }
+}
+
+#[test]
+fn application_wake_refreshes_its_deadline_without_commands() {
+    use core::cell::Cell;
+    struct Timer<'a> {
+        network: &'a support::Network,
+        armed: &'a Cell<Option<Instant>>,
+    }
+    impl Clock for Timer<'_> {
+        fn now(&self) -> Instant {
+            self.network.now()
+        }
+        async fn sleep_until(&self, deadline: Instant) {
+            self.armed.set(Some(deadline));
+            self.network.sleep_until(deadline).await;
+        }
+    }
+    struct App<'a> {
+        ready: &'a Cell<bool>,
+        deadline: Option<Instant>,
+        fired: &'a Cell<bool>,
+        waker: &'a RefCell<Option<Waker>>,
+    }
+    impl mai_coap::endpoint::Application<128> for App<'_> {
+        fn handle(
+            &mut self,
+            _: Request<'_>,
+            _: &mut ResponseWriter<'_, 128>,
+        ) -> Result<Disposition, Code> {
+            Err(Code::NOT_FOUND)
+        }
+        fn recognizes(&self, _: mai_coap::codec::OptionNumber) -> bool {
+            false
+        }
+        fn poll(&mut self, now: Instant, cx: &mut Context<'_>) {
+            *self.waker.borrow_mut() = Some(cx.waker().clone());
+            if self.ready.replace(false) {
+                self.deadline = Some(now.after(10));
+            }
+            if self.deadline.is_some_and(|deadline| deadline <= now) {
+                self.deadline = None;
+                self.fired.set(true);
+            }
+        }
+        fn deadline(&self) -> Option<Instant> {
+            self.deadline
+        }
+    }
+    let shared = Shared::<128, 1>::new();
+    let mut endpoint = Endpoint::<_, 128, 1, 2>::new(&shared, Unsecured(rand::rng())).unwrap();
+    let clock = support::Network::default();
+    let mut socket = clock.socket("192.0.2.2:5683");
+    let armed = Cell::new(None);
+    let timer = Timer {
+        network: &clock,
+        armed: &armed,
+    };
+    let ready = Cell::new(false);
+    let fired = Cell::new(false);
+    let waker = RefCell::new(None);
+    let mut app = App {
+        ready: &ready,
+        deadline: None,
+        fired: &fired,
+        waker: &waker,
+    };
+    let mut cx = Context::from_waker(Waker::noop());
+    let mut driver = core::pin::pin!(endpoint.run(&mut socket, &timer, &mut app, &AllowAll));
+    assert!(driver.as_mut().poll(&mut cx).is_pending());
+    ready.set(true);
+    waker.borrow_mut().take().unwrap().wake();
+    assert!(driver.as_mut().poll(&mut cx).is_pending());
+    assert!(
+        !ready.get(),
+        "an application wake must poll the application"
+    );
+    assert_eq!(armed.get(), Some(Instant(10)));
+    clock.advance(9);
+    assert!(driver.as_mut().poll(&mut cx).is_pending());
+    assert!(!fired.get());
+    clock.advance(1);
+    assert!(driver.as_mut().poll(&mut cx).is_pending());
+    assert!(
+        fired.get(),
+        "the wait must use the new application deadline"
+    );
+    assert!(clock.sent().is_empty());
 }
