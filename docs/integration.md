@@ -132,6 +132,20 @@ crypto work finishes. Time spent queued behind other datagrams counts.
 
 ## Storage
 
+`Endpoint` and its profile aliases accept a final request-role type after packet
+storage: `endpoint::role::Combined` (default), `Server`, or `Client`. Roles do not
+enable Cargo features or change configured table capacities. `Server` retains
+outbound exchanges for CON responses but rejects client request commands with
+`Error::RoleDisabled`. `Client` rejects incoming CON requests with RST and ignores
+NON requests. It retains response duplicate records; its full-reply cache capacity
+may be zero. Choose capacities for each interface independently.
+
+Roles are fixed at construction, so active exchanges cannot be moved between
+roles. Use `new_with_role` for inline storage and `with_storage_and_role` for
+caller-selected storage; `new` and `with_storage` select the default combined role.
+For example, a server-only default profile can be selected with
+`DefaultEndpoint::<_, _, endpoint::role::Server>::new_with_role(&shared, protection)`.
+
 Protocol tables have const-generic capacities. Choose a named profile or set the
 parameters yourself; `Endpoint`'s rustdoc lists their positional order.
 

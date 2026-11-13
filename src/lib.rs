@@ -214,6 +214,8 @@ pub enum Error {
     RepresentationChanged,
     /// The operation was cancelled.
     Cancelled,
+    /// The endpoint role disables this command.
+    RoleDisabled,
     /// An address scheme is unsupported.
     UnsupportedScheme,
 }
@@ -241,6 +243,7 @@ impl core::fmt::Display for Error {
             Self::Edhoc => f.write_str("key establishment failed"),
             Self::RepresentationChanged => f.write_str("representation changed"),
             Self::Cancelled => f.write_str("operation cancelled"),
+            Self::RoleDisabled => f.write_str("endpoint role disables this command"),
             Self::UnsupportedScheme => f.write_str("unsupported URI scheme"),
         }
     }

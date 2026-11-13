@@ -192,6 +192,7 @@ impl<
     const BODY_CONTEXTS: usize,
     const PACKETS: usize,
     S: PacketStorage<DATAGRAM_BYTES, PACKETS>,
+    Mode: role::Role,
 >
     Endpoint<
         '_,
@@ -207,6 +208,7 @@ impl<
         BODY_CONTEXTS,
         PACKETS,
         S,
+        Mode,
     >
 {
     pub(super) fn observation_ready(&self, index: usize, now: Instant) -> bool {

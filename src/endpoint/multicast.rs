@@ -92,6 +92,7 @@ impl<
     const BODY_CONTEXTS: usize,
     const PACKETS: usize,
     S: PacketStorage<DATAGRAM_BYTES, PACKETS>,
+    Mode: role::Role,
 >
     Endpoint<
         '_,
@@ -107,6 +108,7 @@ impl<
         BODY_CONTEXTS,
         PACKETS,
         S,
+        Mode,
     >
 {
     pub(super) fn multicast_deadlines(&self) -> impl Iterator<Item = Instant> + '_ {

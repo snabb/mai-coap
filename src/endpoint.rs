@@ -23,6 +23,8 @@ use core::{
 };
 use critical_section::Mutex;
 mod delegate;
+/// Compile-time endpoint request roles.
+pub mod role;
 mod writer;
 use writer::ResponseArena;
 pub use writer::ResponseWriter;
@@ -60,6 +62,7 @@ pub type DefaultEndpoint<
     'a,
     P,
     S = InlineStorage<{ crate::DEFAULT_DATAGRAM }, { crate::DEFAULT_PACKETS }>,
+    Mode = role::Combined,
 > = Endpoint<
     'a,
     P,
@@ -74,6 +77,7 @@ pub type DefaultEndpoint<
     { crate::DEFAULT_BODY_CONTEXTS },
     { crate::DEFAULT_PACKETS },
     S,
+    Mode,
 >;
 /// Default-capacity command and completion storage.
 pub type DefaultShared = Shared;
@@ -91,8 +95,8 @@ pub type DefaultShared = Shared;
 ///     Ok(())
 /// }
 /// ```
-pub type SmallEndpoint<'a, P, S = InlineStorage<1152, 16>> =
-    Endpoint<'a, P, 1152, 4, 16, 4, 4, 4, 4, 4, 4, 16, S>;
+pub type SmallEndpoint<'a, P, S = InlineStorage<1152, 16>, Mode = role::Combined> =
+    Endpoint<'a, P, 1152, 4, 16, 4, 4, 4, 4, 4, 4, 16, S, Mode>;
 /// Command/completion storage matching [`SmallEndpoint`].
 pub type SmallShared = Shared<1152, 4>;
 /// Immediate server profile with no outbound or deferred application operations.
@@ -102,7 +106,8 @@ pub type ServerEndpoint<
     P,
     const DATAGRAM_BYTES: usize = { crate::DEFAULT_DATAGRAM },
     S = InlineStorage<DATAGRAM_BYTES, 2>,
-> = Endpoint<'a, P, DATAGRAM_BYTES, 0, 8, 0, 2, 2, 0, 0, 0, 2, S>;
+    Mode = role::Combined,
+> = Endpoint<'a, P, DATAGRAM_BYTES, 0, 8, 0, 2, 2, 0, 0, 0, 2, S, Mode>;
 /// Command-free storage matching [`ServerEndpoint`].
 pub type ServerShared<const DATAGRAM_BYTES: usize = { crate::DEFAULT_DATAGRAM }> =
     Shared<DATAGRAM_BYTES, 0>;
@@ -1665,6 +1670,8 @@ impl<TransportError: core::error::Error + 'static> core::error::Error for RunErr
 /// `OUTBOUND` bounds all tracked exchanges, including deferred CON responses
 /// and CON notifications on server-only endpoints.
 /// Empty ACKs use only duplicate-record storage.
+/// The final type arguments select packet storage and a fixed [`role::Role`].
+/// Explicit roles use [`Self::new_with_role`] or [`Self::with_storage_and_role`].
 ///
 /// # Custom drivers
 ///
@@ -1698,10 +1705,13 @@ pub struct Endpoint<
     const BODY_CONTEXTS: usize = { crate::DEFAULT_BODY_CONTEXTS },
     const PACKETS: usize = { crate::DEFAULT_PACKETS },
     S = InlineStorage<DATAGRAM_BYTES, PACKETS>,
+    Mode = role::Combined,
 > where
     P: Protection,
     S: PacketStorage<DATAGRAM_BYTES, PACKETS>,
+    Mode: role::Role,
 {
+    _role: core::marker::PhantomData<fn() -> Mode>,
     shared: &'a Shared<DATAGRAM_BYTES, COMMANDS>,
     protection: P,
     ids: MessageIds,
@@ -1746,6 +1756,7 @@ impl<
     const BODY_CONTEXTS: usize,
     const PACKETS: usize,
     S: PacketStorage<DATAGRAM_BYTES, PACKETS>,
+    Mode: role::Role,
 >
     SendWindow<
         '_,
@@ -1763,6 +1774,7 @@ impl<
             BODY_CONTEXTS,
             PACKETS,
             S,
+            Mode,
         >,
     >
 {
@@ -1829,11 +1841,54 @@ impl<
         DEFERRED,
         BODY_CONTEXTS,
         PACKETS,
+        InlineStorage<DATAGRAM_BYTES, PACKETS>,
+        role::Combined,
     >
 {
     /// Constructs an endpoint with inline packet storage.
     /// Invalid zero/small capacities return [`Error::Capacity`].
     pub fn new(shared: &'a Shared<DATAGRAM_BYTES, COMMANDS>, protection: P) -> Result<Self, Error> {
+        Self::new_with_role(shared, protection)
+    }
+}
+impl<
+    'a,
+    P: Protection,
+    const DATAGRAM_BYTES: usize,
+    const OUTBOUND: usize,
+    const DEDUP_ENTRIES: usize,
+    const OBSERVERS: usize,
+    const CACHED_REPLIES: usize,
+    const SEND_QUEUE: usize,
+    const COMMANDS: usize,
+    const DEFERRED: usize,
+    const BODY_CONTEXTS: usize,
+    const PACKETS: usize,
+    Mode: role::Role,
+>
+    Endpoint<
+        'a,
+        P,
+        DATAGRAM_BYTES,
+        OUTBOUND,
+        DEDUP_ENTRIES,
+        OBSERVERS,
+        CACHED_REPLIES,
+        SEND_QUEUE,
+        COMMANDS,
+        DEFERRED,
+        BODY_CONTEXTS,
+        PACKETS,
+        InlineStorage<DATAGRAM_BYTES, PACKETS>,
+        Mode,
+    >
+{
+    /// Constructs inline packet storage with the role selected by the endpoint type.
+    /// Invalid zero/small capacities return [`Error::Capacity`].
+    pub fn new_with_role(
+        shared: &'a Shared<DATAGRAM_BYTES, COMMANDS>,
+        protection: P,
+    ) -> Result<Self, Error> {
         // Construct at the pool field rather than passing a second inline array.
         Self::initialize(shared, protection, || const { PacketPool::new() })
     }
@@ -1867,11 +1922,55 @@ impl<
         BODY_CONTEXTS,
         PACKETS,
         S,
+        role::Combined,
     >
 {
     /// Constructs an endpoint using caller-selected bounded packet storage.
     /// Invalid zero/small capacities return [`Error::Capacity`].
     pub fn with_storage(
+        shared: &'a Shared<DATAGRAM_BYTES, COMMANDS>,
+        protection: P,
+        storage: S,
+    ) -> Result<Self, Error> {
+        Self::with_storage_and_role(shared, protection, storage)
+    }
+}
+impl<
+    'a,
+    P: Protection,
+    const DATAGRAM_BYTES: usize,
+    const OUTBOUND: usize,
+    const DEDUP_ENTRIES: usize,
+    const OBSERVERS: usize,
+    const CACHED_REPLIES: usize,
+    const SEND_QUEUE: usize,
+    const COMMANDS: usize,
+    const DEFERRED: usize,
+    const BODY_CONTEXTS: usize,
+    const PACKETS: usize,
+    S: PacketStorage<DATAGRAM_BYTES, PACKETS>,
+    Mode: role::Role,
+>
+    Endpoint<
+        'a,
+        P,
+        DATAGRAM_BYTES,
+        OUTBOUND,
+        DEDUP_ENTRIES,
+        OBSERVERS,
+        CACHED_REPLIES,
+        SEND_QUEUE,
+        COMMANDS,
+        DEFERRED,
+        BODY_CONTEXTS,
+        PACKETS,
+        S,
+        Mode,
+    >
+{
+    /// Constructs an endpoint using caller-selected bounded packet storage.
+    /// Invalid zero/small capacities return [`Error::Capacity`].
+    pub fn with_storage_and_role(
         shared: &'a Shared<DATAGRAM_BYTES, COMMANDS>,
         protection: P,
         storage: S,
@@ -1885,7 +1984,7 @@ impl<
     ) -> Result<Self, Error> {
         if DATAGRAM_BYTES < 16
             || DEDUP_ENTRIES == 0
-            || CACHED_REPLIES == 0
+            || Mode::SERVE && CACHED_REPLIES == 0
             || SEND_QUEUE == 0
             || PACKETS == 0
         {
@@ -1894,6 +1993,7 @@ impl<
         let mut seed = [0; 2];
         protection.random(&mut seed);
         Ok(Self {
+            _role: core::marker::PhantomData,
             shared,
             protection,
             ids: MessageIds::new(u16::from_be_bytes(seed)),
@@ -2594,7 +2694,8 @@ impl<
     fn deferred_available(&self, ty: MessageType) -> bool {
         #[cfg(feature = "server")]
         {
-            COMMANDS != 0
+            Mode::SERVE
+                && COMMANDS != 0
                 && !self.deferred.is_full()
                 && (ty != MessageType::Confirmable || OUTBOUND != 0)
         }
@@ -2750,8 +2851,9 @@ impl<
         let ty = message.message_type();
         if multicast {
             #[cfg(feature = "multicast")]
-            return self.receive_multicast(message, metadata, now, application, policy);
-            #[cfg(not(feature = "multicast"))]
+            if Mode::SERVE {
+                return self.receive_multicast(message, metadata, now, application, policy);
+            }
             return Ok(());
         }
         if matches!(ty, MessageType::Acknowledgement | MessageType::Reset)
@@ -2760,7 +2862,15 @@ impl<
             return Ok(());
         }
         if message.code().is_response() {
-            return self.receive_response(message, metadata, now, application);
+            if Mode::INITIATE {
+                return self.receive_response(message, metadata, now, application);
+            }
+            if ty == MessageType::Confirmable
+                && self.charge_response_budget(metadata.remote.ip(), now)
+            {
+                self.control(metadata, MessageType::Reset, message.message_id(), now)?;
+            }
+            return Ok(());
         }
         if message.code() == Code::EMPTY {
             if ty == MessageType::Confirmable
@@ -2773,6 +2883,24 @@ impl<
         if !message.code().is_request()
             || !matches!(ty, MessageType::Confirmable | MessageType::NonConfirmable)
         {
+            return Ok(());
+        }
+        if !Mode::SERVE {
+            if ty == MessageType::Confirmable
+                && self.charge_response_budget(metadata.remote.ip(), now)
+            {
+                if self
+                    .duplicates
+                    .lookup(metadata.remote, metadata.local, message.message_id(), now)
+                    .is_some()
+                {
+                    self.counters.duplicates += 1;
+                    return self.replay_cached(metadata, message, now);
+                }
+                let reset = empty_message(MessageType::Reset, message.message_id());
+                self.control(metadata, MessageType::Reset, message.message_id(), now)?;
+                self.remember(message, metadata, CachedReply::inline(&reset)?, now)?;
+            }
             return Ok(());
         }
         if self.outgoing.is_full() || ty == MessageType::NonConfirmable && !self.ids.available(now)
@@ -2819,7 +2947,9 @@ impl<
                 self.finish(i, Err(Error::Reset));
                 return Ok(true);
             }
-            if message.code() == Code::EMPTY {
+            // Dropped Observe cancellations lose their slot but retain the client request.
+            let response = self.exchanges[i].slot.is_none() && self.exchanges[i].original.is_none();
+            if message.code() == Code::EMPTY || response {
                 if self.exchanges[i].slot.is_none() {
                     self.finish(
                         i,
@@ -3591,10 +3721,10 @@ impl<
                 .slot
                 .is_some_and(|(slot, generation)| self.shared.cancelled(slot, generation));
             #[cfg(feature = "observe")]
-            let stopping = stopping || self.deregistration_due(i);
+            let stopping = stopping || Mode::INITIATE && self.deregistration_due(i);
             if stopping {
                 #[cfg(feature = "observe")]
-                if self.exchanges[i].observation.is_some() {
+                if Mode::INITIATE && self.exchanges[i].observation.is_some() {
                     if !self.observation_ready(i, now) {
                         i += 1;
                         continue;
@@ -3609,7 +3739,8 @@ impl<
             }
             if now >= self.exchanges[i].deadline {
                 #[cfg(feature = "observe")]
-                if self.exchanges[i].retry.is_none()
+                if Mode::INITIATE
+                    && self.exchanges[i].retry.is_none()
                     && self.exchanges[i]
                         .observation
                         .is_some_and(|o| o.established())
@@ -3680,7 +3811,7 @@ impl<
             i += 1;
         }
         #[cfg(feature = "server")]
-        if DEFERRED != 0 {
+        if Mode::SERVE && DEFERRED != 0 {
             self.expire_deferred(now);
         }
         for slot in 0..COMMANDS {
@@ -3694,13 +3825,23 @@ impl<
                 #[cfg(feature = "client")]
                 Admission::Rejected(error) => Err(error),
                 #[cfg(feature = "client")]
-                Admission::Request(request) => self.request_ready(request, now).map(|ready| {
-                    retained = ready.unwrap_or(false);
-                    ready.is_some()
-                }),
+                Admission::Request(request) => {
+                    if Mode::INITIATE {
+                        self.request_ready(request, now).map(|ready| {
+                            retained = ready.unwrap_or(false);
+                            ready.is_some()
+                        })
+                    } else {
+                        Err(Error::RoleDisabled)
+                    }
+                }
                 #[cfg(feature = "server")]
                 Admission::Respond(ticket) => {
-                    if let Some(entry) = self.deferred.iter().find(|entry| entry.ticket == ticket) {
+                    if !Mode::SERVE {
+                        Err(Error::RoleDisabled)
+                    } else if let Some(entry) =
+                        self.deferred.iter().find(|entry| entry.ticket == ticket)
+                    {
                         Ok(!self.outgoing.is_full()
                             && self.ids.available(now)
                             && self.packet_capacity() > 0
@@ -3845,24 +3986,42 @@ impl<
                 #[cfg(feature = "multicast")]
                 collect_until,
                 ..
-            } => self.command_request(
-                (slot, generation),
-                target,
-                &mut packet,
-                token_len,
-                raw,
-                #[cfg(feature = "multicast")]
-                collect_until,
-                now,
-                reservation,
-                original,
-            ),
+            } => {
+                if !Mode::INITIATE {
+                    return Err(Error::RoleDisabled);
+                }
+                self.command_request(
+                    (slot, generation),
+                    target,
+                    &mut packet,
+                    token_len,
+                    raw,
+                    #[cfg(feature = "multicast")]
+                    collect_until,
+                    now,
+                    reservation,
+                    original,
+                )
+            }
             #[cfg(feature = "server")]
             Command::Respond {
                 ticket,
                 packet,
                 queued,
-            } => self.command_respond((slot, generation), ticket, packet, queued, now, reservation),
+            } => {
+                if Mode::SERVE {
+                    self.command_respond(
+                        (slot, generation),
+                        ticket,
+                        packet,
+                        queued,
+                        now,
+                        reservation,
+                    )
+                } else {
+                    Err(Error::RoleDisabled)
+                }
+            }
         }
     }
     #[cfg(feature = "client")]

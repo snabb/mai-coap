@@ -37,6 +37,7 @@ impl<
     const DEFERRED: usize,
     const BODY_CONTEXTS: usize,
     const PACKETS: usize,
+    Mode: mai_coap::endpoint::role::Role,
 > PopOutgoing<DATAGRAM_BYTES>
     for Endpoint<
         'a,
@@ -51,6 +52,8 @@ impl<
         DEFERRED,
         BODY_CONTEXTS,
         PACKETS,
+        mai_coap::InlineStorage<DATAGRAM_BYTES, PACKETS>,
+        Mode,
     >
 {
     fn pop_outgoing(&mut self) -> Option<Outgoing<DATAGRAM_BYTES>> {

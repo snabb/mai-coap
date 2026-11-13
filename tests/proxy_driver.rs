@@ -41,12 +41,44 @@ fn drive_to_idle(mut driver: Pin<&mut impl Future>, wake: &Wake, cx: &mut Contex
     panic!("drivers did not become idle within 20 wake-driven polls");
 }
 
-fn check(separate: bool) {
+fn check<Incoming: mai_coap::endpoint::role::Role, Outgoing: mai_coap::endpoint::role::Role>(
+    separate: bool,
+) {
     let network = support::Network::default();
     let incoming = Shared::<256, 3>::new();
     let outgoing = Shared::<256, 3>::new();
-    let mut inbound = Endpoint::<_, 256, 3, 8>::new(&incoming, Unsecured(rand::rng())).unwrap();
-    let mut outbound = Endpoint::<_, 256, 3, 8>::new(&outgoing, Unsecured(rand::rng())).unwrap();
+    let mut inbound = Endpoint::<
+        _,
+        256,
+        3,
+        8,
+        8,
+        8,
+        16,
+        3,
+        3,
+        8,
+        40,
+        mai_coap::InlineStorage<256, 40>,
+        Incoming,
+    >::new_with_role(&incoming, Unsecured(rand::rng()))
+    .unwrap();
+    let mut outbound = Endpoint::<
+        _,
+        256,
+        3,
+        8,
+        8,
+        8,
+        16,
+        3,
+        3,
+        8,
+        40,
+        mai_coap::InlineStorage<256, 40>,
+        Outgoing,
+    >::new_with_role(&outgoing, Unsecured(rand::rng()))
+    .unwrap();
     let mut a = network.socket("192.0.2.2:5683");
     let mut b = network.socket("192.0.2.3:5683");
     let requester = "192.0.2.1:5683".parse().unwrap();
@@ -112,10 +144,15 @@ fn check(separate: bool) {
 
 #[test]
 fn shared_endpoint_relays_without_timer() {
-    check(false);
+    check::<mai_coap::endpoint::role::Combined, mai_coap::endpoint::role::Combined>(false);
 }
 
 #[test]
 fn separate_endpoint_relays_without_timer() {
-    check(true);
+    check::<mai_coap::endpoint::role::Combined, mai_coap::endpoint::role::Combined>(true);
+}
+
+#[test]
+fn separate_server_and_client_roles_relay_without_timer() {
+    check::<mai_coap::endpoint::role::Server, mai_coap::endpoint::role::Client>(true);
 }

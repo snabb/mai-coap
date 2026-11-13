@@ -417,6 +417,9 @@ endpoint.run(&mut socket, &clock, &mut app, &policy).await?;
 - **Bridging network stacks.** `ForwardProxy::with_outbound` forwards through another
   endpoint's handle, with its own exchange capacity. Both drivers must run. With
   `Endpoint::run`, upstream completion resumes forwarding without periodic polling.
+  The receiving endpoint needs outbound exchange capacity for separate CON replies,
+  including with `endpoint::role::Server`; these are response exchanges, not client
+  request initiation. A separate outbound endpoint can use `endpoint::role::Client`.
 - **Observe** is not forwarded.
 
 ## Errors and diagnostics
@@ -432,6 +435,7 @@ Protocol and driver errors implement `Display` and `core::error::Error`. The mai
 | `UnprotectedResponse(code)` | An unauthenticated error reply to a protected request |
 | `Protection`, `Replay`, `ContextNotFound`, `SequenceExhausted`, `Edhoc` | Security failures |
 | `Capacity` | A bounded table or buffer is full, or the capability has zero capacity |
+| `RoleDisabled` | A submitted command is disabled by the endpoint's request role |
 | `RepresentationChanged` | The ETag changed during a block-wise transfer |
 
 `Endpoint::counters()` returns `Counters`. Enable `shared-counters` to read an owned

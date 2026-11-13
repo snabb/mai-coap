@@ -468,6 +468,16 @@ mod client_regressions {
                     |_: Request<'_>, _: &mut ResponseWriter<'_, 128>| Ok(Disposition::Complete);
 
                 for now in [Instant(1), Instant(99)] {
+                    // Slot-less client continuations model a dropped Observe cancellation.
+                    endpoint
+                        .receive(
+                            &response[..n],
+                            metadata,
+                            now,
+                            &mut app,
+                            &crate::security::AllowAll,
+                        )
+                        .unwrap();
                     assert_eq!(
                         endpoint.receive_response(message, metadata, now, &mut app),
                         Err(Error::Capacity)
@@ -497,7 +507,13 @@ mod client_regressions {
                     let now = window.now();
                     let endpoint = &mut *window.endpoint;
                     endpoint
-                        .receive_response(message, metadata, now, &mut app)
+                        .receive(
+                            &response[..n],
+                            metadata,
+                            now,
+                            &mut app,
+                            &crate::security::AllowAll,
+                        )
                         .unwrap();
                     assert!(!endpoint.exchanges[0].accepted);
                     assert!(endpoint.exchanges[0].deadline > now);
@@ -946,6 +962,66 @@ mod server_multicast_regressions {
 #[cfg(all(feature = "client", feature = "observe"))]
 mod local_observe {
     use super::*;
+    #[test]
+    fn dropped_observation_retains_original_after_releasing_its_slot() {
+        let shared = Shared::<128, 1>::new();
+        let mut endpoint =
+            Endpoint::<_, 128, 1, 4, 0, 1, 2, 1, 0, 0, 4>::new(&shared, Unsecured(rand::rng()))
+                .unwrap();
+        let remote: SocketAddr = "192.0.2.1:5683".parse().unwrap();
+        let mut observation = shared.handle().client(remote).observe("/x").unwrap();
+        endpoint.poll(Instant(0)).unwrap();
+        let request = MessageView::parse(endpoint.front_outgoing().unwrap().bytes).unwrap();
+        let mut response = [0; 128];
+        let mut builder = MessageBuilder::new(
+            &mut response,
+            MessageType::Acknowledgement,
+            Code::CONTENT,
+            request.message_id(),
+            request.token(),
+        )
+        .unwrap();
+        builder.uint_option(OptionNumber::OBSERVE, 0).unwrap();
+        let n = builder.finish(b"initial").unwrap();
+        endpoint.complete_outgoing(Instant(0));
+        let mut app = |_: Request<'_>, _: &mut ResponseWriter<'_, 128>| Err(Code::NOT_FOUND);
+        endpoint
+            .receive(
+                &response[..n],
+                Metadata::new(remote, "192.0.2.2".parse().unwrap(), n),
+                Instant(1),
+                &mut app,
+                &crate::security::AllowAll,
+            )
+            .unwrap();
+        let initial =
+            futures_lite::future::block_on(futures_lite::future::poll_once(observation.next()))
+                .expect("registration response must be ready")
+                .expect("observation is active")
+                .unwrap();
+        assert_eq!(initial.message().unwrap().payload(), b"initial");
+        drop(observation);
+        endpoint.poll(Instant(2)).unwrap();
+        let cancel = MessageView::parse(endpoint.front_outgoing().unwrap().bytes).unwrap();
+        assert_eq!(cancel.option(OptionNumber::OBSERVE).unwrap().uint(), Ok(1));
+        endpoint.complete_outgoing(Instant(2));
+        let exchange = &endpoint.exchanges[0];
+        assert!(exchange.slot.is_none());
+        let original = MessageView::parse(
+            endpoint
+                .pool
+                .get(exchange.original.as_ref().unwrap())
+                .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(
+            original.option(OptionNumber::OBSERVE).unwrap().uint(),
+            Ok(1)
+        );
+        endpoint.finish(0, Err(Error::Cancelled));
+        assert_eq!(endpoint.pool.available(), 4);
+    }
+
     #[test]
     fn unsent_refresh_preserves_binding_and_order_until_acceptance_or_abort() {
         for (accept, cancel) in [(true, false), (true, true), (false, false), (false, true)] {

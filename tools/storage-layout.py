@@ -275,9 +275,10 @@ def _profile_report(
     endpoint_name = (
         "Endpoint<mai_coap::edhoc::endpoint::Edhoc<"
         "mai_coap::crypto::software::SoftwareCrypto<mai_coap_target_tests::TestRng>, "
-        f"4, 4, mai_coap::edhoc::TrustedPeers<16>, 255>, {generic_args}, mai_coap::packet_pool::InlineStorage<{datagram}, {packets}>>"
+        f"4, 4, mai_coap::edhoc::TrustedPeers<16>, 255>, {generic_args}, mai_coap::packet_pool::InlineStorage<{datagram}, {packets}>, mai_coap::endpoint::role::Combined>"
     )
     endpoint_members = {
+        "_role",
         "shared",
         "protection",
         "duplicates",
@@ -303,6 +304,8 @@ def _profile_report(
         "observers",
     } | ({"leisure"} if multicast else set())
     endpoint = layout.find(lambda name: name == endpoint_name, endpoint_members)
+    if endpoint["fields"]["_role"]["size_bytes"] != 0:
+        raise ValueError("endpoint role marker must be zero-sized")
     shared = layout.find(
         lambda name: name == f"Shared<{datagram}, {commands}>", {"state"}
     )

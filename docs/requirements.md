@@ -303,6 +303,10 @@ implemented; informative only).
   same time: the server role, the client role and the proxy role on one port.
   Applications bridging independent network stacks MAY connect two endpoint
   handles through a proxy; both drivers remain independently owned and scheduled.
+  An endpoint MAY restrict request initiation or serving through a compile-time
+  role. The default MUST retain both roles. Restrictions MUST preserve control
+  messages, duplicate response ACKs and separate CON response completion; disabled
+  commands MUST complete with an explicit error rather than remain queued.
 
 ## 6. Message codec (RFC 7252 §3, §5.4, §5.10)
 

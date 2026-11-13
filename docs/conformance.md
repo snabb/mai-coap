@@ -298,6 +298,29 @@ helpers check codes. `Router::observable` returns a typed resource ID scoped to 
 endpoint's application tree and rejects another route's ID without mutation; composed
 applications maintain uniqueness themselves.
 
+### Endpoint request roles
+
+Explicit `endpoint::role` types restrict request initiation and serving without
+changing the default combined-role API. Roles are fixed for the endpoint lifetime.
+Client-only endpoints retain duplicate response ACK metadata and can omit full
+cached replies. Server-only endpoints retain outbound exchanges for separate CON
+responses. Matching ACKs finish those responses even when the ACK includes a
+Response Code or payload, as required by RFC 7252 section 5.2.2.
+`tests/endpoint_roles.rs`, the split-role proxy driver regression and the endpoint
+fuzz role oracle cover these restrictions. Independent RFC-derived review confirmed
+that unsolicited CON requests/responses may be rejected with RST. RFC 7252 permits
+discarding requester state after completion; this implementation retains its
+existing bounded duplicate-ACK policy rather than weakening it for client roles.
+Rejected CON requests share that bounded duplicate table with response ACK records.
+
+The fuzz role oracle checks unsolicited controls and disabled-command slot reuse;
+completed-response ACK replay and retained client continuations have deterministic
+unit coverage. Mutation controls bypassed the client serving gate and enabled
+server initiation; the oracle rejected both. ACK regressions reject removing
+server response completion or applying it to a retained client continuation.
+Queue saturation retains the documented bounded-overload behavior above; these
+role changes do not add a separate control-message queue.
+
 ### Shared counters
 
 With `shared-counters`, `Shared` holds one owned `Counters` snapshot independent of
