@@ -10,6 +10,7 @@ byte counts live in generated reports, not here:
 | [size-resources.json](size-resources.json) | Linked Cortex-M4 flash and static RAM per feature workload, secured endpoint layouts per profile, toolchain, date |
 | [stack-resources.json](stack-resources.json) | QEMU driver stack peaks, budgets, driver-future sizes |
 | [xarxa-resources.json](xarxa-resources.json) | Owned-packet workload stack, futures, static RAM and component breakdown |
+| [proxy-resources.json](proxy-resources.json) | Matched two-endpoint role experiment at D=1152 and two 1,024-byte replies |
 
 These cover reference fixtures, ABI layouts and exercised QEMU peaks, not complete
 firmware on real boards.
@@ -91,6 +92,23 @@ EDHOC and protocol tables use stack storage, so section totals don't estimate pe
 Capacities are in [the fixture](../target-tests/src/main.rs), and they are not library
 defaults. Linked deltas include fixture changes, so use the saved symbol reports to
 attribute cost.
+
+## Two-endpoint proxy workload
+
+`tools/proxy-resources.py --output target/proxy-profile` measures two overlapping
+opaque forwards with 1,024-byte origin payloads at a 1,152-byte datagram limit,
+followed by a public local GET. Add `--roles` to select a server-only receiving
+endpoint and client-only outbound endpoint; all capacities remain identical.
+The ELF contains both plain and secure-capable receiving endpoints. Origin replies
+are scripted, so this does not validate protected local interoperability or hardware.
+
+The report records flash, static RAM, both driver futures and exercised stack paint,
+with compiler/build host, source revision/digest and ELF/fixture hashes. Endpoints and Shared storage are
+static; the proxy, link and futures occupy the stack. Stack paint records exercised
+writes rather than a worst-case bound; endpoint construction happens before painting,
+and its peak is unmeasured. Preserve both ELFs and symbol reports when
+comparing revisions. [proxy-resources.json](proxy-resources.json) records the matched
+role experiment.
 
 ## Endpoint layouts
 

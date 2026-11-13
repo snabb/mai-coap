@@ -17,6 +17,8 @@ block = ["mai-coap/block"]
 block1 = ["mai-coap/block1"]
 observe = ["mai-coap/observe", "test-support"]
 proxy = ["mai-coap/proxy"]
+proxy-profile = ["proxy", "edhoc"]
+proxy-roles = ["proxy-profile"]
 discovery = ["mai-coap/discovery"]
 multicast = ["mai-coap/multicast"]
 oscore = ["mai-coap/software-crypto"]
@@ -56,3 +58,8 @@ required-features = ["stack-profile"]
 name = "mai-coap-xarxa-profile"
 path = "src/xarxa_main.rs"
 required-features = ["xarxa-profile"]
+
+[[bin]]
+name = "mai-coap-proxy-profile"
+path = "src/proxy_main.rs"
+required-features = ["proxy-profile"]

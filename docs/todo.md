@@ -173,6 +173,14 @@ From an independent review of the Kani harnesses and fuzz oracles against the RF
 
 ## Optional resource integration
 
+- [ ] **Shared/proxy packet ownership:** prototype bounded caller-owned packet
+  leases across command, completion and forwarding states. Preserve datagram and
+  concurrency limits, exact retries, context pins and progress when either
+  endpoint's command slots or packet pool are full. Compare static storage,
+  future storage and construction/poll peaks before selecting a pool budget.
+- [ ] **Capacity-independent driver helpers:** evaluate temporary runtime table
+  views if significant duplicate code remains after fixed endpoint roles. Keep
+  the const-generic storage facade and avoid references into the owning object.
 - [ ] **Proxy scratch storage:** evaluate merging URI normalization directly into
   caller output while preserving option order and opaque values. Measure linked
   frames and runtime stack before claiming savings; current source-level buffers

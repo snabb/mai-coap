@@ -38,7 +38,7 @@ const PAINT: u32 = 0xcccc_cccc;
 // Paint only unused stack, never the live future storage above MSP. Volatile
 // word writes keep this loop independent of memset and its stack requirements.
 #[inline(never)]
-fn begin() {
+pub(super) fn begin() {
     let low = &raw const _stack_end as usize;
     let sp = cortex_m::register::msp::read() as usize;
     assert!(sp > low + 256);
@@ -49,12 +49,12 @@ fn begin() {
     }
 }
 
-struct Peak {
-    painted: usize,
-    capacity: usize,
+pub(super) struct Peak {
+    pub(super) painted: usize,
+    pub(super) capacity: usize,
 }
 #[inline(never)]
-fn finish() -> Peak {
+pub(super) fn finish() -> Peak {
     let low = &raw const _stack_end as usize;
     let top = &raw const _stack_start as usize;
     let mut first = low;
@@ -180,7 +180,13 @@ fn poll_operation<F: Future>(future: Pin<&mut F>) -> Poll<F::Output> {
 }
 
 #[inline(never)]
-fn protection(initiator: bool) -> Secure {
+pub(super) fn protection(initiator: bool) -> Secure {
+    protection_with_context(initiator)
+}
+
+pub(super) fn protection_with_context<const N: usize>(
+    initiator: bool,
+) -> Edhoc<SoftwareCrypto<TestRng>, 1, 1, TrustedPeers<1>, N> {
     let (credential, other, private) = if initiator {
         (
             include_bytes!("../../tests/fixtures/i.ccs").as_slice(),

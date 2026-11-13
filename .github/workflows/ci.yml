@@ -71,6 +71,7 @@ jobs:
           python3 tools/test-ci.py
           python3 tools/test-target-runtime.py
           python3 tools/test-storage-layout.py
+          python3 tools/test-proxy-resources.py
       - name: Cache pinned workflow linter
         id: actionlint-cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -215,6 +216,11 @@ jobs:
       - name: Measure linked Cortex-M4 workloads
         if: matrix.target == 'thumbv7em-none-eabihf'
         run: python3 tools/firmware-size.py --output "$RESOURCE_REPORT_DIR"
+      - name: Exercise and measure two-endpoint proxy roles
+        if: matrix.target == 'thumbv7em-none-eabihf'
+        run: |
+          python3 tools/proxy-resources.py --output "$RESOURCE_REPORT_DIR/proxy-combined"
+          python3 tools/proxy-resources.py --roles --output "$RESOURCE_REPORT_DIR/proxy-roles"
       - name: Measure realistic datagram storage and client futures
         if: matrix.target == 'thumbv7em-none-eabihf'
         run: |

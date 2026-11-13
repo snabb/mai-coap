@@ -1,0 +1,548 @@
+{
+  "date": "2026-11-14",
+  "baseline_revision": "f8a8cef2585f1b791dcc12cdf5a788fc3af27c7f",
+  "baseline_method": "Original src/endpoint.rs, src/lib.rs, src/endpoint/observing.rs and src/endpoint/multicast.rs, with tests/support/outgoing.rs restored for compatibility. Both revisions use the current public measurement fixture, build script and locked dependencies; unused new role/test source files are present in the baseline source digest.",
+  "candidate": "Fixed endpoint request roles; recorded source digests identify the measured uncommitted tree based on baseline_revision.",
+  "capacity_order": [
+    "DATAGRAM_BYTES",
+    "OUTBOUND",
+    "DEDUP_ENTRIES",
+    "OBSERVERS",
+    "CACHED_REPLIES",
+    "SEND_QUEUE",
+    "COMMANDS",
+    "DEFERRED",
+    "BODY_CONTEXTS",
+    "PACKETS"
+  ],
+  "capacities": {
+    "incoming": [
+      1152,
+      4,
+      8,
+      0,
+      2,
+      2,
+      4,
+      4,
+      2,
+      2
+    ],
+    "outgoing": [
+      1152,
+      2,
+      1,
+      0,
+      1,
+      2,
+      2,
+      0,
+      0,
+      2
+    ],
+    "shared_incoming_commands": 4,
+    "shared_outgoing_commands": 2,
+    "forwards": 2,
+    "origin_payload_bytes": 1024,
+    "packet_storage": "InlineStorage",
+    "secure_incoming": {
+      "contexts": 1,
+      "handshakes": 1,
+      "trusted_peers": 1,
+      "id_context_bytes": 0
+    }
+  },
+  "comparison_boundary": "Same Arm build host, compiler/profile, payload and capacities. Both plain and secure-capable incoming variants are linked, with static endpoint and Shared storage. This is not the Rustastic ESP32-S3 image, protected-local interop, physical hardware, a CPU measurement, a construction peak or a worst-case stack bound. Static RAM and future sizes are unchanged; no RAM reduction is claimed.",
+  "targets": {
+    "thumbv7em-none-eabihf": {
+      "measurements": {
+        "baseline": {
+          "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+          "build_host": "aarch64-unknown-linux-gnu",
+          "source_revision": "f8a8cef2585f1b791dcc12cdf5a788fc3af27c7f",
+          "git_dirty": true,
+          "source_sha256": "c2857dfb3fcb9a9259a4d6b7c19e24ca9563152572f4e1bbb261b8a4222608c5",
+          "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+          "fixture_sha256": {
+            "proxy_main.rs": "3d06d6e8561587f11533debee3353d743aff22bb32b2ec745f8b76d54320e830",
+            "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+            "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+          },
+          "target": "thumbv7em-none-eabihf",
+          "profile": "release opt-level=s, LTO, codegen-units=1",
+          "features": "proxy-profile",
+          "datagram_bytes": 1152,
+          "forwards": 2,
+          "payload_bytes": 1024,
+          "elf_sha256": "aa5f83ad1b4a367c25aefdfbd74080e9b77a0b792ab32f2e3113fb152df79edf",
+          "roles": false,
+          "flash_bytes": 236144,
+          "static_ram_bytes": 24232,
+          "scenarios": {
+            "plain": {
+              "incoming_future": 1440,
+              "outgoing_future": 1440,
+              "painted": 26332,
+              "capacity": 106840
+            },
+            "secure": {
+              "incoming_future": 1440,
+              "outgoing_future": 1440,
+              "painted": 26452,
+              "capacity": 106840
+            }
+          },
+          "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+        },
+        "combined": {
+          "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+          "build_host": "aarch64-unknown-linux-gnu",
+          "source_revision": "f8a8cef2585f1b791dcc12cdf5a788fc3af27c7f",
+          "git_dirty": true,
+          "source_sha256": "37507c7c228e40a7e2bb34ceb5cbff0adc3b86013c62dee50544a85ef8208ea0",
+          "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+          "fixture_sha256": {
+            "proxy_main.rs": "3d06d6e8561587f11533debee3353d743aff22bb32b2ec745f8b76d54320e830",
+            "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+            "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+          },
+          "target": "thumbv7em-none-eabihf",
+          "profile": "release opt-level=s, LTO, codegen-units=1",
+          "features": "proxy-profile",
+          "datagram_bytes": 1152,
+          "forwards": 2,
+          "payload_bytes": 1024,
+          "elf_sha256": "d1a51ff73448ea38ca5121665ec53f783d410062de1135e9c6286c93efc13928",
+          "roles": false,
+          "flash_bytes": 236256,
+          "static_ram_bytes": 24232,
+          "scenarios": {
+            "plain": {
+              "incoming_future": 1440,
+              "outgoing_future": 1440,
+              "painted": 26332,
+              "capacity": 106840
+            },
+            "secure": {
+              "incoming_future": 1440,
+              "outgoing_future": 1440,
+              "painted": 26452,
+              "capacity": 106840
+            }
+          },
+          "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+        },
+        "roles": {
+          "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+          "build_host": "aarch64-unknown-linux-gnu",
+          "source_revision": "f8a8cef2585f1b791dcc12cdf5a788fc3af27c7f",
+          "git_dirty": true,
+          "source_sha256": "37507c7c228e40a7e2bb34ceb5cbff0adc3b86013c62dee50544a85ef8208ea0",
+          "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+          "fixture_sha256": {
+            "proxy_main.rs": "3d06d6e8561587f11533debee3353d743aff22bb32b2ec745f8b76d54320e830",
+            "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+            "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+          },
+          "target": "thumbv7em-none-eabihf",
+          "profile": "release opt-level=s, LTO, codegen-units=1",
+          "features": "proxy-roles",
+          "datagram_bytes": 1152,
+          "forwards": 2,
+          "payload_bytes": 1024,
+          "elf_sha256": "4c2f1c0f691ae820f1a991864e1d307f442c4ad1491c4481d392de882c9d56fd",
+          "roles": true,
+          "flash_bytes": 195824,
+          "static_ram_bytes": 24232,
+          "scenarios": {
+            "plain": {
+              "incoming_future": 1440,
+              "outgoing_future": 1440,
+              "painted": 25916,
+              "capacity": 106840
+            },
+            "secure": {
+              "incoming_future": 1440,
+              "outgoing_future": 1440,
+              "painted": 26116,
+              "capacity": 106840
+            }
+          },
+          "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+        }
+      },
+      "combined_vs_baseline": {
+        "flash_bytes": 112,
+        "static_ram_bytes": 0
+      },
+      "roles_vs_baseline": {
+        "flash_bytes": -40320,
+        "static_ram_bytes": 0
+      },
+      "roles_vs_combined": {
+        "flash_bytes": -40432,
+        "static_ram_bytes": 0
+      },
+      "roles_stack_delta_bytes": {
+        "plain": -416,
+        "secure": -336
+      },
+      "minimum_roles_stack_headroom_bytes": 80724
+    },
+    "thumbv8m.main-none-eabihf": {
+      "measurements": {
+        "baseline": {
+          "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+          "build_host": "aarch64-unknown-linux-gnu",
+          "source_revision": "f8a8cef2585f1b791dcc12cdf5a788fc3af27c7f",
+          "git_dirty": true,
+          "source_sha256": "c2857dfb3fcb9a9259a4d6b7c19e24ca9563152572f4e1bbb261b8a4222608c5",
+          "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+          "fixture_sha256": {
+            "proxy_main.rs": "3d06d6e8561587f11533debee3353d743aff22bb32b2ec745f8b76d54320e830",
+            "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+            "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+          },
+          "target": "thumbv8m.main-none-eabihf",
+          "profile": "release opt-level=s, LTO, codegen-units=1",
+          "features": "proxy-profile",
+          "datagram_bytes": 1152,
+          "forwards": 2,
+          "payload_bytes": 1024,
+          "elf_sha256": "3f255c218faea3d177045443fba5b89075992fcd99d278a8ec87cfc806398382",
+          "roles": false,
+          "flash_bytes": 236964,
+          "static_ram_bytes": 24232,
+          "scenarios": {
+            "plain": {
+              "incoming_future": 1440,
+              "outgoing_future": 1440,
+              "painted": 26332,
+              "capacity": 106840
+            },
+            "secure": {
+              "incoming_future": 1440,
+              "outgoing_future": 1440,
+              "painted": 26452,
+              "capacity": 106840
+            }
+          },
+          "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+        },
+        "combined": {
+          "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+          "build_host": "aarch64-unknown-linux-gnu",
+          "source_revision": "f8a8cef2585f1b791dcc12cdf5a788fc3af27c7f",
+          "git_dirty": true,
+          "source_sha256": "37507c7c228e40a7e2bb34ceb5cbff0adc3b86013c62dee50544a85ef8208ea0",
+          "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+          "fixture_sha256": {
+            "proxy_main.rs": "3d06d6e8561587f11533debee3353d743aff22bb32b2ec745f8b76d54320e830",
+            "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+            "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+          },
+          "target": "thumbv8m.main-none-eabihf",
+          "profile": "release opt-level=s, LTO, codegen-units=1",
+          "features": "proxy-profile",
+          "datagram_bytes": 1152,
+          "forwards": 2,
+          "payload_bytes": 1024,
+          "elf_sha256": "4386b3a95e6aa7a1abbc8d206b1b5c77264887213815d239d4d0b3f621cfb031",
+          "roles": false,
+          "flash_bytes": 237076,
+          "static_ram_bytes": 24232,
+          "scenarios": {
+            "plain": {
+              "incoming_future": 1440,
+              "outgoing_future": 1440,
+              "painted": 26332,
+              "capacity": 106840
+            },
+            "secure": {
+              "incoming_future": 1440,
+              "outgoing_future": 1440,
+              "painted": 26452,
+              "capacity": 106840
+            }
+          },
+          "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+        },
+        "roles": {
+          "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+          "build_host": "aarch64-unknown-linux-gnu",
+          "source_revision": "f8a8cef2585f1b791dcc12cdf5a788fc3af27c7f",
+          "git_dirty": true,
+          "source_sha256": "37507c7c228e40a7e2bb34ceb5cbff0adc3b86013c62dee50544a85ef8208ea0",
+          "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+          "fixture_sha256": {
+            "proxy_main.rs": "3d06d6e8561587f11533debee3353d743aff22bb32b2ec745f8b76d54320e830",
+            "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+            "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+          },
+          "target": "thumbv8m.main-none-eabihf",
+          "profile": "release opt-level=s, LTO, codegen-units=1",
+          "features": "proxy-roles",
+          "datagram_bytes": 1152,
+          "forwards": 2,
+          "payload_bytes": 1024,
+          "elf_sha256": "595997c3e5d53b5d3cd0c60849cef6117b67651cd89a7c73cfe6771de7947d15",
+          "roles": true,
+          "flash_bytes": 196640,
+          "static_ram_bytes": 24232,
+          "scenarios": {
+            "plain": {
+              "incoming_future": 1440,
+              "outgoing_future": 1440,
+              "painted": 25916,
+              "capacity": 106840
+            },
+            "secure": {
+              "incoming_future": 1440,
+              "outgoing_future": 1440,
+              "painted": 26116,
+              "capacity": 106840
+            }
+          },
+          "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+        }
+      },
+      "combined_vs_baseline": {
+        "flash_bytes": 112,
+        "static_ram_bytes": 0
+      },
+      "roles_vs_baseline": {
+        "flash_bytes": -40324,
+        "static_ram_bytes": 0
+      },
+      "roles_vs_combined": {
+        "flash_bytes": -40436,
+        "static_ram_bytes": 0
+      },
+      "roles_stack_delta_bytes": {
+        "plain": -416,
+        "secure": -336
+      },
+      "minimum_roles_stack_headroom_bytes": 80724
+    }
+  },
+  "default_role_control_workloads": {
+    "base": {
+      "baseline": {
+        "features": "client,test-support",
+        "flash_bytes": 52700,
+        "static_ram_bytes": 296
+      },
+      "candidate": {
+        "features": "client,test-support",
+        "flash_bytes": 52768,
+        "static_ram_bytes": 296
+      },
+      "flash_delta_bytes": 68,
+      "static_ram_delta_bytes": 0
+    },
+    "block": {
+      "baseline": {
+        "features": "client,test-support,block",
+        "flash_bytes": 60364,
+        "static_ram_bytes": 296
+      },
+      "candidate": {
+        "features": "client,test-support,block",
+        "flash_bytes": 60436,
+        "static_ram_bytes": 296
+      },
+      "flash_delta_bytes": 72,
+      "static_ram_delta_bytes": 0
+    },
+    "block1": {
+      "baseline": {
+        "features": "client,test-support,block1",
+        "flash_bytes": 53896,
+        "static_ram_bytes": 304
+      },
+      "candidate": {
+        "features": "client,test-support,block1",
+        "flash_bytes": 53968,
+        "static_ram_bytes": 304
+      },
+      "flash_delta_bytes": 72,
+      "static_ram_delta_bytes": 0
+    },
+    "observe": {
+      "baseline": {
+        "features": "client,test-support,observe",
+        "flash_bytes": 64632,
+        "static_ram_bytes": 368
+      },
+      "candidate": {
+        "features": "client,test-support,observe",
+        "flash_bytes": 64708,
+        "static_ram_bytes": 368
+      },
+      "flash_delta_bytes": 76,
+      "static_ram_delta_bytes": 0
+    },
+    "oscore": {
+      "baseline": {
+        "features": "client,test-support,oscore",
+        "flash_bytes": 77348,
+        "static_ram_bytes": 296
+      },
+      "candidate": {
+        "features": "client,test-support,oscore",
+        "flash_bytes": 77412,
+        "static_ram_bytes": 296
+      },
+      "flash_delta_bytes": 64,
+      "static_ram_delta_bytes": 0
+    },
+    "edhoc": {
+      "baseline": {
+        "features": "client,test-support,edhoc",
+        "flash_bytes": 131792,
+        "static_ram_bytes": 296
+      },
+      "candidate": {
+        "features": "client,test-support,edhoc",
+        "flash_bytes": 131868,
+        "static_ram_bytes": 296
+      },
+      "flash_delta_bytes": 76,
+      "static_ram_delta_bytes": 0
+    },
+    "proxy": {
+      "baseline": {
+        "features": "client,test-support,proxy",
+        "flash_bytes": 106396,
+        "static_ram_bytes": 1920
+      },
+      "candidate": {
+        "features": "client,test-support,proxy",
+        "flash_bytes": 106492,
+        "static_ram_bytes": 1920
+      },
+      "flash_delta_bytes": 96,
+      "static_ram_delta_bytes": 0
+    },
+    "discovery": {
+      "baseline": {
+        "features": "client,test-support,discovery",
+        "flash_bytes": 97308,
+        "static_ram_bytes": 296
+      },
+      "candidate": {
+        "features": "client,test-support,discovery",
+        "flash_bytes": 97400,
+        "static_ram_bytes": 296
+      },
+      "flash_delta_bytes": 92,
+      "static_ram_delta_bytes": 0
+    },
+    "full-block1": {
+      "baseline": {
+        "features": "client,test-support,edhoc,block1,observe,proxy,discovery,multicast",
+        "flash_bytes": 270548,
+        "static_ram_bytes": 12856
+      },
+      "candidate": {
+        "features": "client,test-support,edhoc,block1,observe,proxy,discovery,multicast",
+        "flash_bytes": 270656,
+        "static_ram_bytes": 12856
+      },
+      "flash_delta_bytes": 108,
+      "static_ram_delta_bytes": 0
+    },
+    "get-server": {
+      "baseline": {
+        "features": "get-server",
+        "flash_bytes": 50072,
+        "static_ram_bytes": 24
+      },
+      "candidate": {
+        "features": "get-server",
+        "flash_bytes": 50140,
+        "static_ram_bytes": 24
+      },
+      "flash_delta_bytes": 68,
+      "static_ram_delta_bytes": 0
+    },
+    "get-server-shared-counters": {
+      "baseline": {
+        "features": "get-server,shared-counters",
+        "flash_bytes": 51764,
+        "static_ram_bytes": 144
+      },
+      "candidate": {
+        "features": "get-server,shared-counters",
+        "flash_bytes": 51832,
+        "static_ram_bytes": 144
+      },
+      "flash_delta_bytes": 68,
+      "static_ram_delta_bytes": 0
+    },
+    "get-server-block1": {
+      "baseline": {
+        "features": "get-server-block1",
+        "flash_bytes": 64404,
+        "static_ram_bytes": 24
+      },
+      "candidate": {
+        "features": "get-server-block1",
+        "flash_bytes": 64468,
+        "static_ram_bytes": 24
+      },
+      "flash_delta_bytes": 64,
+      "static_ram_delta_bytes": 0
+    }
+  },
+  "default_role_control_measurement": {
+    "date": "2026-11-13",
+    "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+    "build_host": "aarch64-unknown-linux-gnu",
+    "target": "thumbv7em-none-eabihf",
+    "profile": "release opt-level=s, LTO, codegen-units=1",
+    "boundary": "Reachable test workloads, not whole-feature upper bounds. Static RAM excludes stack. Two-role EDHOC and protocol tables use stack storage; this is not a peak RAM measurement."
+  },
+  "existing_runtime_controls": {
+    "stack-thumbv7em-none-eabihf": {
+      "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+      "build_host": "aarch64-unknown-linux-gnu",
+      "profile": "release opt-level=s, LTO, codegen-units=1",
+      "budgets_enforced": true,
+      "flash_delta_bytes": 64,
+      "static_ram_delta_bytes": 0,
+      "maximum_painted_delta_bytes": 0,
+      "future_sizes_unchanged": true
+    },
+    "stack-thumbv8m.main-none-eabihf": {
+      "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+      "build_host": "aarch64-unknown-linux-gnu",
+      "profile": "release opt-level=s, LTO, codegen-units=1",
+      "budgets_enforced": true,
+      "flash_delta_bytes": 68,
+      "static_ram_delta_bytes": 0,
+      "maximum_painted_delta_bytes": 0,
+      "future_sizes_unchanged": true
+    },
+    "xarxa-thumbv7em-none-eabihf": {
+      "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+      "build_host": "aarch64-unknown-linux-gnu",
+      "profile": "release opt-level=s, LTO, codegen-units=1",
+      "budgets_enforced": true,
+      "flash_delta_bytes": 96,
+      "static_ram_delta_bytes": 0,
+      "maximum_painted_delta_bytes": 0,
+      "future_sizes_unchanged": true
+    },
+    "xarxa-thumbv8m.main-none-eabihf": {
+      "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+      "build_host": "aarch64-unknown-linux-gnu",
+      "profile": "release opt-level=s, LTO, codegen-units=1",
+      "budgets_enforced": true,
+      "flash_delta_bytes": 100,
+      "static_ram_delta_bytes": 0,
+      "maximum_painted_delta_bytes": 0,
+      "future_sizes_unchanged": true
+    }
+  }
+}

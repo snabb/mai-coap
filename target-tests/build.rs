@@ -22,11 +22,12 @@ fn main() {
         "thumbv7em-none-eabihf" => {
             "MEMORY { FLASH : ORIGIN = 0, LENGTH = 1024K\n RAM : ORIGIN = 0x20000000, LENGTH = 128K }"
         }
-        // The two-driver stack fixture uses the model's 2 MiB SSRAM1 secure
+        // Multi-driver resource fixtures use the model's 2 MiB SSRAM1 secure
         // alias. Ordinary runtime fixtures retain the 32 KiB internal SRAM.
         "thumbv8m.main-none-eabihf"
             if env::var_os("CARGO_FEATURE_STACK_PROFILE").is_some()
-                || env::var_os("CARGO_FEATURE_XARXA_PROFILE").is_some() =>
+                || env::var_os("CARGO_FEATURE_XARXA_PROFILE").is_some()
+                || env::var_os("CARGO_FEATURE_PROXY_PROFILE").is_some() =>
         {
             "MEMORY { FLASH : ORIGIN = 0x10000000, LENGTH = 4M\n RAM : ORIGIN = 0x38000000, LENGTH = 128K }"
         }
