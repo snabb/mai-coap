@@ -1314,7 +1314,7 @@
         "scope": "The receiver Endpoint is already contained in nested drive future 31,832; do not add it again to the 12,984-byte delta ledger."
       },
       "command_capacity_probe": {
-        "status": "Matched downstream build requested; not measured or deployed yet.",
+        "status": "Matched linked builds verified; physical concurrency, recovery and stack qualification requested in Rustastic message 0138, results pending.",
         "change": "For a separately driven proxy, retain receiving command slots for local worker/client operations; remove the two extra receiving reply-submission slots. Keep outbound Shared and all exchange/deferred/body/packet capacities unchanged.",
         "with_two_workers": {
           "receiving_commands_before": 4,
@@ -1347,7 +1347,178 @@
           ],
           "boundary": "The tests model deferred local replies, not real upload flash I/O or physical hardware. No library production code changed."
         },
-        "boundary": "The Shared-size difference is read from the same proxy feature graph. A whole-task/firmware reduction remains a prediction until a matched linked build confirms compiler layout; the 2760-byte proxy-vs-no-proxy receiving Shared delta also includes 168 bytes of feature-dependent slot/metadata growth."
+        "boundary": "The same-feature Shared-size prediction is confirmed by matched linked task-pool and .bss reductions: 2592 bytes with OTA and 1296 without OTA. Stack use, construction peak and whole-program worst-case RAM remain unmeasured for the probe. The earlier 2760-byte proxy-vs-no-proxy receiving Shared delta also includes 168 bytes of feature-dependent slot/metadata growth.",
+        "linked_measurement": {
+          "date": "2026-11-14",
+          "source_report": "Rustastic coordination report 0137",
+          "firmware_source_revision": "36ac6401",
+          "mai_coap_revision": "d727322570aaf65ea7206c9bbb2fa925fb07869d",
+          "probe_patch_sha256": "2cbf64ac3f5201f152eccb81bbd368afc577276a7f0b200fc6897e60e07a9fb7",
+          "board": "XIAO ESP32-S3",
+          "target": "xtensa-esp32s3-none-elf",
+          "build_host": "AWS m7g AArch64, one host/run for all five builds",
+          "toolchain": "rustc 1.97.0-nightly (8ea53bcd7 2026-07-08)",
+          "profile": "release",
+          "datagram_bytes": 1152,
+          "forwards": 2,
+          "features": "net-coap-oscore,net-mdns,net-fragmentation plus net-ota and/or net-coap-proxy as indicated by each variant",
+          "controls": "Same firmware baseline, compiler, profile, library clone path and remaining capacities. The receiving-command patch alone separates each control/probe pair. No-proxy uses the corresponding no-proxy device configuration; no-OTA drops only net-ota.",
+          "verification": "Parent independently read full ELF hashes, size -A sections and readelf task-pool symbols for all five images; symbols agree with saved nm reports. The probe patch hash matches the prepared patch.",
+          "variants": {
+            "noproxy": {
+              "proxy": false,
+              "ota": true,
+              "receiving_commands": 2,
+              "elf_sha256": "0659673940323b310f87aa7e34fb2f6b200d89b49f4d6f9a16f52d06414cc405",
+              "sections_bytes": {
+                ".text": 857545,
+                ".rodata": 113848,
+                ".data": 20912,
+                ".bss": 176728,
+                ".stack": 98184
+              },
+              "coap_task_pool": {
+                "symbol": "node_xiao_esp32s3::coap::POOL",
+                "bytes": 31696
+              },
+              "selected_section_totals_bytes": {
+                "text_rodata_data": 992305,
+                "data_bss": 197640
+              }
+            },
+            "ctrl-proxy": {
+              "proxy": true,
+              "ota": true,
+              "receiving_commands": 4,
+              "elf_sha256": "49ca81a38ec066caa2ab681120295cdb1a86b950f8701dea6d1ef41070185545",
+              "sections_bytes": {
+                ".text": 919077,
+                ".rodata": 115792,
+                ".data": 20912,
+                ".bss": 189712,
+                ".stack": 85200
+              },
+              "coap_task_pool": {
+                "symbol": "node_xiao_esp32s3::coap_proxy::POOL",
+                "bytes": 44680
+              },
+              "selected_section_totals_bytes": {
+                "text_rodata_data": 1055781,
+                "data_bss": 210624
+              }
+            },
+            "probe-proxy": {
+              "proxy": true,
+              "ota": true,
+              "receiving_commands": 2,
+              "elf_sha256": "e75dbae0ccb667ebc856458bf0c911bf4bbe2299b16e55974adf8263a50c919a",
+              "sections_bytes": {
+                ".text": 916973,
+                ".rodata": 115760,
+                ".data": 20912,
+                ".bss": 187120,
+                ".stack": 87792
+              },
+              "coap_task_pool": {
+                "symbol": "node_xiao_esp32s3::coap_proxy::POOL",
+                "bytes": 42088
+              },
+              "selected_section_totals_bytes": {
+                "text_rodata_data": 1053645,
+                "data_bss": 208032
+              }
+            },
+            "ctrl-proxy-noota": {
+              "proxy": true,
+              "ota": false,
+              "receiving_commands": 2,
+              "elf_sha256": "88c889c080f1396fd87ef758302dcf66623270ac90e7996d5b1f2b7a1c3f92b6",
+              "sections_bytes": {
+                ".text": 876065,
+                ".rodata": 111968,
+                ".data": 20584,
+                ".bss": 163872,
+                ".stack": 111616
+              },
+              "coap_task_pool": {
+                "symbol": "node_xiao_esp32s3::coap_proxy::POOL",
+                "bytes": 19016
+              },
+              "selected_section_totals_bytes": {
+                "text_rodata_data": 1008617,
+                "data_bss": 184456
+              }
+            },
+            "probe-proxy-noota": {
+              "proxy": true,
+              "ota": false,
+              "receiving_commands": 1,
+              "elf_sha256": "6fddfb705e66d2849407fd4a54dcd077f18c91450edfa4274cb22fc9044ec532",
+              "sections_bytes": {
+                ".text": 877085,
+                ".rodata": 111968,
+                ".data": 20584,
+                ".bss": 162576,
+                ".stack": 112912
+              },
+              "coap_task_pool": {
+                "symbol": "node_xiao_esp32s3::coap_proxy::POOL",
+                "bytes": 17720
+              },
+              "selected_section_totals_bytes": {
+                "text_rodata_data": 1009637,
+                "data_bss": 183160
+              }
+            }
+          },
+          "probe_minus_control": {
+            "with_ota": {
+              "control": "ctrl-proxy",
+              "probe": "probe-proxy",
+              "changed_non_debug_sections_bytes": {
+                ".bss": -2592,
+                ".rodata": -32,
+                ".stack": 2592,
+                ".text": -2104
+              },
+              "coap_task_pool_delta_bytes": -2592,
+              "selected_text_rodata_data_delta_bytes": -2136,
+              "data_bss_delta_bytes": -2592
+            },
+            "without_ota": {
+              "control": "ctrl-proxy-noota",
+              "probe": "probe-proxy-noota",
+              "changed_non_debug_sections_bytes": {
+                ".bss": -1296,
+                ".stack": 1296,
+                ".text": 1020
+              },
+              "coap_task_pool_delta_bytes": -1296,
+              "selected_text_rodata_data_delta_bytes": 1020,
+              "data_bss_delta_bytes": -1296
+            }
+          },
+          "ota_proxy_increment_over_no_proxy_bytes": {
+            "control_data_bss": 12984,
+            "probe_data_bss": 10392
+          },
+          "section_accounting": "Selected flash sums are .text + .rodata + .data; static sums are .data + .bss. These are not absolute programming-image sizes or totals of all RAM allocations. Within each control/probe pair every other non-debug section size is unchanged. The .stack capacity grows by the freed .bss space and is not an additional saving or a stack-usage measurement.",
+          "no_ota_code_growth": {
+            "text_delta_bytes": 1020,
+            "downstream_reported_named_code_net_delta_bytes": 1066,
+            "downstream_reported_groups_bytes": {
+              "endpoint::Shared": 484,
+              "endpoint::race": 399,
+              "endpoint::SendWindow": 161,
+              "endpoint::Exchange": 135,
+              "net::coap::proxy": -56,
+              "transport::embassy_xarxa": -47
+            },
+            "interpretation": "The downstream report observes opposite movements in several of the same functions in the OTA pair and suggests capacity-dependent code generation. That cause is a hypothesis, not an independently established attribution; the measured no-OTA .text growth remains a trade-off."
+          },
+          "physical_validation": "Not run by these builds. Concurrent upload/forward progress, recovery and measured stack/headroom remain pending under request 0138.",
+          "private_artifacts": "Saved downstream ELF, nm and build-log artifacts stay outside Git; no provisioned binaries or device settings are published here."
+        }
       }
     }
   }

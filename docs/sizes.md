@@ -128,8 +128,10 @@ Its `ram_attribution` ledger reconciles the remaining proxy task-pool increase
 from DWARF sizes and selected field offsets in the largest suspend states, including
 nested future storage and explicitly labelled residuals for unlisted captures and
 padding. Nested fields and overlapping states are not extra allocations. The
-receiving-command reduction described there is a build probe, with a same-feature
-Shared-size prediction separate from measured firmware savings.
+receiving-command comparison includes matched linked OTA and no-OTA firmware
+builds that confirm the static reduction, with the no-OTA code growth recorded as
+a trade-off. Physical concurrency, recovery and stack qualification for that
+capacity change remain pending.
 
 ## Endpoint layouts
 
