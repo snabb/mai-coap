@@ -816,8 +816,167 @@
       }
     ],
     "writer_hardening": "Oversized callback lengths D+1 and usize::MAX are rejected as Malformed before parsing or queueing; corrected output can reuse the admitted ticket. The focused test fails with the length guard removed, and final host/M0/endpoint-fuzz checks were repeated after this fix.",
-    "hardware": "Not run for this candidate; previous role-only downstream results do not validate it."
+    "hardware": "Downstream results and ELF-verified S3 section/task-pool measurements are recorded in downstream_validation. They are distinct from the QEMU fixture measurements.",
+    "timeout_driver": "Four silent-origin cases (short/default retry profile, independent/joined drivers) pass on both baseline and candidate. Suppressing the upstream completion wake fails all four. Full host checks passed after adding these tests; production code is unchanged from the hardware-tested candidate."
   },
-  "boundary": "Proxy application storage occupies the measured stack, so application and painted savings overlap. Endpoints and Shared remain static. Driver futures are unchanged. Paint observes writes in exercised scenarios, excludes construction peak and interrupts, and is not a worst-case bound. No S3 task-pool, physical stack, CPU or worst-case measurement is claimed. Opaque 1024-byte relays and a public local GET do not establish protected local interoperability.",
-  "artifacts": "Ignored target/remote/target/proxy-ownership/final contains paired proxy and standard ELFs, source/fixture/ELF hashes, section and symbol reports, runtime logs and mutation logs; validation logs are in the sibling validation directory."
+  "boundary": "The proxy_comparisons and standard_controls above are linked/QEMU fixtures: application storage occupies the measured stack, so application and painted savings overlap; Endpoint/Shared are static and driver futures unchanged. Paint excludes construction peak and interrupts and is not a worst-case bound. The fixture does not establish protected local interoperability or hardware behavior. Separate downstream physical results, including their unmatched stack comparison and exclusions, are below. No whole-firmware worst-case RAM or CPU claim is made.",
+  "artifacts": "Ignored target/remote/target/proxy-ownership/final contains paired proxy and standard ELFs, source/fixture/ELF hashes, section and symbol reports, runtime logs and mutation logs; validation logs are in the sibling validation directory.",
+  "downstream_validation": {
+    "date": "2026-11-14",
+    "source_reports": [
+      "Rustastic coordination reports 0124 and 0127-0130"
+    ],
+    "firmware_source_revision": "36ac6401",
+    "hardware_tested_mai_coap_revision": "1c75109a9593f26eab6480c3b649ec15e108e6ca",
+    "later_test_only_revision": "7473425",
+    "measurement": {
+      "board": "XIAO ESP32-S3",
+      "target": "xtensa-esp32s3-none-elf",
+      "build_host": "AWS m7g AArch64, same host for all four builds",
+      "toolchain": "rustc 1.97.0-nightly (8ea53bcd7 2026-07-08)",
+      "profile": "release",
+      "datagram_bytes": 1152,
+      "forwards": 2,
+      "controls": "Same firmware source, device configuration, capacities and compiler/profile. Independent equal-length source paths for baseline/candidate; proxy-on and proxy-off at each revision. No comparison with earlier x86 absolute sizes is used for the paired deltas.",
+      "verification": "ELF section sizes, hashes and coap task-pool symbols independently read from all four saved images."
+    },
+    "variants": {
+      "ctrl-noproxy": {
+        "mai_coap_revision": "74dba445ddd785769ff86e45f05a3a096ce13df3",
+        "proxy": false,
+        "elf_sha256": "d89da2440bfc720b145c114e9706e23e58de7ec9803882c160deec371d9ec329",
+        "sections_bytes": {
+          ".data": 20912,
+          ".bss": 176728,
+          ".rodata": 113832,
+          ".text": 857573,
+          ".stack": 98184
+        },
+        "coap_task_pool": {
+          "symbol": "node_xiao_esp32s3::coap::POOL",
+          "bytes": 31696
+        },
+        "flash_bytes": 992317,
+        "static_ram_bytes": 197640
+      },
+      "ctrl-proxy": {
+        "mai_coap_revision": "74dba445ddd785769ff86e45f05a3a096ce13df3",
+        "proxy": true,
+        "elf_sha256": "272cb3064a3055213114c49c8e3f322d7da06f81c9c0fcb059637b3b0e3f85ba",
+        "sections_bytes": {
+          ".data": 20912,
+          ".bss": 194320,
+          ".rodata": 115752,
+          ".text": 914973,
+          ".stack": 80592
+        },
+        "coap_task_pool": {
+          "symbol": "node_xiao_esp32s3::coap_proxy::POOL",
+          "bytes": 49288
+        },
+        "flash_bytes": 1051637,
+        "static_ram_bytes": 215232
+      },
+      "cand-noproxy": {
+        "mai_coap_revision": "1c75109a9593f26eab6480c3b649ec15e108e6ca",
+        "proxy": false,
+        "elf_sha256": "6b6edb1558566860499cc323d50e0fd1254782480b0f40da0d769b19fb0c0082",
+        "sections_bytes": {
+          ".data": 20912,
+          ".bss": 176728,
+          ".rodata": 113848,
+          ".text": 857541,
+          ".stack": 98184
+        },
+        "coap_task_pool": {
+          "symbol": "node_xiao_esp32s3::coap::POOL",
+          "bytes": 31696
+        },
+        "flash_bytes": 992301,
+        "static_ram_bytes": 197640
+      },
+      "cand-proxy": {
+        "mai_coap_revision": "1c75109a9593f26eab6480c3b649ec15e108e6ca",
+        "proxy": true,
+        "elf_sha256": "157171dd42731c6a52c667aa7c6d7c886cac2b38cda293b7090ee3c38c96bc7d",
+        "sections_bytes": {
+          ".data": 20912,
+          ".bss": 189712,
+          ".rodata": 115784,
+          ".text": 919049,
+          ".stack": 85200
+        },
+        "coap_task_pool": {
+          "symbol": "node_xiao_esp32s3::coap_proxy::POOL",
+          "bytes": 44680
+        },
+        "flash_bytes": 1055745,
+        "static_ram_bytes": 210624
+      }
+    },
+    "proxy_enabled_candidate_minus_control": {
+      "flash_bytes": 4108,
+      "static_ram_bytes": -4608,
+      "coap_task_pool_bytes": -4608,
+      "reserved_stack_region_bytes": 4608
+    },
+    "proxy_overhead_relative_to_same_revision_no_proxy": {
+      "ctrl": {
+        "flash_bytes": 59320,
+        "static_ram_bytes": 17592
+      },
+      "cand": {
+        "flash_bytes": 63444,
+        "static_ram_bytes": 12984
+      }
+    },
+    "proxy_overhead_change": {
+      "flash_bytes": 4124,
+      "static_ram_bytes": -4608
+    },
+    "symbol_group_deltas_reported_bytes": {
+      "transport::embassy_xarxa": 2925,
+      "endpoint::Endpoint": 2424,
+      "endpoint::Operation": 224,
+      "codec::reheader": 220,
+      "endpoint::deferred": 142,
+      "proxy::write_status": 72,
+      "proxy::ForwardProxy": -666,
+      "endpoint::ResponseOperation": -363,
+      "endpoint::Handle": -284,
+      "mai_coap_top_level": -195,
+      "proxy::status": -193
+    },
+    "stack_observations": {
+      "paired_comparison": false,
+      "control": {
+        "revision": "74dba44",
+        "build_host": "x86_64",
+        "region_bytes": 80592,
+        "painted_used_bytes": 55680,
+        "headroom_bytes": 24912
+      },
+      "candidate": {
+        "revision": "1c75109",
+        "build_host": "AArch64",
+        "region_bytes": 85200,
+        "painted_used_bytes": 52912,
+        "headroom_bytes": 32288
+      },
+      "boundary": "Reported debugger stack paint after boot under steady-state request traffic. The AArch64 control was not repainted; build hosts and earlier workloads differ. These observations do not establish a matched source-attributable stack reduction, boot/construction peak or worst-case headroom. The task pool is already included in static RAM; the larger reserved stack region is the same freed allocation, not an additional saving."
+    },
+    "physical_validation": {
+      "flrc": "nRF54 Thread receiving proxy to a tunnel peer. 61/61 interoperability checks; local and forwarded OSCORE, separate CON/ACK, idle completion, ten overlap/retransmission rounds on each image, capacity rejection and subsequent recovery passed. All 30 requests per image completed in the overlap test.",
+      "loss_boundary": "Some first copies were unanswered on both images and retries recovered. Differences in retransmission counts and the initial slow burst do not establish a source-attributable performance change.",
+      "expiry": "Halted-origin runs recovered forwarding slots. A later instrumented candidate trace shows upstream Timeout, immediate 5.04 queue handoff, transport acceptance and four downstream CON retries.",
+      "lora": "S3 Wi-Fi receiving proxy to a tunnel peer: forwarded info/status/log and overlapping status/log plus local requests passed. Single-run times are not a performance comparison. The known large (about 15 KB) peer-list timeout was not repeated; tuning remains outside this validation.",
+      "capacity_boundary": "Hardware bursts do not directly force every receiving command slot busy while a completed reply waits; deterministic host tests cover that handoff path."
+    },
+    "timeout_diagnosis": {
+      "cause": "A stateful router firewall dropped the late reverse UDP flow after its conntrack entry expired. Matching router logs identify all five accepted CON 5.04 attempts as new-flow drops.",
+      "resolution": "After the user-approved UDP and UDP-stream idle timeout change to 300 seconds, the halted-origin test received 5.04 at the client 127 seconds after the request. No mai-coap production change was needed.",
+      "boundary": "Local send acceptance alone did not establish wire delivery. The trace used a private instrumented clone of the candidate; the successful post-network-change check used the hardware-tested candidate."
+    },
+    "artifact_boundary": "Provisioned ELFs, symbol reports, captures and hardware logs remain private downstream artifacts. Only section/task-pool sizes, ELF hashes, revision/toolchain controls and validation limits are published here."
+  }
 }

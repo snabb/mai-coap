@@ -234,6 +234,14 @@ completion on `Capacity`, and omitting completion-slot clearing each fail their
 regression/oracle assertions. The writer-length regression also fails before explicit
 oversize rejection; correcting the writer can reuse the same admitted ticket.
 
+Downstream physical coverage and exclusions are recorded in the
+`downstream_validation` section of [proxy-ownership-resources.json](proxy-ownership-resources.json).
+An instrumented halted-origin run verified upstream timeout, immediate 5.04 handoff
+and transport acceptance of the separate CON and its retries. A stateful router
+firewall dropped the late reverse UDP flow after conntrack expiry; after the
+approved network timeout change, the client received 5.04. No protocol change was
+required. Local acceptance alone did not establish delivery across that network.
+
 ### Duplicate detection
 
 `DEDUP_ENTRIES` metadata records and `CACHED_REPLIES` references to full replies are

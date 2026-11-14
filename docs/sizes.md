@@ -116,8 +116,14 @@ matched M4/M33 driver-pulled reply experiment against `74dba44`, including stand
 linked workload controls and symbol attribution for flash growth. Each pair uses
 the same host, compiler, release profile, fixture and capacities. Application
 storage is part of the measured stack, so its reduction overlaps the painted
-reduction. Construction peak, worst-case stack, S3 task pools and physical stack
-remain unmeasured. Existing budgets are unchanged.
+reduction. Construction peak and worst-case stack remain unmeasured. Existing
+budgets are unchanged.
+
+The report's separate `downstream_validation` section records matched ESP32-S3
+proxy-on/off builds, task-pool symbols and ELF hashes, plus physical FLRC and LoRa
+coverage. Its debugger stack observations span different build hosts and workloads,
+so they do not establish a matched stack reduction. Task-pool storage is already
+part of static RAM; a larger linker stack region is the same freed allocation.
 
 ## Endpoint layouts
 
