@@ -124,6 +124,11 @@ proxy-on/off builds, task-pool symbols and ELF hashes, plus physical FLRC and Lo
 coverage. Its debugger stack observations span different build hosts and workloads,
 so they do not establish a matched stack reduction. Task-pool storage is already
 part of static RAM; a larger linker stack region is the same freed allocation.
+Its `ram_attribution` ledger reconciles the remaining proxy task-pool increase
+from DWARF sizes and field offsets in the largest suspend states, including
+nested future storage. Nested fields and overlapping states are not extra
+allocations. The receiving-command reduction described there is a build probe,
+with a same-feature Shared-size prediction separate from measured firmware savings.
 
 ## Endpoint layouts
 

@@ -163,6 +163,13 @@ The built-in proxy uses this hook to retain an upstream completion in its existi
 storage until the receiving endpoint accepts it. That completion continues to
 occupy an outbound command slot while receiving capacity is unavailable.
 
+With a separate outbound endpoint, size receiving command storage for local worker
+and client operations; relayed replies need no additional receiving command slots.
+The outbound `Shared` still needs capacity for upstream commands and retained
+completions. A proxy using one endpoint counts that upstream work in the same
+command bound. Keep at least one receiving command slot for deferred admission,
+even when a separate-outbound proxy has no local worker.
+
 `Endpoint::run` handles both hooks. Custom drivers call `poll_resources`, and manual
 `Application` wrappers forward `poll_deferred` as well as `poll`, `deadline` and the
 other lifecycle methods. `delegate_application!` forwards the complete contract.

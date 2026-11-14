@@ -241,3 +241,227 @@ fn expired_receiving_ticket_releases_a_retained_upstream_completion() {
     assert!(receiving.pop_outgoing().is_none());
     drop(next);
 }
+
+fn worker_replies_and_forwards<const COMMANDS: usize, const EXCHANGES: usize>(workers: usize) {
+    use core::{future::Future, pin::Pin, task::Poll};
+    use mai_coap::{
+        Error, InlineStorage,
+        endpoint::{Disposition, Response, Ticket, role},
+        security::AllowAll,
+    };
+    #[derive(Default)]
+    struct Workers(Vec<Ticket>);
+    impl Application<256> for Workers {
+        fn handle(
+            &mut self,
+            request: Request<'_>,
+            _: &mut ResponseWriter<'_, 256>,
+        ) -> Result<Disposition, Code> {
+            assert!(self.0.len() < 2);
+            self.0.push(request.deferred_ticket().unwrap());
+            Ok(Disposition::Deferred)
+        }
+        fn recognizes(&self, _: OptionNumber) -> bool {
+            false
+        }
+    }
+    type Receiving<'a, const COMMANDS: usize, const EXCHANGES: usize> = Endpoint<
+        'a,
+        Unsecured<StdRng>,
+        256,
+        EXCHANGES,
+        8,
+        0,
+        2,
+        2,
+        COMMANDS,
+        EXCHANGES,
+        0,
+        6,
+        InlineStorage<256, 6>,
+        role::Server,
+    >;
+    type Upstream<'a> = Endpoint<
+        'a,
+        Unsecured<StdRng>,
+        256,
+        2,
+        4,
+        0,
+        0,
+        2,
+        2,
+        0,
+        0,
+        2,
+        InlineStorage<256, 2>,
+        role::Client,
+    >;
+    assert!(workers <= COMMANDS);
+    let incoming = Shared::<256, COMMANDS>::new();
+    let outgoing = Shared::<256, 2>::new();
+    let mut receiving = Receiving::<COMMANDS, EXCHANGES>::new_with_role(
+        &incoming,
+        Unsecured(StdRng::seed_from_u64(21)),
+    )
+    .unwrap();
+    let mut upstream =
+        Upstream::new_with_role(&outgoing, Unsecured(StdRng::seed_from_u64(22))).unwrap();
+    let mut app = ForwardProxy::<_, _, 256, COMMANDS, 2, 2>::with_outbound(
+        Workers::default(),
+        Route,
+        incoming.handle(),
+        outgoing.handle(),
+    )
+    .unwrap();
+    let mut bytes = [0; 256];
+    for (remote, token) in [(address(1), b'a'), (address(2), b'b')]
+        .into_iter()
+        .take(workers)
+    {
+        let n = MessageBuilder::new(
+            &mut bytes,
+            MessageType::Confirmable,
+            Code::GET,
+            u16::from(token),
+            &[token],
+        )
+        .unwrap()
+        .finish(&[])
+        .unwrap();
+        receiving
+            .receive(
+                &bytes[..n],
+                Metadata::new(remote, address(20).ip(), n),
+                Instant(0),
+                &mut app,
+                &AllowAll,
+            )
+            .unwrap();
+        let ack = receiving.pop_outgoing().unwrap();
+        assert_eq!(
+            MessageView::parse(ack.packet.as_slice()).unwrap().code(),
+            Code::EMPTY
+        );
+    }
+    assert_eq!(app.inner_mut().0.len(), workers);
+    for (remote, token) in [(address(3), b'f'), (address(4), b'g')] {
+        let request = forward_request(token);
+        receiving
+            .receive(
+                request.as_slice(),
+                Metadata::new(remote, address(20).ip(), request.as_slice().len()),
+                Instant(0),
+                &mut app,
+                &AllowAll,
+            )
+            .unwrap();
+        let ack = receiving.pop_outgoing().unwrap();
+        assert_eq!(
+            MessageView::parse(ack.packet.as_slice()).unwrap().code(),
+            Code::EMPTY
+        );
+    }
+    let mut unused = |_: Request<'_>, _: &mut ResponseWriter<'_, 256>| Err(Code::NOT_FOUND);
+    for _ in 0..2 {
+        upstream.poll(Instant(0)).unwrap();
+        let request = upstream
+            .pop_outgoing()
+            .expect("upstream NSTART must recover");
+        let reply = origin_response(&request.packet, b"forwarded");
+        upstream
+            .receive(
+                reply.as_slice(),
+                Metadata::new(address(9), address(20).ip(), reply.as_slice().len()),
+                Instant(0),
+                &mut unused,
+                &AllowAll,
+            )
+            .unwrap();
+    }
+    let handle = incoming.handle();
+    let mut response = Response::<256>::new(Code::CONTENT);
+    response.set_payload(b"worker").unwrap();
+    let tickets = app.inner_mut().0.clone();
+    let mut deliveries: Vec<_> = tickets
+        .iter()
+        .map(|ticket| handle.respond(*ticket, &response).unwrap())
+        .collect();
+    if workers == COMMANDS {
+        assert!(matches!(
+            handle.respond(tickets[0], &response),
+            Err(Error::Capacity)
+        ));
+    }
+    let mut cx = Context::from_waker(core::task::Waker::noop());
+    for operation in &mut deliveries {
+        assert!(Pin::new(operation).poll(&mut cx).is_pending());
+    }
+    // Worker submissions occupy their command slots before either upstream result
+    // is pulled. Forwarding must make progress with no extra receiving reservation.
+    receiving
+        .poll_resources(Instant(0), &mut app, &AllowAll, &mut cx)
+        .unwrap();
+    let mut forwards = Vec::new();
+    for _ in 0..2 {
+        let packet = receiving
+            .pop_outgoing()
+            .expect("forward needs no extra command slot");
+        let reply = MessageView::parse(packet.packet.as_slice()).unwrap();
+        assert_eq!(reply.message_type(), MessageType::Confirmable);
+        assert_eq!(reply.code(), Code::CONTENT);
+        assert_eq!(reply.payload(), b"forwarded");
+        forwards.push((packet.remote, reply.token()[0]));
+    }
+    forwards.sort_unstable();
+    assert_eq!(forwards, [(address(3), b'f'), (address(4), b'g')]);
+    for operation in &mut deliveries {
+        assert!(Pin::new(operation).poll(&mut cx).is_pending());
+    }
+    receiving.poll(Instant(0)).unwrap();
+    for operation in &mut deliveries {
+        assert_eq!(Pin::new(operation).poll(&mut cx), Poll::Ready(Ok(())));
+    }
+    let mut worker_replies = Vec::new();
+    for _ in 0..workers {
+        let packet = receiving
+            .pop_outgoing()
+            .expect("worker reply must retain its command");
+        let reply = MessageView::parse(packet.packet.as_slice()).unwrap();
+        assert_eq!(reply.message_type(), MessageType::Confirmable);
+        assert_eq!(reply.code(), Code::CONTENT);
+        assert_eq!(reply.payload(), b"worker");
+        worker_replies.push((packet.remote, reply.token()[0]));
+    }
+    worker_replies.sort_unstable();
+    let expected: Vec<_> = [(address(1), b'a'), (address(2), b'b')]
+        .into_iter()
+        .take(workers)
+        .collect();
+    assert_eq!(worker_replies, expected);
+    assert!(receiving.front_outgoing().is_none());
+    let outbound = outgoing.handle();
+    let first = outbound
+        .client(address(9))
+        .request(Code::GET, "/again")
+        .unwrap()
+        .send()
+        .unwrap();
+    let second = outbound
+        .client(address(9))
+        .request(Code::GET, "/again")
+        .unwrap()
+        .send()
+        .unwrap();
+    drop((first, second));
+}
+
+#[test]
+fn two_worker_replies_and_two_forwards_share_two_receiving_commands() {
+    worker_replies_and_forwards::<2, 4>(2);
+}
+
+#[test]
+fn proxy_without_workers_needs_only_one_receiving_command() {
+    worker_replies_and_forwards::<1, 2>(0);
+}

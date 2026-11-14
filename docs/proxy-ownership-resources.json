@@ -1012,6 +1012,345 @@
       "endpoint::Handle": -284,
       "mai_coap_top_level": -195,
       "proxy::status": -193
+    },
+    "ram_attribution": {
+      "provenance": {
+        "hardware_tested_library_revision": "1c75109a9593f26eab6480c3b649ec15e108e6ca",
+        "firmware_revision": "36ac6401",
+        "proxy_variant": "cand-proxy",
+        "no_proxy_variant": "cand-noproxy",
+        "compiler_and_profile": "Same compiler, build host and release profile as downstream_validation.measurement. DIE offsets refer to readelf --debug-dump=info --wide for the corresponding private ELF.",
+        "method": "TaskStorage/POOL symbols and DWARF sizes and disjoint field offsets in each largest suspend state. Alternative coroutine states overlap and are not summed. Matching ELF hashes are in downstream_validation.variants."
+      },
+      "pool_comparison": {
+        "no_proxy": {
+          "symbol_bytes": 31696,
+          "future": {
+            "die": "0x3c41",
+            "bytes": 31656,
+            "max_state": "Suspend2"
+          },
+          "task_storage_bytes": 31696,
+          "task_storage_minus_future_bytes": 40
+        },
+        "proxy": {
+          "symbol_bytes": 44680,
+          "future": {
+            "die": "0x3c46",
+            "bytes": 44640,
+            "max_state": "Suspend2"
+          },
+          "task_storage_bytes": 44680,
+          "task_storage_minus_future_bytes": 40
+        },
+        "delta_bytes": 12984,
+        "delta_ledger": [
+          {
+            "item": "nested serve/drive future",
+            "no_proxy_bytes": 28712,
+            "proxy_bytes": 31832,
+            "delta_bytes": 3120,
+            "proxy_die": "0xbf5c",
+            "no_proxy_die": "0x419f"
+          },
+          {
+            "item": "receiving Shared, C2 to C4 across matched app variants",
+            "no_proxy_bytes": 2576,
+            "proxy_bytes": 5336,
+            "delta_bytes": 2760,
+            "proxy_die": "0x8fa78",
+            "no_proxy_die": "0x811e6"
+          },
+          {
+            "item": "outbound Shared, proxy only",
+            "proxy_bytes": 2744,
+            "delta_bytes": 2744,
+            "die": "0x9bd18"
+          },
+          {
+            "item": "outbound Endpoint, proxy only",
+            "proxy_bytes": 4280,
+            "delta_bytes": 4280,
+            "die": "0x9c226"
+          },
+          {
+            "item": "additional retained captures",
+            "components_bytes": {
+              "second_seed": 32,
+              "second_socket": 8,
+              "second_iface": 8,
+              "TunnelRouting": 20,
+              "second_transport": 12
+            },
+            "delta_bytes": 80
+          }
+        ],
+        "same_proxy_feature_shared_capacity_comparison": {
+          "C4": {
+            "shared_die": "0x8fa78",
+            "shared_bytes": 5336,
+            "state_die": "0x8ff5e",
+            "state_bytes": 5328,
+            "slots": {
+              "count": 4,
+              "slot_die": "0x8ffa8",
+              "slot_bytes_each": 1296,
+              "array_bytes": 5184
+            },
+            "counters_bytes": 120,
+            "driver_bytes": 8,
+            "revision_bytes": 8,
+            "body_sequence_bytes": 8,
+            "wrapper_bytes": 8
+          },
+          "C2": {
+            "shared_die": "0x9bd18",
+            "shared_bytes": 2744,
+            "state_die": "0x9c1a6",
+            "state_bytes": 2736,
+            "slots": {
+              "count": 2,
+              "slot_die": "0x8ffa8",
+              "slot_bytes_each": 1296,
+              "array_bytes": 2592
+            },
+            "counters_bytes": 120,
+            "driver_bytes": 8,
+            "revision_bytes": 8,
+            "body_sequence_bytes": 8,
+            "wrapper_bytes": 8
+          },
+          "C4_minus_C2_bytes": 2592
+        },
+        "no_proxy_feature_shared_C2": {
+          "bytes": 2576,
+          "state_bytes": 2568,
+          "slot_bytes_each": 1216,
+          "array_bytes": 2432,
+          "counters_bytes": 120,
+          "driver_bytes": 8,
+          "revision_bytes": 8,
+          "body_sequence_field": false,
+          "die": "0x811e6",
+          "state_die": "0x816cc",
+          "slot_die": "0x81709"
+        },
+        "scope": "The 2,760-byte receiver Shared delta compares the matched no-proxy C2 build to proxy C4; it includes +168 bytes from proxy-only per-slot/metadata representation (2*80-byte slot increase plus an 8-byte body_sequence). Within one proxy feature set C4 to C2 saves 2,592 bytes. TaskStorage totals already equal the POOL symbols; do not add the 40-byte difference again."
+      },
+      "proxy_future_suspend2_fields": {
+        "die": "0x3c46",
+        "future_bytes": 44640,
+        "fields": [
+          {
+            "name": "socket",
+            "offset": 64,
+            "bytes": 8
+          },
+          {
+            "name": "tunnel_socket",
+            "offset": 72,
+            "bytes": 8
+          },
+          {
+            "name": "shared",
+            "offset": 448,
+            "bytes": 5336
+          },
+          {
+            "name": "transport",
+            "offset": 424,
+            "bytes": 12
+          },
+          {
+            "name": "tunnel_transport",
+            "offset": 436,
+            "bytes": 12
+          },
+          {
+            "name": "outbound_shared",
+            "offset": 5784,
+            "bytes": 2744
+          },
+          {
+            "name": "outbound",
+            "offset": 8528,
+            "bytes": 4280
+          },
+          {
+            "name": "drive_awaitee",
+            "offset": 12808,
+            "bytes": 31832
+          }
+        ],
+        "other_captures": {
+          "uplink_and_tunnel_iface_total_bytes": 16,
+          "rng_and_tunnel_seed_total_bytes": 64,
+          "TunnelRouting_bytes": 20
+        },
+        "scope": "Fields shown coexist in the largest Suspend2 state. Coroutine variants overlap in storage; this is not a sum over variants."
+      },
+      "nested_drive": {
+        "proxy": {
+          "die": "0xbf5c",
+          "bytes": 31832,
+          "largest_state": "Suspend1",
+          "fields": [
+            {
+              "name": "queue",
+              "offset": 0,
+              "bytes": 4928,
+              "type": "WorkQueue<1152,2>"
+            },
+            {
+              "name": "upload",
+              "offset": 4992,
+              "bytes": 16
+            },
+            {
+              "name": "router",
+              "offset": 5008,
+              "bytes": 304
+            },
+            {
+              "name": "receiving_endpoint",
+              "offset": 5312,
+              "bytes": 7472,
+              "die": "0x9a8d3",
+              "type": "EDHOC server Endpoint, D=1152,C=4,PACKETS=2"
+            },
+            {
+              "name": "inner_drive_awaitee",
+              "offset": 12936,
+              "bytes": 18896
+            }
+          ]
+        },
+        "no_proxy": {
+          "die": "0x419f",
+          "bytes": 28712,
+          "largest_state": "Suspend1",
+          "fields": [
+            {
+              "name": "queue",
+              "offset": 0,
+              "bytes": 4928,
+              "type": "WorkQueue<1152,2>"
+            },
+            {
+              "name": "upload",
+              "offset": 11520,
+              "bytes": 16
+            },
+            {
+              "name": "router",
+              "offset": 11536,
+              "bytes": 304
+            },
+            {
+              "name": "receiving_endpoint",
+              "offset": 4960,
+              "bytes": 6560,
+              "die": "0x89e0e",
+              "type": "EDHOC server Endpoint, D=1152,C=2,PACKETS=2"
+            },
+            {
+              "name": "inner_drive_awaitee",
+              "offset": 11992,
+              "bytes": 16720
+            }
+          ]
+        },
+        "proxy_minus_no_proxy_bytes": 3120,
+        "nested_delta_subledger": {
+          "receiving_endpoint_capacity_change": 912,
+          "inner_drive_future": 2176,
+          "Forward_value_vs_Local_ZST": 32
+        },
+        "ota_run_suspend0": {
+          "proxy": {
+            "die": "0xe32fb",
+            "future_bytes": 18896,
+            "server_future": {
+              "offset": 0,
+              "bytes": 2080
+            },
+            "select3": {
+              "die": "0x11945b",
+              "offset": 4072,
+              "bytes": 14712
+            }
+          },
+          "no_proxy": {
+            "die": "0xbc63e",
+            "future_bytes": 16720,
+            "server_future": {
+              "offset": 0,
+              "bytes": 992
+            },
+            "select3": {
+              "die": "0xfc824",
+              "offset": 2984,
+              "bytes": 13624
+            }
+          },
+          "inner_drive_delta_bytes": 2176,
+          "subledger": {
+            "separate_server_future_slot": 1088,
+            "select3_awaited_future_slot": 1088
+          },
+          "scope": "Both fields are present at distinct offsets in each largest Suspend0 state, and both grow by 1,088 B. Select3.a has the same concrete future type as ota::run.server. The caller passes server by value to select3(server, worker, supervise), so Select3 owns one future slot by value while the enclosing async layout still reserves a distinct server field. This confirms duplicate storage in the future layout; after the move, the source slot may be uninitialized, which DWARF alone cannot establish."
+        },
+        "scope": "Nested fields explain the 3,120-byte parent component and are not additional top-level ledger entries. Endpoint and inner-drive fields coexist in the displayed Suspend1; other coroutine states overlap."
+      },
+      "endpoint_occurrences": {
+        "outbound_endpoint": {
+          "die": "0x9c226",
+          "bytes": 4280,
+          "role": "client",
+          "protection": "Unsecured",
+          "multiplicity_in_outer_proxy_future": 1
+        },
+        "receiving_endpoint": {
+          "die": "0x9a8d3",
+          "bytes": 7472,
+          "role": "server",
+          "protection": "EDHOC",
+          "multiplicity_in_nested_serve_future": 1
+        },
+        "scope": "The receiver Endpoint is already contained in nested drive future 31,832; do not add it again to the 12,984-byte delta ledger."
+      },
+      "command_capacity_probe": {
+        "status": "Matched downstream build requested; not measured or deployed yet.",
+        "change": "For a separately driven proxy, retain receiving command slots for local worker/client operations; remove the two extra receiving reply-submission slots. Keep outbound Shared and all exchange/deferred/body/packet capacities unchanged.",
+        "with_two_workers": {
+          "receiving_commands_before": 4,
+          "receiving_commands_probe": 2,
+          "same_feature_shared_bytes_before": 5336,
+          "same_feature_shared_bytes_probe": 2744,
+          "predicted_shared_delta_bytes": -2592
+        },
+        "without_workers": {
+          "receiving_commands_probe": 1,
+          "reason": "Current deferred admission requires nonzero COMMANDS. Driver-pulled delivery uses no free slot but does not remove that admission minimum."
+        },
+        "validation": {
+          "host": "python3 tools/checks.py --docs --test and focused std,proxy Clippy passed. All four proxy_ownership tests passed after restoring temporary probes.",
+          "mixed_workers": "Two local deferred worker reply commands fill receiving C2 while two forwards hand off; both worker replies then hand off and outbound slots can be reused.",
+          "without_workers": "A separate-outbound proxy admits and delivers two forwards with receiving C1 and outbound C2/O2.",
+          "negative_probes": [
+            {
+              "change": "Require a free receiving command slot during direct handoff",
+              "observed": "Mixed worker/forward regression fails: no forwarded response enters the queue."
+            },
+            {
+              "change": "Use receiving C0 in the no-worker proxy case",
+              "observed": "The response is 5.03 (Code163), not an Empty ACK; deferred proxy admission is disabled."
+            }
+          ],
+          "boundary": "The tests model deferred local replies, not real upload flash I/O or physical hardware. No library production code changed."
+        },
+        "boundary": "The Shared-size difference is read from the same proxy feature graph. A whole-task/firmware reduction remains a prediction until a matched linked build confirms compiler layout; the 2760-byte proxy-vs-no-proxy receiving Shared delta also includes 168 bytes of feature-dependent slot/metadata growth."
+      }
     }
   }
 }

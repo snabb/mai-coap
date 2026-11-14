@@ -225,6 +225,10 @@ a silent origin, with both a short timeout and the default retransmission profil
 It covers independent tasks and joined drivers, polling only scheduled tasks and
 waking only expired timers. Suppressing the upstream completion wake makes these
 tests fail.
+`tests/proxy_ownership.rs` also covers two local worker reply commands occupying
+both receiving slots while two forwards hand off, and a separate-outbound proxy
+with no workers using one receiving command slot. This is deferred-reply capacity
+coverage; it does not exercise upload flash I/O.
 The proxy delivery fuzz oracle checks opaque safe options/ciphertext, unsafe-option
 errors, result retention, expiry/drop cleanup, command pressure and exact CON retries.
 Expected properties were independently derived from RFC 7252 sections 4.2, 4.4,
