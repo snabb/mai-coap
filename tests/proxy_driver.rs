@@ -170,6 +170,7 @@ struct TimerState {
 }
 #[derive(Clone, Default)]
 // Network::advance also wakes socket waiters, which could hide a lost completion wake.
+// Network sends do too, so the final upstream event must remain a send-free timeout.
 struct Timer(std::rc::Rc<std::cell::RefCell<TimerState>>);
 struct TimerRegistration {
     timer: Timer,
@@ -342,6 +343,7 @@ fn silent_origin_timeout(parameters: mai_coap::messaging::TransmissionParameters
     let (mut inbound, mut outbound): (Task<'_>, Task<'_>) = if joined {
         (
             Box::pin(async {
+                // Receiving first prevents this poll from consuming a missed completion wake.
                 let result = futures_lite::future::zip(inbound, outbound).await;
                 panic!("joined drivers stopped: {result:?}");
             }),

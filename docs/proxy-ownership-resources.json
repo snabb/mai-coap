@@ -838,7 +838,34 @@
       "datagram_bytes": 1152,
       "forwards": 2,
       "controls": "Same firmware source, device configuration, capacities and compiler/profile. Independent equal-length source paths for baseline/candidate; proxy-on and proxy-off at each revision. No comparison with earlier x86 absolute sizes is used for the paired deltas.",
-      "verification": "ELF section sizes, hashes and coap task-pool symbols independently read from all four saved images."
+      "verification": "ELF section sizes, hashes and coap task-pool symbols independently read from all four saved images.",
+      "section_accounting": "Variant totals are selected ELF section sums: text_rodata_data = .text + .rodata + .data; data_bss = .data + .bss. These are not absolute programming-image sizes or totals of every RAM allocation. Other non-debug section sizes reported by size -A are identical across all four images, so the reported flash/static-RAM changes and feature-overhead changes are unaffected. The reserved .stack region is reported separately and is not counted as an additional saving.",
+      "unchanged_other_non_debug_sections_bytes": {
+        ".rwtext": 12404,
+        ".rwtext.wifi": 32012,
+        ".rwdata_dummy": 45440,
+        ".data.wifi": 496,
+        ".noinit": 0,
+        ".flash.appdesc": 256,
+        ".rodata_merge": 0,
+        ".rodata.wifi": 33808,
+        ".vectors": 1024,
+        ".rotext_dummy": 196608,
+        ".init": 3,
+        ".fini": 3,
+        ".rtc_fast.text": 0,
+        ".rtc_fast.data": 0,
+        ".rtc_fast.bss": 0,
+        ".rtc_fast.persistent": 0,
+        ".rtc_slow.text": 0,
+        ".rtc_slow.data": 0,
+        ".rtc_slow.bss": 0,
+        ".rtc_slow.persistent": 0,
+        ".espressif.metadata": 21,
+        ".eh_frame": 4,
+        ".xtensa.info": 56,
+        ".comment": 254
+      }
     },
     "variants": {
       "ctrl-noproxy": {
@@ -856,8 +883,10 @@
           "symbol": "node_xiao_esp32s3::coap::POOL",
           "bytes": 31696
         },
-        "flash_bytes": 992317,
-        "static_ram_bytes": 197640
+        "selected_section_totals_bytes": {
+          "text_rodata_data": 992317,
+          "data_bss": 197640
+        }
       },
       "ctrl-proxy": {
         "mai_coap_revision": "74dba445ddd785769ff86e45f05a3a096ce13df3",
@@ -874,8 +903,10 @@
           "symbol": "node_xiao_esp32s3::coap_proxy::POOL",
           "bytes": 49288
         },
-        "flash_bytes": 1051637,
-        "static_ram_bytes": 215232
+        "selected_section_totals_bytes": {
+          "text_rodata_data": 1051637,
+          "data_bss": 215232
+        }
       },
       "cand-noproxy": {
         "mai_coap_revision": "1c75109a9593f26eab6480c3b649ec15e108e6ca",
@@ -892,8 +923,10 @@
           "symbol": "node_xiao_esp32s3::coap::POOL",
           "bytes": 31696
         },
-        "flash_bytes": 992301,
-        "static_ram_bytes": 197640
+        "selected_section_totals_bytes": {
+          "text_rodata_data": 992301,
+          "data_bss": 197640
+        }
       },
       "cand-proxy": {
         "mai_coap_revision": "1c75109a9593f26eab6480c3b649ec15e108e6ca",
@@ -910,8 +943,10 @@
           "symbol": "node_xiao_esp32s3::coap_proxy::POOL",
           "bytes": 44680
         },
-        "flash_bytes": 1055745,
-        "static_ram_bytes": 210624
+        "selected_section_totals_bytes": {
+          "text_rodata_data": 1055745,
+          "data_bss": 210624
+        }
       }
     },
     "proxy_enabled_candidate_minus_control": {
@@ -933,19 +968,6 @@
     "proxy_overhead_change": {
       "flash_bytes": 4124,
       "static_ram_bytes": -4608
-    },
-    "symbol_group_deltas_reported_bytes": {
-      "transport::embassy_xarxa": 2925,
-      "endpoint::Endpoint": 2424,
-      "endpoint::Operation": 224,
-      "codec::reheader": 220,
-      "endpoint::deferred": 142,
-      "proxy::write_status": 72,
-      "proxy::ForwardProxy": -666,
-      "endpoint::ResponseOperation": -363,
-      "endpoint::Handle": -284,
-      "mai_coap_top_level": -195,
-      "proxy::status": -193
     },
     "stack_observations": {
       "paired_comparison": false,
@@ -977,6 +999,19 @@
       "resolution": "After the user-approved UDP and UDP-stream idle timeout change to 300 seconds, the halted-origin test received 5.04 at the client 127 seconds after the request. No mai-coap production change was needed.",
       "boundary": "Local send acceptance alone did not establish wire delivery. The trace used a private instrumented clone of the candidate; the successful post-network-change check used the hardware-tested candidate."
     },
-    "artifact_boundary": "Provisioned ELFs, symbol reports, captures and hardware logs remain private downstream artifacts. Only section/task-pool sizes, ELF hashes, revision/toolchain controls and validation limits are published here."
+    "artifact_boundary": "Provisioned ELFs, symbol reports, captures and hardware logs remain private downstream artifacts. Only section/task-pool sizes, ELF hashes, revision/toolchain controls and validation limits are published here.",
+    "selected_symbol_group_deltas_reported_bytes": {
+      "transport::embassy_xarxa": 2925,
+      "endpoint::Endpoint": 2424,
+      "endpoint::Operation": 224,
+      "codec::reheader": 220,
+      "endpoint::deferred": 142,
+      "proxy::write_status": 72,
+      "proxy::ForwardProxy": -666,
+      "endpoint::ResponseOperation": -363,
+      "endpoint::Handle": -284,
+      "mai_coap_top_level": -195,
+      "proxy::status": -193
+    }
   }
 }
