@@ -1,0 +1,823 @@
+{
+  "date": "2026-11-14",
+  "baseline_revision": "74dba445ddd785769ff86e45f05a3a096ce13df3",
+  "method": "Same AWS m7g.xlarge Arm instance, absolute checkout path, stable Rust, release profile, fixture and capacities. Baseline restores src/endpoint.rs, src/endpoint/delegate.rs, src/proxy.rs and src/server.rs from baseline_revision; new src/endpoint/deferred.rs is present but unreferenced in baseline. Current target-tests fixtures and resource tools are identical on both sides. The baseline was measured before the later writer-length guard; its unreferenced deferred module differs only in documentation. Source hashes identify these dirty measured trees; source_revision records the parent HEAD at measurement time.",
+  "proxy_comparisons": {
+    "m4/split": {
+      "before": {
+        "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+        "build_host": "aarch64-unknown-linux-gnu",
+        "source_revision": "74dba445ddd785769ff86e45f05a3a096ce13df3",
+        "git_dirty": true,
+        "source_sha256": "d9cc52048d5c2ff1bbc8144542dfaa1c3fb4f739685d1baa25536e2fc2d541c2",
+        "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+        "fixture_sha256": {
+          "proxy_main.rs": "dc47ce8f2bfc3db63873a48a9e57f393c07662599d9055cd018d3574d96f1831",
+          "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+          "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+        },
+        "target": "thumbv7em-none-eabihf",
+        "profile": "release opt-level=s, LTO, codegen-units=1",
+        "features": "proxy-roles",
+        "datagram_bytes": 1152,
+        "forwards": 2,
+        "payload_bytes": 1024,
+        "elf_sha256": "3425bd015972b732e5eb577e81cefd1f98b0acd6981935265d3a467e286186db",
+        "roles": true,
+        "flash_bytes": 195892,
+        "static_ram_bytes": 24232,
+        "scenarios": {
+          "plain": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 2968,
+            "painted": 25924,
+            "capacity": 106840
+          },
+          "secure": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 2968,
+            "painted": 26124,
+            "capacity": 106840
+          }
+        },
+        "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+      },
+      "after": {
+        "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+        "build_host": "aarch64-unknown-linux-gnu",
+        "source_revision": "74dba445ddd785769ff86e45f05a3a096ce13df3",
+        "git_dirty": true,
+        "source_sha256": "81871e82f478382bb25b26b77fddeb9b7064833b71a74af1e48cca3afca8c56f",
+        "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+        "fixture_sha256": {
+          "proxy_main.rs": "dc47ce8f2bfc3db63873a48a9e57f393c07662599d9055cd018d3574d96f1831",
+          "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+          "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+        },
+        "target": "thumbv7em-none-eabihf",
+        "profile": "release opt-level=s, LTO, codegen-units=1",
+        "features": "proxy-roles",
+        "datagram_bytes": 1152,
+        "forwards": 2,
+        "payload_bytes": 1024,
+        "elf_sha256": "8c0a72c5ea56e7fdea4cfc0f839d314f64a893d4aa8b0a76134710129e0a204b",
+        "roles": true,
+        "flash_bytes": 197372,
+        "static_ram_bytes": 24232,
+        "scenarios": {
+          "plain": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 664,
+            "painted": 24468,
+            "capacity": 106840
+          },
+          "secure": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 664,
+            "painted": 24660,
+            "capacity": 106840
+          }
+        },
+        "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+      },
+      "minimum_exercised_headroom": {
+        "before_bytes": 80716,
+        "after_bytes": 82180
+      },
+      "delta": {
+        "flash_bytes": 1480,
+        "static_ram_bytes": 0,
+        "scenarios": {
+          "plain": {
+            "incoming_future": 0,
+            "outgoing_future": 0,
+            "application_bytes": -2304,
+            "painted": -1456,
+            "capacity": 0
+          },
+          "secure": {
+            "incoming_future": 0,
+            "outgoing_future": 0,
+            "application_bytes": -2304,
+            "painted": -1464,
+            "capacity": 0
+          }
+        }
+      }
+    },
+    "m4/combined": {
+      "before": {
+        "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+        "build_host": "aarch64-unknown-linux-gnu",
+        "source_revision": "74dba445ddd785769ff86e45f05a3a096ce13df3",
+        "git_dirty": true,
+        "source_sha256": "d9cc52048d5c2ff1bbc8144542dfaa1c3fb4f739685d1baa25536e2fc2d541c2",
+        "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+        "fixture_sha256": {
+          "proxy_main.rs": "dc47ce8f2bfc3db63873a48a9e57f393c07662599d9055cd018d3574d96f1831",
+          "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+          "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+        },
+        "target": "thumbv7em-none-eabihf",
+        "profile": "release opt-level=s, LTO, codegen-units=1",
+        "features": "proxy-profile",
+        "datagram_bytes": 1152,
+        "forwards": 2,
+        "payload_bytes": 1024,
+        "elf_sha256": "3fc2105547dae44be05d88b8f8e187ae85b2fb0f80ee2607aa94e4ae40d6649a",
+        "roles": false,
+        "flash_bytes": 236332,
+        "static_ram_bytes": 24232,
+        "scenarios": {
+          "plain": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 2968,
+            "painted": 26340,
+            "capacity": 106840
+          },
+          "secure": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 2968,
+            "painted": 26460,
+            "capacity": 106840
+          }
+        },
+        "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+      },
+      "after": {
+        "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+        "build_host": "aarch64-unknown-linux-gnu",
+        "source_revision": "74dba445ddd785769ff86e45f05a3a096ce13df3",
+        "git_dirty": true,
+        "source_sha256": "81871e82f478382bb25b26b77fddeb9b7064833b71a74af1e48cca3afca8c56f",
+        "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+        "fixture_sha256": {
+          "proxy_main.rs": "dc47ce8f2bfc3db63873a48a9e57f393c07662599d9055cd018d3574d96f1831",
+          "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+          "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+        },
+        "target": "thumbv7em-none-eabihf",
+        "profile": "release opt-level=s, LTO, codegen-units=1",
+        "features": "proxy-profile",
+        "datagram_bytes": 1152,
+        "forwards": 2,
+        "payload_bytes": 1024,
+        "elf_sha256": "e9aa35907e7af60e8b2c254733ea70fdd4cdb4fd7751deafe85779fb65023538",
+        "roles": false,
+        "flash_bytes": 237628,
+        "static_ram_bytes": 24232,
+        "scenarios": {
+          "plain": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 664,
+            "painted": 24884,
+            "capacity": 106840
+          },
+          "secure": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 664,
+            "painted": 24996,
+            "capacity": 106840
+          }
+        },
+        "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+      },
+      "minimum_exercised_headroom": {
+        "before_bytes": 80380,
+        "after_bytes": 81844
+      },
+      "delta": {
+        "flash_bytes": 1296,
+        "static_ram_bytes": 0,
+        "scenarios": {
+          "plain": {
+            "incoming_future": 0,
+            "outgoing_future": 0,
+            "application_bytes": -2304,
+            "painted": -1456,
+            "capacity": 0
+          },
+          "secure": {
+            "incoming_future": 0,
+            "outgoing_future": 0,
+            "application_bytes": -2304,
+            "painted": -1464,
+            "capacity": 0
+          }
+        }
+      }
+    },
+    "m33/split": {
+      "before": {
+        "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+        "build_host": "aarch64-unknown-linux-gnu",
+        "source_revision": "74dba445ddd785769ff86e45f05a3a096ce13df3",
+        "git_dirty": true,
+        "source_sha256": "d9cc52048d5c2ff1bbc8144542dfaa1c3fb4f739685d1baa25536e2fc2d541c2",
+        "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+        "fixture_sha256": {
+          "proxy_main.rs": "dc47ce8f2bfc3db63873a48a9e57f393c07662599d9055cd018d3574d96f1831",
+          "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+          "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+        },
+        "target": "thumbv8m.main-none-eabihf",
+        "profile": "release opt-level=s, LTO, codegen-units=1",
+        "features": "proxy-roles",
+        "datagram_bytes": 1152,
+        "forwards": 2,
+        "payload_bytes": 1024,
+        "elf_sha256": "9d0b583b9cc6b3f4c73999ca7ba0823696f3a4e94582f43ee0c37cabdabffac1",
+        "roles": true,
+        "flash_bytes": 196708,
+        "static_ram_bytes": 24232,
+        "scenarios": {
+          "plain": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 2968,
+            "painted": 25924,
+            "capacity": 106840
+          },
+          "secure": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 2968,
+            "painted": 26124,
+            "capacity": 106840
+          }
+        },
+        "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+      },
+      "after": {
+        "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+        "build_host": "aarch64-unknown-linux-gnu",
+        "source_revision": "74dba445ddd785769ff86e45f05a3a096ce13df3",
+        "git_dirty": true,
+        "source_sha256": "81871e82f478382bb25b26b77fddeb9b7064833b71a74af1e48cca3afca8c56f",
+        "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+        "fixture_sha256": {
+          "proxy_main.rs": "dc47ce8f2bfc3db63873a48a9e57f393c07662599d9055cd018d3574d96f1831",
+          "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+          "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+        },
+        "target": "thumbv8m.main-none-eabihf",
+        "profile": "release opt-level=s, LTO, codegen-units=1",
+        "features": "proxy-roles",
+        "datagram_bytes": 1152,
+        "forwards": 2,
+        "payload_bytes": 1024,
+        "elf_sha256": "470eb8977ddbb2d1bcc045c391de27de4d0b1df79e5fbd968f24524fa46ea624",
+        "roles": true,
+        "flash_bytes": 198188,
+        "static_ram_bytes": 24232,
+        "scenarios": {
+          "plain": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 664,
+            "painted": 24468,
+            "capacity": 106840
+          },
+          "secure": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 664,
+            "painted": 24660,
+            "capacity": 106840
+          }
+        },
+        "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+      },
+      "minimum_exercised_headroom": {
+        "before_bytes": 80716,
+        "after_bytes": 82180
+      },
+      "delta": {
+        "flash_bytes": 1480,
+        "static_ram_bytes": 0,
+        "scenarios": {
+          "plain": {
+            "incoming_future": 0,
+            "outgoing_future": 0,
+            "application_bytes": -2304,
+            "painted": -1456,
+            "capacity": 0
+          },
+          "secure": {
+            "incoming_future": 0,
+            "outgoing_future": 0,
+            "application_bytes": -2304,
+            "painted": -1464,
+            "capacity": 0
+          }
+        }
+      }
+    },
+    "m33/combined": {
+      "before": {
+        "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+        "build_host": "aarch64-unknown-linux-gnu",
+        "source_revision": "74dba445ddd785769ff86e45f05a3a096ce13df3",
+        "git_dirty": true,
+        "source_sha256": "d9cc52048d5c2ff1bbc8144542dfaa1c3fb4f739685d1baa25536e2fc2d541c2",
+        "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+        "fixture_sha256": {
+          "proxy_main.rs": "dc47ce8f2bfc3db63873a48a9e57f393c07662599d9055cd018d3574d96f1831",
+          "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+          "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+        },
+        "target": "thumbv8m.main-none-eabihf",
+        "profile": "release opt-level=s, LTO, codegen-units=1",
+        "features": "proxy-profile",
+        "datagram_bytes": 1152,
+        "forwards": 2,
+        "payload_bytes": 1024,
+        "elf_sha256": "38afc19b7f1c59cc9b6a66ec252e03aaf4a6cdc4840eb93a48eb059ed501c802",
+        "roles": false,
+        "flash_bytes": 237152,
+        "static_ram_bytes": 24232,
+        "scenarios": {
+          "plain": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 2968,
+            "painted": 26340,
+            "capacity": 106840
+          },
+          "secure": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 2968,
+            "painted": 26460,
+            "capacity": 106840
+          }
+        },
+        "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+      },
+      "after": {
+        "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+        "build_host": "aarch64-unknown-linux-gnu",
+        "source_revision": "74dba445ddd785769ff86e45f05a3a096ce13df3",
+        "git_dirty": true,
+        "source_sha256": "81871e82f478382bb25b26b77fddeb9b7064833b71a74af1e48cca3afca8c56f",
+        "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+        "fixture_sha256": {
+          "proxy_main.rs": "dc47ce8f2bfc3db63873a48a9e57f393c07662599d9055cd018d3574d96f1831",
+          "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+          "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+        },
+        "target": "thumbv8m.main-none-eabihf",
+        "profile": "release opt-level=s, LTO, codegen-units=1",
+        "features": "proxy-profile",
+        "datagram_bytes": 1152,
+        "forwards": 2,
+        "payload_bytes": 1024,
+        "elf_sha256": "9d7dd5fbfff1bde7a6eb3674923f1ef5624adc77fe403a3e10660215fb54d8fa",
+        "roles": false,
+        "flash_bytes": 238444,
+        "static_ram_bytes": 24232,
+        "scenarios": {
+          "plain": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 664,
+            "painted": 24884,
+            "capacity": 106840
+          },
+          "secure": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 664,
+            "painted": 24996,
+            "capacity": 106840
+          }
+        },
+        "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+      },
+      "minimum_exercised_headroom": {
+        "before_bytes": 80380,
+        "after_bytes": 81844
+      },
+      "delta": {
+        "flash_bytes": 1292,
+        "static_ram_bytes": 0,
+        "scenarios": {
+          "plain": {
+            "incoming_future": 0,
+            "outgoing_future": 0,
+            "application_bytes": -2304,
+            "painted": -1456,
+            "capacity": 0
+          },
+          "secure": {
+            "incoming_future": 0,
+            "outgoing_future": 0,
+            "application_bytes": -2304,
+            "painted": -1464,
+            "capacity": 0
+          }
+        }
+      }
+    }
+  },
+  "standard_controls": {
+    "before": {
+      "base": {
+        "features": "client,test-support",
+        "flash_bytes": 52768,
+        "static_ram_bytes": 296
+      },
+      "block": {
+        "features": "client,test-support,block",
+        "flash_bytes": 60436,
+        "static_ram_bytes": 296
+      },
+      "block1": {
+        "features": "client,test-support,block1",
+        "flash_bytes": 53968,
+        "static_ram_bytes": 304
+      },
+      "observe": {
+        "features": "client,test-support,observe",
+        "flash_bytes": 64708,
+        "static_ram_bytes": 368
+      },
+      "oscore": {
+        "features": "client,test-support,oscore",
+        "flash_bytes": 77412,
+        "static_ram_bytes": 296
+      },
+      "edhoc": {
+        "features": "client,test-support,edhoc",
+        "flash_bytes": 131868,
+        "static_ram_bytes": 296
+      },
+      "proxy": {
+        "features": "client,test-support,proxy",
+        "flash_bytes": 106580,
+        "static_ram_bytes": 1920
+      },
+      "discovery": {
+        "features": "client,test-support,discovery",
+        "flash_bytes": 97400,
+        "static_ram_bytes": 296
+      },
+      "full-block1": {
+        "features": "client,test-support,edhoc,block1,observe,proxy,discovery,multicast",
+        "flash_bytes": 270800,
+        "static_ram_bytes": 12856
+      },
+      "get-server": {
+        "features": "get-server",
+        "flash_bytes": 50140,
+        "static_ram_bytes": 24
+      },
+      "get-server-shared-counters": {
+        "features": "get-server,shared-counters",
+        "flash_bytes": 51832,
+        "static_ram_bytes": 144
+      },
+      "get-server-block1": {
+        "features": "get-server-block1",
+        "flash_bytes": 64468,
+        "static_ram_bytes": 24
+      },
+      "measurement": {
+        "date": "2026-11-14",
+        "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+        "build_host": "aarch64-unknown-linux-gnu",
+        "target": "thumbv7em-none-eabihf",
+        "profile": "release opt-level=s, LTO, codegen-units=1",
+        "boundary": "Reachable test workloads, not whole-feature upper bounds. Static RAM excludes stack. Two-role EDHOC and protocol tables use stack storage; this is not a peak RAM measurement."
+      }
+    },
+    "after": {
+      "base": {
+        "features": "client,test-support",
+        "flash_bytes": 52740,
+        "static_ram_bytes": 296
+      },
+      "block": {
+        "features": "client,test-support,block",
+        "flash_bytes": 60408,
+        "static_ram_bytes": 296
+      },
+      "block1": {
+        "features": "client,test-support,block1",
+        "flash_bytes": 53940,
+        "static_ram_bytes": 304
+      },
+      "observe": {
+        "features": "client,test-support,observe",
+        "flash_bytes": 64672,
+        "static_ram_bytes": 368
+      },
+      "oscore": {
+        "features": "client,test-support,oscore",
+        "flash_bytes": 77380,
+        "static_ram_bytes": 296
+      },
+      "edhoc": {
+        "features": "client,test-support,edhoc",
+        "flash_bytes": 131836,
+        "static_ram_bytes": 296
+      },
+      "proxy": {
+        "features": "client,test-support,proxy",
+        "flash_bytes": 106480,
+        "static_ram_bytes": 1920
+      },
+      "discovery": {
+        "features": "client,test-support,discovery",
+        "flash_bytes": 97368,
+        "static_ram_bytes": 296
+      },
+      "full-block1": {
+        "features": "client,test-support,edhoc,block1,observe,proxy,discovery,multicast",
+        "flash_bytes": 273152,
+        "static_ram_bytes": 12856
+      },
+      "get-server": {
+        "features": "get-server",
+        "flash_bytes": 50140,
+        "static_ram_bytes": 24
+      },
+      "get-server-shared-counters": {
+        "features": "get-server,shared-counters",
+        "flash_bytes": 51832,
+        "static_ram_bytes": 144
+      },
+      "get-server-block1": {
+        "features": "get-server-block1",
+        "flash_bytes": 64468,
+        "static_ram_bytes": 24
+      },
+      "measurement": {
+        "date": "2026-11-14",
+        "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+        "build_host": "aarch64-unknown-linux-gnu",
+        "target": "thumbv7em-none-eabihf",
+        "profile": "release opt-level=s, LTO, codegen-units=1",
+        "boundary": "Reachable test workloads, not whole-feature upper bounds. Static RAM excludes stack. Two-role EDHOC and protocol tables use stack storage; this is not a peak RAM measurement."
+      }
+    },
+    "delta": {
+      "base": {
+        "flash_bytes": -28,
+        "static_ram_bytes": 0
+      },
+      "block": {
+        "flash_bytes": -28,
+        "static_ram_bytes": 0
+      },
+      "block1": {
+        "flash_bytes": -28,
+        "static_ram_bytes": 0
+      },
+      "observe": {
+        "flash_bytes": -36,
+        "static_ram_bytes": 0
+      },
+      "oscore": {
+        "flash_bytes": -32,
+        "static_ram_bytes": 0
+      },
+      "edhoc": {
+        "flash_bytes": -32,
+        "static_ram_bytes": 0
+      },
+      "proxy": {
+        "flash_bytes": -100,
+        "static_ram_bytes": 0
+      },
+      "discovery": {
+        "flash_bytes": -32,
+        "static_ram_bytes": 0
+      },
+      "full-block1": {
+        "flash_bytes": 2352,
+        "static_ram_bytes": 0
+      },
+      "get-server": {
+        "flash_bytes": 0,
+        "static_ram_bytes": 0
+      },
+      "get-server-shared-counters": {
+        "flash_bytes": 0,
+        "static_ram_bytes": 0
+      },
+      "get-server-block1": {
+        "flash_bytes": 0,
+        "static_ram_bytes": 0
+      }
+    }
+  },
+  "symbol_attribution": {
+    "m4/split": {
+      "all_named_flash_delta_bytes": 1476,
+      "largest_nonanonymous_changes": [
+        {
+          "symbol": "<mai_coap::proxy::ForwardProxy<mai_coap_proxy_profile::Local, mai_coap_proxy_profile::Route, 1152, 4, 2, 2> as mai_coap::endpoint::Application<1152>>::poll",
+          "delta_bytes": -1484
+        },
+        {
+          "symbol": "<mai_coap::proxy::ForwardProxy<mai_coap_proxy_profile::Local, mai_coap_proxy_profile::Route, 1152, 4, 2, 2> as mai_coap::endpoint::Application<1152>>::poll_deferred::{closure#0}",
+          "delta_bytes": 510
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint<mai_coap::endpoint::Unsecured<mai_coap_proxy_profile::TestRng>, 1152, 4, 8, 0, 2, 2, 4, 4, 2, 2, mai_coap::packet_pool::InlineStorage<1152, 2>, mai_coap::endpoint::role::Server>>::with_packet::<(), <mai_coap::endpoint::Endpoint<mai_coap::endpoint::Unsecured<mai_coap_proxy_profile::TestRng>, 1152, 4, 8, 0, 2, 2, 4, 4, 2, 2, mai_coap::packet_pool::InlineStorage<1152, 2>, mai_coap::endpoint::role::Server>>::deliver_deferred::{closure#1}>",
+          "delta_bytes": 448
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint<mai_coap::edhoc::endpoint::Edhoc<mai_coap::crypto::software::SoftwareCrypto<mai_coap_proxy_profile::TestRng>, 1, 1, mai_coap::edhoc::TrustedPeers<1>, 0>, 1152, 4, 8, 0, 2, 2, 4, 4, 2, 2, mai_coap::packet_pool::InlineStorage<1152, 2>, mai_coap::endpoint::role::Server>>::with_packet::<(), <mai_coap::endpoint::Endpoint<mai_coap::edhoc::endpoint::Edhoc<mai_coap::crypto::software::SoftwareCrypto<mai_coap_proxy_profile::TestRng>, 1, 1, mai_coap::edhoc::TrustedPeers<1>, 0>, 1152, 4, 8, 0, 2, 2, 4, 4, 2, 2, mai_coap::packet_pool::InlineStorage<1152, 2>, mai_coap::endpoint::role::Server>>::deliver_deferred::{closure#1}>",
+          "delta_bytes": 434
+        },
+        {
+          "symbol": "<mai_coap::proxy::ForwardProxy<mai_coap_proxy_profile::Local, mai_coap_proxy_profile::Route, 1152, 4, 2, 2> as mai_coap::endpoint::Application<1152>>::poll_deferred",
+          "delta_bytes": 272
+        },
+        {
+          "symbol": "mai_coap::codec::reheader",
+          "delta_bytes": 252
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint<mai_coap::endpoint::Unsecured<mai_coap_proxy_profile::TestRng>, 1152, 4, 8, 0, 2, 2, 4, 4, 2, 2, mai_coap::packet_pool::InlineStorage<1152, 2>, mai_coap::endpoint::role::Server>>::deliver_deferred",
+          "delta_bytes": 248
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint<mai_coap::edhoc::endpoint::Edhoc<mai_coap::crypto::software::SoftwareCrypto<mai_coap_proxy_profile::TestRng>, 1, 1, mai_coap::edhoc::TrustedPeers<1>, 0>, 1152, 4, 8, 0, 2, 2, 4, 4, 2, 2, mai_coap::packet_pool::InlineStorage<1152, 2>, mai_coap::endpoint::role::Server>>::deliver_deferred",
+          "delta_bytes": 244
+        },
+        {
+          "symbol": "core::ptr::drop_glue::<mai_coap::endpoint::ResponseOperation<1152, 4>>",
+          "delta_bytes": -230
+        },
+        {
+          "symbol": "<mai_coap::Packet<1152>>::reheader",
+          "delta_bytes": -190
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Operation<1152, 2>>::release_reply",
+          "delta_bytes": 184
+        },
+        {
+          "symbol": "<mai_coap::proxy::ForwardProxy<mai_coap_proxy_profile::Local, mai_coap_proxy_profile::Route, 1152, 4, 2, 2> as mai_coap::endpoint::Application<1152>>::deadline",
+          "delta_bytes": -160
+        },
+        {
+          "symbol": "mai_coap::proxy::status::<1152>",
+          "delta_bytes": -156
+        },
+        {
+          "symbol": "mai_coap_proxy_profile::poll_driver::<<mai_coap::endpoint::Endpoint<mai_coap::edhoc::endpoint::Edhoc<mai_coap::crypto::software::SoftwareCrypto<mai_coap_proxy_profile::TestRng>, 1, 1, mai_coap::edhoc::TrustedPeers<1>, 0>, 1152, 4, 8, 0, 2, 2, 4, 4, 2, 2, mai_coap::packet_pool::InlineStorage<1152, 2>, mai_coap::endpoint::role::Server>>::run<mai_coap_proxy_profile::Socket, mai_coap_proxy_profile::Timer, mai_coap::proxy::ForwardProxy<mai_coap_proxy_profile::Local, mai_coap_proxy_profile::Route, 1152, 4, 2, 2>, mai_coap::security::PublicPaths>::{closure#0}>",
+          "delta_bytes": 142
+        },
+        {
+          "symbol": "<mai_coap::codec::MessageBuilder>::finish",
+          "delta_bytes": -138
+        },
+        {
+          "symbol": "<mai_coap::codec::MessageBuilder>::finish_parts",
+          "delta_bytes": 120
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint<mai_coap::edhoc::endpoint::Edhoc<mai_coap::crypto::software::SoftwareCrypto<mai_coap_proxy_profile::TestRng>, 1, 1, mai_coap::edhoc::TrustedPeers<1>, 0>, 1152, 4, 8, 0, 2, 2, 4, 4, 2, 2, mai_coap::packet_pool::InlineStorage<1152, 2>, mai_coap::endpoint::role::Server>>::credits_used",
+          "delta_bytes": 112
+        },
+        {
+          "symbol": "mai_coap_proxy_profile::scenario::<mai_coap::endpoint::Unsecured<mai_coap_proxy_profile::TestRng>>",
+          "delta_bytes": -112
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint<mai_coap::endpoint::Unsecured<mai_coap_proxy_profile::TestRng>, 1152, 4, 8, 0, 2, 2, 4, 4, 2, 2, mai_coap::packet_pool::InlineStorage<1152, 2>, mai_coap::endpoint::role::Server>>::credits_used",
+          "delta_bytes": 112
+        },
+        {
+          "symbol": "mai_coap_proxy_profile::scenario::<mai_coap::edhoc::endpoint::Edhoc<mai_coap::crypto::software::SoftwareCrypto<mai_coap_proxy_profile::TestRng>, 1, 1, mai_coap::edhoc::TrustedPeers<1>, 0>>",
+          "delta_bytes": -112
+        }
+      ]
+    },
+    "m4/full-block1": {
+      "all_named_flash_delta_bytes": 2364,
+      "largest_nonanonymous_changes": [
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint<mai_coap::endpoint::Unsecured<mai_coap_target_tests::TestRng>, 128, 1, 2, 1, 8, 16, 1, 1, 8, 40>>::command_respond",
+          "delta_bytes": 1372
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint<mai_coap::endpoint::Unsecured<mai_coap_target_tests::TestRng>, 256, 4, 4, 1, 8, 16, 4, 4, 8, 40>>::poll_resources::<mai_coap::proxy::ForwardProxy<mai_coap_target_tests::proxy::{closure#0}, mai_coap_target_tests::proxy::Route, 256, 4, 1>, mai_coap::security::PublicPaths>",
+          "delta_bytes": -1016
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint<mai_coap::endpoint::Unsecured<mai_coap_target_tests::TestRng>, 128, 1, 2, 1, 8, 16, 1, 1, 8, 40>>::poll_observations::<mai_coap::server::Router<128, 1, 1, 32>, mai_coap::security::PublicPaths>",
+          "delta_bytes": -702
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint<mai_coap::endpoint::Unsecured<mai_coap_target_tests::TestRng>, 128, 1, 2, 1, 8, 16, 1, 1, 8, 40>>::server_exchange",
+          "delta_bytes": 684
+        },
+        {
+          "symbol": "<mai_coap::proxy::ForwardProxy<mai_coap_target_tests::proxy::{closure#0}, mai_coap_target_tests::proxy::Route, 256, 4, 1> as mai_coap::endpoint::Application<256>>::poll_deferred::{closure#0}",
+          "delta_bytes": 504
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint<mai_coap::endpoint::Unsecured<mai_coap_target_tests::TestRng>, 256, 4, 4, 1, 8, 16, 4, 4, 8, 40>>::with_packet::<(), <mai_coap::endpoint::Endpoint<mai_coap::endpoint::Unsecured<mai_coap_target_tests::TestRng>, 256, 4, 4, 1, 8, 16, 4, 4, 8, 40>>::deliver_deferred::{closure#1}>",
+          "delta_bytes": 412
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint<mai_coap::endpoint::Unsecured<mai_coap_target_tests::TestRng>, 128, 1, 2, 1, 8, 16, 1, 1, 8, 40>>::with_packet::<(), <mai_coap::endpoint::Endpoint<mai_coap::endpoint::Unsecured<mai_coap_target_tests::TestRng>, 128, 1, 2, 1, 8, 16, 1, 1, 8, 40>>::deliver_deferred::{closure#1}>",
+          "delta_bytes": 396
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint<mai_coap::endpoint::Unsecured<mai_coap_target_tests::TestRng>, 128, 1, 2, 1, 8, 16, 1, 1, 8, 40>>::deliver_deferred",
+          "delta_bytes": 260
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint<mai_coap::endpoint::Unsecured<mai_coap_target_tests::TestRng>, 256, 4, 4, 1, 8, 16, 4, 4, 8, 40>>::deliver_deferred",
+          "delta_bytes": 250
+        },
+        {
+          "symbol": "core::ptr::drop_glue::<mai_coap::endpoint::ResponseOperation<256, 4>>",
+          "delta_bytes": -234
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Shared<256, 4>>::submit",
+          "delta_bytes": -216
+        },
+        {
+          "symbol": "mai_coap_target_tests::discovery",
+          "delta_bytes": 204
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Operation<256, 4>>::release_reply",
+          "delta_bytes": 176
+        },
+        {
+          "symbol": "mai_coap::proxy::status::<256>",
+          "delta_bytes": -140
+        },
+        {
+          "symbol": "<mai_coap::codec::MessageBuilder>::finish",
+          "delta_bytes": -138
+        },
+        {
+          "symbol": "<mai_coap::codec::MessageBuilder>::finish_parts",
+          "delta_bytes": 120
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint<mai_coap::endpoint::Unsecured<mai_coap_target_tests::TestRng>, 128, 1, 2, 1, 8, 16, 1, 1, 8, 40>>::credits_used",
+          "delta_bytes": 114
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint<mai_coap::endpoint::Unsecured<mai_coap_target_tests::TestRng>, 128, 1, 2, 8, 8, 2, 1, 1, 8, 2>>::command_respond",
+          "delta_bytes": -92
+        },
+        {
+          "symbol": "<mai_coap::endpoint::deferred::Sink<&mut <mai_coap::endpoint::Endpoint<mai_coap::endpoint::Unsecured<mai_coap_target_tests::TestRng>, 256, 4, 4, 1, 8, 16, 4, 4, 8, 40>>::poll_deferred_responses<mai_coap::proxy::ForwardProxy<mai_coap_target_tests::proxy::{closure#0}, mai_coap_target_tests::proxy::Route, 256, 4, 1>>::{closure#0}> as mai_coap::endpoint::deferred::DeferredResponses<256>>::respond",
+          "delta_bytes": 88
+        },
+        {
+          "symbol": "<mai_coap::endpoint::deferred::Sink<&mut <mai_coap::endpoint::Endpoint<mai_coap::endpoint::Unsecured<mai_coap_target_tests::TestRng>, 128, 1, 2, 1, 8, 16, 1, 1, 8, 40>>::poll_deferred_responses<mai_coap::server::Router<128, 1, 1, 32>>::{closure#0}> as mai_coap::endpoint::deferred::DeferredResponses<128>>::respond",
+          "delta_bytes": 88
+        }
+      ]
+    }
+  },
+  "validation": {
+    "host": "python3 tools/checks.py --docs --test: passed",
+    "m0": "python3 tools/checks.py --target thumbv6m-none-eabi: passed",
+    "runtime": "M4 ordinary target runtime, M4/M33 stack and owned xarxa checks: passed without budget changes",
+    "fuzz": "All nine targets 30 seconds each; new endpoint seeds 1000 runs, repeated after mutations: passed",
+    "focused": "11 direct handoff tests, wrapper/driver/role/proxy ownership/response path suites and combined-feature Clippy: passed",
+    "mutations": [
+      {
+        "defect": "Require a free receiving Shared command slot",
+        "killed_by": "tests/deferred_pull.rs::direct_handoff_does_not_need_a_free_command_slot",
+        "observed": "Runtime assertion: expected queue handoff, got Capacity"
+      },
+      {
+        "defect": "Release upstream completion on receiving Capacity",
+        "killed_by": "endpoint fuzz seed proxy-delivery-1",
+        "observed": "Runtime assertion: sole upstream slot was prematurely reusable"
+      },
+      {
+        "defect": "Omit completion-slot clearing after handoff",
+        "killed_by": "endpoint fuzz seed proxy-delivery-0",
+        "observed": "Runtime assertion: upstream slot reuse returned Capacity"
+      }
+    ],
+    "writer_hardening": "Oversized callback lengths D+1 and usize::MAX are rejected as Malformed before parsing or queueing; corrected output can reuse the admitted ticket. The focused test fails with the length guard removed, and final host/M0/endpoint-fuzz checks were repeated after this fix.",
+    "hardware": "Not run for this candidate; previous role-only downstream results do not validate it."
+  },
+  "boundary": "Proxy application storage occupies the measured stack, so application and painted savings overlap. Endpoints and Shared remain static. Driver futures are unchanged. Paint observes writes in exercised scenarios, excludes construction peak and interrupts, and is not a worst-case bound. No S3 task-pool, physical stack, CPU or worst-case measurement is claimed. Opaque 1024-byte relays and a public local GET do not establish protected local interoperability.",
+  "artifacts": "Ignored target/remote/target/proxy-ownership/final contains paired proxy and standard ELFs, source/fixture/ELF hashes, section and symbol reports, runtime logs and mutation logs; validation logs are in the sibling validation directory."
+}

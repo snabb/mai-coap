@@ -11,6 +11,7 @@ byte counts live in generated reports, not here:
 | [stack-resources.json](stack-resources.json) | QEMU driver stack peaks, budgets, driver-future sizes |
 | [xarxa-resources.json](xarxa-resources.json) | Owned-packet workload stack, futures, static RAM and component breakdown |
 | [proxy-resources.json](proxy-resources.json) | Matched two-endpoint role experiment at D=1152 and two 1,024-byte replies |
+| [proxy-ownership-resources.json](proxy-ownership-resources.json) | Matched driver-pulled reply comparison, application storage and stack/flash trade-off |
 
 These cover reference fixtures, ABI layouts and exercised QEMU peaks, not complete
 firmware on real boards.
@@ -102,13 +103,21 @@ endpoint and client-only outbound endpoint; all capacities remain identical.
 The ELF contains both plain and secure-capable receiving endpoints. Origin replies
 are scripted, so this does not validate protected local interoperability or hardware.
 
-The report records flash, static RAM, both driver futures and exercised stack paint,
+The report records flash, static RAM, application storage, both driver futures and exercised stack paint,
 with compiler/build host, source revision/digest and ELF/fixture hashes. Endpoints and Shared storage are
 static; the proxy, link and futures occupy the stack. Stack paint records exercised
 writes rather than a worst-case bound; endpoint construction happens before painting,
 and its peak is unmeasured. Preserve both ELFs and symbol reports when
 comparing revisions. [proxy-resources.json](proxy-resources.json) records the matched
 role experiment.
+
+[proxy-ownership-resources.json](proxy-ownership-resources.json) records the
+matched M4/M33 driver-pulled reply experiment against `74dba44`, including standard
+linked workload controls and symbol attribution for flash growth. Each pair uses
+the same host, compiler, release profile, fixture and capacities. Application
+storage is part of the measured stack, so its reduction overlaps the painted
+reduction. Construction peak, worst-case stack, S3 task pools and physical stack
+remain unmeasured. Existing budgets are unchanged.
 
 ## Endpoint layouts
 
@@ -214,8 +223,9 @@ Current choices that shape the reports:
   arena, and deferred submission uses owned `Response` values. The writer lowers stack
   peaks at a flash cost. Each fresh arena is initialized; keeping one would trade CPU
   for persistent RAM.
-- **Retained replies.** Proxy forwards and Block1 duplicates keep one tokenless
-  serialized packet. Deferred entries keep only the token and message type. Observer
+- **Retained replies.** Proxy forwards keep an upstream completion in its existing
+  command slot until the receiving endpoint queues it. Block1 duplicates keep one
+  tokenless serialized packet. Deferred entries keep only the token and message type. Observer
   entries keep their request, because notification callbacks read it.
 - **Packet handles.** A handle is a one-based `u16` slot holding one counted reference,
   so a slot can't be reused while a handle exists.
