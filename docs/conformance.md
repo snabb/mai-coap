@@ -220,6 +220,11 @@ unit tests for cancellation during preparation, and an endpoint fuzz oracle for
 completion milestones. `tests/deferred_pull.rs` covers capacity preflight/recovery,
 protection failure, duplicate handoff and Router delegation; `tests/proxy_ownership.rs`
 covers opposite-direction one-slot progress and expiry with completion-slot reuse.
+`tests/proxy_driver.rs` verifies separate CON 5.04 delivery and slot recovery after
+a silent origin, with both a short timeout and the default retransmission profile.
+It covers independent tasks and joined drivers, polling only scheduled tasks and
+waking only expired timers. Suppressing the upstream completion wake makes these
+tests fail.
 The proxy delivery fuzz oracle checks opaque safe options/ciphertext, unsafe-option
 errors, result retention, expiry/drop cleanup, command pressure and exact CON retries.
 Expected properties were independently derived from RFC 7252 sections 4.2, 4.4,
