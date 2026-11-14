@@ -153,6 +153,20 @@ Rules for deferred work:
 - **Capacity.** Check `Request::deferred_ticket()` before accepting deferred work. CON
   requests also need outbound capacity.
 
+With `proxy`, `Application::poll_deferred(now, cx, responses)` can offer a ready
+serialized response directly to the receiving driver. `responses.respond(ticket,
+&mut writer)` reserves protocol storage before calling the synchronous writer and
+reports queue handoff. Keep the original data after `Capacity`, schedule a retry
+through `deadline`, and discard stale tickets after `Cancelled`. This does not need
+a free receiving command slot; ordinary ticket admission limits still apply.
+The built-in proxy uses this hook to retain an upstream completion in its existing
+storage until the receiving endpoint accepts it. That completion continues to
+occupy an outbound command slot while receiving capacity is unavailable.
+
+`Endpoint::run` handles both hooks. Custom drivers call `poll_resources`, and manual
+`Application` wrappers forward `poll_deferred` as well as `poll`, `deadline` and the
+other lifecycle methods. `delegate_application!` forwards the complete contract.
+
 ## Block-wise transfers
 
 Enable `block` for Block2 (downloads) and `block1` for Block1 (uploads).

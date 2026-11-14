@@ -1,5 +1,6 @@
 mod client_transfer;
 mod endpoint_roles;
+mod proxy_delivery;
 pub mod response_writer;
 
 pub use client_transfer::client_transfer;
@@ -420,6 +421,7 @@ pub fn proxy_uri(data: &[u8]) {
     }
 }
 pub fn endpoint(data: &[u8]) {
+    proxy_delivery::check(data);
     endpoint_roles::check(data);
     deferred_response(data);
     deduplication::<0>(data);

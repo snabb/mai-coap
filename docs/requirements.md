@@ -965,6 +965,11 @@ These principles and acceptance examples define what "usable" means. The example
   since eventual confirmable notifications require an exchange slot.
   Permanently disabled client/deferred capabilities fail promptly with Capacity; transient queue,
   packet, message-ID and NSTART pressure leaves accepted commands pending.
+  With `proxy`, an application MAY offer serialized replies through a synchronous
+  driver-pulled sink. This handoff MUST NOT need a free receiving command slot.
+  It MUST reserve packet/protocol capacity before invoking the writer and retain
+  the application's original completion after transient failure. Successful queue
+  handoff transfers retry ownership to the endpoint before releasing that completion.
   Original plaintext is retained only for Observe or when the protection layer
   declares handshake/recovery requirements. Protection wrappers forward that query.
   Response operations return `Result<(), Error>`. Dropping before queue handoff
@@ -1056,8 +1061,10 @@ These principles and acceptance examples define what "usable" means. The example
   and protection delegation helpers cover lifecycle, counters and peer dispatch.
   Wrappers MAY explicitly exclude overridden methods; all remaining methods MUST
   still be forwarded, including feature-gated methods. Reject unknown exclusions.
-  Application polling has one method with the driver's task context; Protection
-  has one target-aware method for each outgoing, handshake-response and recovery
+  `Application::poll` receives the driver's task context. With `proxy`,
+  `poll_deferred` additionally receives a bounded driver-owned response sink;
+  wrappers MUST forward both hooks. Protection has one target-aware method for each
+  outgoing, handshake-response and recovery
   operation. Wrappers MUST forward driver wakeup contexts and transport receive-error
   classification. A recoverable per-datagram metadata error is dropped and counted;
   a real socket failure remains a driver error. Missing local addresses MUST NOT

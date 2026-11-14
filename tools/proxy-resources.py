@@ -18,7 +18,8 @@ TARGETS = {
 }
 LINE = re.compile(
     r"proxy: security=(plain|secure) D=1152 forwards=2 payload=1024 "
-    r"incoming_future=(\d+) outgoing_future=(\d+) painted=(\d+) capacity=(\d+)"
+    r"incoming_future=(\d+) outgoing_future=(\d+) application_bytes=(\d+) "
+    r"painted=(\d+) capacity=(\d+)"
 )
 
 
@@ -32,7 +33,13 @@ def measurements(log):
             raise ValueError(f"invalid or duplicate proxy measurement: {line}")
         values = dict(
             zip(
-                ("incoming_future", "outgoing_future", "painted", "capacity"),
+                (
+                    "incoming_future",
+                    "outgoing_future",
+                    "application_bytes",
+                    "painted",
+                    "capacity",
+                ),
                 map(int, match.groups()[1:]),
                 strict=True,
             )

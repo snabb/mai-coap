@@ -183,12 +183,27 @@ Observe and body retention keep their explicit owned bytes and leases.
 
 `respond()` returns `ResponseOperation` with output `Result<(), Error>` at queue
 handoff. Later failures are not returned to the caller, and there is no dedicated
-ACK-timeout counter. The built-in proxy and upload worker use it. Opt-in
+ACK-timeout counter. The upload worker uses it. Opt-in
 `respond_confirmed()` waits for ACK, RST or retransmission timeout on CON and local
 acceptance on NON, including initial local failures, and only it keeps a command slot
 while waiting. Dropping before handoff cancels submission; afterward it detaches the
 waiter while transport and CoAP retries continue. The handoff and cancellation decision
 share a critical section.
+
+With `proxy`, `Application::poll_deferred` offers serialized replies to
+`DeferredResponses`. The sink uses the same ticket, metadata, protection and
+transactional send/exchange path, with queue-handoff completion and no receiving
+command allocation. Queue, MID, exchange, NSTART and packet capacity are checked
+before the writer runs. The writer and protection callbacks run outside critical
+sections. The proxy retains a ready upstream result in its existing `Shared` slot
+until handoff succeeds; the bounded byte copy from that slot is inside its critical
+section. Stale tickets and permanent errors discard that completion.
+
+This avoids holding a full reply in every forwarding slot and avoids a command-slot
+cycle between opposite-direction proxies. `poll_resources` calls both application
+hooks; an idle driver also calls the deferred hook and resumes when it queues a
+reply without changing `Shared` revision. `delegate_application!`, `ForwardProxy`
+and `Router` forward the hook. Manual wrappers must do the same.
 
 **Budgets.** `ResponseWriter::set_deferred_timeout` sets explicit processing budgets,
 and owned `Response` stores only content, so a submitted reply can't change an admitted
@@ -196,12 +211,23 @@ ticket's budget. Tickets stay valid for the budget plus one incoming exchange li
 or one lifetime without a budget. `WorkQueue` supplies its timeout. The proxy supplies
 its destination profile's exchange lifetime and enforces that budget from admission,
 including NSTART queueing, returning 5.04 on expiry. Relayed responses stay retained
-across `Capacity` completions until delivery succeeds or the ticket is cancelled or
-expires.
+across `Capacity` failures until queue handoff succeeds or the ticket is cancelled
+or expires. Resource wakes retry immediately; a 100 ms application deadline also
+covers transient providers that supply no waker.
 
 Tests: `tests/deferred_delivery.rs` (milestones, detachment, stale replies, slot reuse),
 unit tests for cancellation during preparation, and an endpoint fuzz oracle for
-completion milestones.
+completion milestones. `tests/deferred_pull.rs` covers capacity preflight/recovery,
+protection failure, duplicate handoff and Router delegation; `tests/proxy_ownership.rs`
+covers opposite-direction one-slot progress and expiry with completion-slot reuse.
+The proxy delivery fuzz oracle checks opaque safe options/ciphertext, unsafe-option
+errors, result retention, expiry/drop cleanup, command pressure and exact CON retries.
+Expected properties were independently derived from RFC 7252 sections 4.2, 4.4,
+4.5, 5.2.2, 5.3.1 and 5.7.1 and RFC 8613 sections 4 and 7.4 before implementation.
+Temporary mutations requiring a free receiving command slot, releasing the upstream
+completion on `Capacity`, and omitting completion-slot clearing each fail their
+regression/oracle assertions. The writer-length regression also fails before explicit
+oversize rejection; correcting the writer can reuse the same admitted ticket.
 
 ### Duplicate detection
 

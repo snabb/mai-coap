@@ -121,6 +121,8 @@ fn application_override_preserves_the_remaining_delegation_contract() {
         aborted: u64,
         #[cfg(feature = "proxy")]
         forwarded: usize,
+        #[cfg(feature = "proxy")]
+        deferred: usize,
     }
     impl Application<128> for Inner {
         fn handle(
@@ -136,6 +138,15 @@ fn application_override_preserves_the_remaining_delegation_contract() {
         fn poll(&mut self, _: Instant, cx: &mut core::task::Context<'_>) {
             self.polls += 10;
             cx.waker().wake_by_ref();
+        }
+        #[cfg(feature = "proxy")]
+        fn poll_deferred(
+            &mut self,
+            _: Instant,
+            _: &mut core::task::Context<'_>,
+            _: &mut dyn mai_coap::endpoint::DeferredResponses<128>,
+        ) {
+            self.deferred += 1;
         }
         fn deadline(&self) -> Option<Instant> {
             Some(Instant(5))
@@ -182,6 +193,8 @@ fn application_override_preserves_the_remaining_delegation_contract() {
         aborted: 0,
         #[cfg(feature = "proxy")]
         forwarded: 0,
+        #[cfg(feature = "proxy")]
+        deferred: 0,
     });
     assert!(app.recognizes(OptionNumber(99)));
     assert_eq!(app.deadline(), Some(Instant(5)));
@@ -215,7 +228,10 @@ fn application_override_preserves_the_remaining_delegation_contract() {
         b"wrapped"
     );
     #[cfg(feature = "proxy")]
-    assert_eq!(app.0.forwarded, 2);
+    {
+        assert_eq!(app.0.forwarded, 2);
+        assert_eq!(app.0.deferred, 1);
+    }
 }
 
 #[cfg(feature = "observe")]

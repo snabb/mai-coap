@@ -14,6 +14,10 @@ use std::sync::{
     atomic::{AtomicUsize, Ordering},
 };
 
+struct Wrapped<A>(A);
+impl<A: mai_coap::endpoint::Application<256>> mai_coap::endpoint::Application<256> for Wrapped<A> {
+    mai_coap::delegate_application!(0, 256);
+}
 struct Route;
 impl Routing for Route {
     fn allow(&self, _: core::net::SocketAddr, _: &str, _: u16) -> bool {
@@ -83,7 +87,7 @@ fn check<Incoming: mai_coap::endpoint::role::Role, Outgoing: mai_coap::endpoint:
     let mut b = network.socket("192.0.2.3:5683");
     let requester = "192.0.2.1:5683".parse().unwrap();
     let origin = "192.0.2.9:5683".parse().unwrap();
-    let mut proxy = ForwardProxy::<_, _, 256, 3, 2>::with_outbound(
+    let proxy = ForwardProxy::<_, _, 256, 3, 2>::with_outbound(
         |_: Request<'_>, _: &mut ResponseWriter<'_, 256>| Err(Code::NOT_FOUND),
         Route,
         incoming.handle(),
@@ -94,6 +98,7 @@ fn check<Incoming: mai_coap::endpoint::role::Role, Outgoing: mai_coap::endpoint:
         },
     )
     .unwrap();
+    let mut proxy = Wrapped(proxy);
     let mut unused = |_: Request<'_>, _: &mut ResponseWriter<'_, 256>| Err(Code::NOT_FOUND);
     let mut bytes = [0; 256];
     let mut builder =

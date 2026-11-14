@@ -892,6 +892,19 @@ impl<
     fn poll(&mut self, now: Instant, cx: &mut core::task::Context<'_>) {
         self.poll_routes(now, cx);
     }
+    #[cfg(feature = "proxy")]
+    fn poll_deferred(
+        &mut self,
+        now: Instant,
+        cx: &mut core::task::Context<'_>,
+        responses: &mut dyn crate::endpoint::DeferredResponses<DATAGRAM_BYTES>,
+    ) {
+        for route in &mut self.routes {
+            if let Some(application) = route.target.application_mut() {
+                application.poll_deferred(now, cx, responses);
+            }
+        }
+    }
     fn deadline(&self) -> Option<Instant> {
         let handlers = self
             .routes

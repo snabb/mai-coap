@@ -324,6 +324,7 @@ fn scenario<P: Protection>(security: &str, incoming: &mut Incoming<P>, outgoing:
         OUTGOING_SHARED.handle(),
     )
     .unwrap();
+    let application_size = core::mem::size_of_val(&proxy);
     let mut unused = Local;
     let policy = PublicPaths(&[(Code::GET, "/local")]);
     link.request(1, true);
@@ -362,13 +363,14 @@ fn scenario<P: Protection>(security: &str, incoming: &mut Incoming<P>, outgoing:
     }
     let peak = stack::finish();
     semihosting::println!(
-        "proxy: security={} D={} forwards={} payload={} incoming_future={} outgoing_future={} painted={} capacity={}",
+        "proxy: security={} D={} forwards={} payload={} incoming_future={} outgoing_future={} application_bytes={} painted={} capacity={}",
         security,
         D,
         F,
         PAYLOAD.len(),
         incoming_size,
         outgoing_size,
+        application_size,
         peak.painted,
         peak.capacity
     );

@@ -92,6 +92,18 @@ macro_rules! __delegate_application_proxy {
                 )
             }
         });
+        $crate::__delegate_method!([$($except)*] poll_deferred {
+            fn poll_deferred(
+                &mut self,
+                now: $crate::time::Instant,
+                cx: &mut core::task::Context<'_>,
+                responses: &mut dyn $crate::endpoint::DeferredResponses<{ $size }>,
+            ) {
+                <_ as $crate::endpoint::Application<{ $size }>>::poll_deferred(
+                    &mut self.$field, now, cx, responses,
+                )
+            }
+        });
     };
 }
 #[doc(hidden)]
@@ -300,6 +312,7 @@ macro_rules! __delegate_method {
     ([handle $($rest:ident)*] handle {$($item:tt)*}) => {};
     ([recognizes $($rest:ident)*] recognizes {$($item:tt)*}) => {};
     ([poll $($rest:ident)*] poll {$($item:tt)*}) => {};
+    ([poll_deferred $($rest:ident)*] poll_deferred {$($item:tt)*}) => {};
     ([deadline $($rest:ident)*] deadline {$($item:tt)*}) => {};
     ([uses_context $($rest:ident)*] uses_context {$($item:tt)*}) => {};
     ([abort_context $($rest:ident)*] abort_context {$($item:tt)*}) => {};
@@ -333,6 +346,7 @@ macro_rules! __delegate_validate {
     (application; handle $($rest:ident)*) => { $crate::__delegate_validate!(application; $($rest)*); };
     (application; recognizes $($rest:ident)*) => { $crate::__delegate_validate!(application; $($rest)*); };
     (application; poll $($rest:ident)*) => { $crate::__delegate_validate!(application; $($rest)*); };
+    (application; poll_deferred $($rest:ident)*) => { $crate::__delegate_validate!(application; $($rest)*); };
     (application; deadline $($rest:ident)*) => { $crate::__delegate_validate!(application; $($rest)*); };
     (application; uses_context $($rest:ident)*) => { $crate::__delegate_validate!(application; $($rest)*); };
     (application; abort_context $($rest:ident)*) => { $crate::__delegate_validate!(application; $($rest)*); };

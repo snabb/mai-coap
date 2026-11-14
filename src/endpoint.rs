@@ -22,7 +22,11 @@ use core::{
     task::{Context as TaskContext, Poll, Waker},
 };
 use critical_section::Mutex;
+#[cfg(feature = "proxy")]
+mod deferred;
 mod delegate;
+#[cfg(feature = "proxy")]
+pub use deferred::DeferredResponses;
 /// Compile-time endpoint request roles.
 pub mod role;
 mod writer;
@@ -388,8 +392,20 @@ pub trait Application<const DATAGRAM_BYTES: usize> {
         None
     }
     /// Polls worker operations with the driver's waker. Wrappers must forward.
-    /// Custom drivers using cross-endpoint forwarding must call this method.
+    /// `Endpoint::poll_resources` also drives the deferred-response hook.
     fn poll(&mut self, _: Instant, _: &mut TaskContext<'_>) {}
+    /// Offers ready serialized deferred replies to the receiving driver.
+    /// The sink reserves protocol storage before invoking a writer. Keep each
+    /// reply until handoff succeeds; use `deadline` to retry transient capacity
+    /// failures. Wrappers must forward this method.
+    #[cfg(feature = "proxy")]
+    fn poll_deferred(
+        &mut self,
+        _: Instant,
+        _: &mut TaskContext<'_>,
+        _: &mut dyn DeferredResponses<DATAGRAM_BYTES>,
+    ) {
+    }
     /// Earliest resource deadline; `None` means no scheduled application work.
     fn deadline(&self) -> Option<Instant> {
         None
@@ -1110,15 +1126,6 @@ impl<'a, const DATAGRAM_BYTES: usize, const COMMANDS: usize> Handle<'a, DATAGRAM
             Packet::encoded(|bytes| response.encode(bytes, MessageType::NonConfirmable, 0, &[]))?;
         self.submit_serialized(ticket, packet, queued)
     }
-    /// Hands an already serialized reply to the send queue; see [`Self::respond`].
-    #[cfg(feature = "proxy")]
-    pub(crate) fn respond_serialized(
-        &self,
-        ticket: Ticket,
-        packet: &Packet<DATAGRAM_BYTES>,
-    ) -> Result<ResponseOperation<'a, DATAGRAM_BYTES, COMMANDS>, Error> {
-        self.submit_serialized(ticket, packet.clone(), true)
-    }
     #[cfg(feature = "server")]
     fn submit_serialized(
         &self,
@@ -1207,6 +1214,50 @@ pub struct Operation<'a, const DATAGRAM_BYTES: usize, const COMMANDS: usize> {
     index: usize,
     generation: u64,
     finished: bool,
+}
+#[cfg(feature = "proxy")]
+impl<const D: usize, const C: usize> Operation<'_, D, C> {
+    // Keep the completion in its existing slot until receiving storage is reserved.
+    pub(crate) fn poll_reply(&mut self, cx: &mut TaskContext<'_>) -> Poll<Result<(), Error>> {
+        self.shared.lock(|s| {
+            let slot = &mut s.slots[self.index];
+            if slot.generation != self.generation {
+                return Poll::Ready(Err(Error::Cancelled));
+            }
+            match &slot.data {
+                SlotData::Result(result) => {
+                    Poll::Ready(result.as_ref().map(|_| ()).map_err(|e| *e))
+                }
+                _ => {
+                    slot.waker = Some(cx.waker().clone());
+                    Poll::Pending
+                }
+            }
+        })
+    }
+    pub(crate) fn copy_reply(&self, output: &mut [u8]) -> Result<usize, Error> {
+        self.shared.lock(|s| {
+            let slot = &s.slots[self.index];
+            if slot.generation != self.generation {
+                return Err(Error::Cancelled);
+            }
+            match &slot.data {
+                SlotData::Result(Ok(reply)) => copy(reply.packet.as_slice(), output),
+                SlotData::Result(Err(error)) => Err(*error),
+                _ => Err(Error::Cancelled),
+            }
+        })
+    }
+    pub(crate) fn release_reply(&mut self) {
+        self.shared.lock(|s| {
+            let slot = &mut s.slots[self.index];
+            if slot.generation == self.generation && matches!(slot.data, SlotData::Result(_)) {
+                slot.data = SlotData::Empty;
+            }
+        });
+        self.finished = true;
+        self.shared.wake_driver();
+    }
 }
 impl<const DATAGRAM_BYTES: usize, const COMMANDS: usize> Future
     for Operation<'_, DATAGRAM_BYTES, COMMANDS>
@@ -2109,6 +2160,8 @@ impl<
             self.storage_retry = None;
         }
         application.poll(now, cx);
+        #[cfg(feature = "proxy")]
+        self.poll_deferred_responses(now, application, cx);
         self.release_body_epochs(application);
         #[cfg(feature = "observe")]
         if let Err(error) = self.poll_observations(now, application, policy) {
@@ -2117,6 +2170,65 @@ impl<
         #[cfg(not(feature = "observe"))]
         let _ = policy;
         Ok(())
+    }
+    #[cfg(feature = "proxy")]
+    fn poll_deferred_responses<A: Application<DATAGRAM_BYTES>>(
+        &mut self,
+        now: Instant,
+        application: &mut A,
+        cx: &mut TaskContext<'_>,
+    ) -> bool {
+        if !Mode::SERVE {
+            return false;
+        }
+        let mut progress = false;
+        let mut deliver = |ticket, writer: &mut dyn FnMut(&mut [u8]) -> Result<usize, Error>| {
+            self.deliver_deferred(ticket, writer, now)?;
+            progress = true;
+            Ok(())
+        };
+        application.poll_deferred(now, cx, &mut deferred::Sink(&mut deliver));
+        progress
+    }
+    #[cfg(feature = "proxy")]
+    #[inline(never)]
+    fn deliver_deferred(
+        &mut self,
+        ticket: Ticket,
+        writer: &mut dyn FnMut(&mut [u8]) -> Result<usize, Error>,
+        now: Instant,
+    ) -> Result<(), Error> {
+        let entry = self
+            .deferred
+            .iter()
+            .find(|e| e.ticket == ticket)
+            .ok_or(Error::Cancelled)?;
+        if now >= entry.deadline {
+            return Err(Error::Cancelled);
+        }
+        if self.outgoing.is_full()
+            || !self.ids.available(now)
+            || entry.confirmable
+                && (self.exchanges.is_full()
+                    || self.credits_used(entry.metadata.remote) >= self.parameters.nstart)
+            || !self.storage_ready(now)
+        {
+            return Err(Error::Capacity);
+        }
+        self.with_packet(None, now, |this, reservation| {
+            this.storage_available();
+            let packet = Packet::encoded(|bytes| {
+                let length = writer(bytes)?;
+                if length > bytes.len() {
+                    return Err(Error::Malformed);
+                }
+                Ok(length)
+            })?;
+            if !MessageView::parse(packet.as_slice())?.code().is_response() {
+                return Err(Error::Malformed);
+            }
+            this.command_respond(None, ticket, packet, true, now, reservation)
+        })
     }
     /// Borrows the next datagram without releasing its storage.
     /// Call `complete_outgoing` only after transport acceptance. Cancellation
@@ -4011,7 +4123,7 @@ impl<
             } => {
                 if Mode::SERVE {
                     self.command_respond(
-                        (slot, generation),
+                        Some((slot, generation)),
                         ticket,
                         packet,
                         queued,
@@ -4213,7 +4325,7 @@ impl<
     #[inline(never)]
     fn command_respond(
         &mut self,
-        (slot, generation): (usize, u64),
+        completion: Option<(usize, u64)>,
         ticket: Ticket,
         mut packet: Packet<DATAGRAM_BYTES>,
         queued: bool,
@@ -4278,13 +4390,15 @@ impl<
                     return Err(Error::Capacity);
                 }
             }
-            if !self.shared.response_handoff(
-                (slot, generation),
-                entry.metadata.remote,
-                mid,
-                ty == MessageType::Confirmable,
-                queued,
-            ) {
+            if let Some(completion) = completion
+                && !self.shared.response_handoff(
+                    completion,
+                    entry.metadata.remote,
+                    mid,
+                    ty == MessageType::Confirmable,
+                    queued,
+                )
+            {
                 // No transport poll can observe the queue before handoff commits.
                 if ty == MessageType::Confirmable {
                     let mut exchange = self.exchanges.swap_remove(exchange_index);
@@ -4619,6 +4733,15 @@ impl<
                     }
                     // External operations can wake this task without changing our revision.
                     application.poll(clock.now(), cx);
+                    #[cfg(feature = "proxy")]
+                    if self.with_send_window(clock, |window| {
+                        let now = window.now();
+                        window
+                            .endpoint
+                            .poll_deferred_responses(now, application, cx)
+                    }) {
+                        return Poll::Ready(Event::Wake);
+                    }
                     if application.deadline().is_some_and(|next| next < deadline) {
                         return Poll::Ready(Event::Wake);
                     }

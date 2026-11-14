@@ -26,6 +26,8 @@ def main():
     for flags in range(8):
         seed("endpoint", f"response-handoff-{flags}", bytes([flags, 0, 1, 3, 125]))
     seed("endpoint", "endpoint-roles", bytes([0, 1, 2, 3, 4, 5, 16, 17, 0, 4]))
+    for flags in [0, 1, 2, 3, 4, 5, 8, 9, 16, 17, 64, 65, 66, 67, 72, 80, 127]:
+        seed("endpoint", f"proxy-delivery-{flags}", bytes([flags]) + b"opaque")
     # API-1: sorted/repeated options, atomic refusals and shared wire capacity.
     seed("response_writer", "empty", bytes([0]))
     seed(

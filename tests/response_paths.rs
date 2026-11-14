@@ -256,10 +256,14 @@ fn proxy_slow_route_outlives_local_profile_and_times_out_queued_work() {
         if blocked {
             assert!(endpoint.pop_outgoing().is_none());
             assert_eq!(app.deadline(), Some(Instant(2100)));
-            app.poll(
-                Instant(2100),
-                &mut core::task::Context::from_waker(core::task::Waker::noop()),
-            );
+            endpoint
+                .poll_resources(
+                    Instant(2100),
+                    &mut app,
+                    &ProtectedOnly,
+                    &mut core::task::Context::from_waker(core::task::Waker::noop()),
+                )
+                .unwrap();
         } else {
             let outgoing = endpoint.pop_outgoing().unwrap();
             let request = MessageView::parse(outgoing.packet.as_slice()).unwrap();
@@ -283,18 +287,26 @@ fn proxy_slow_route_outlives_local_profile_and_times_out_queued_work() {
                     &ProtectedOnly,
                 )
                 .unwrap();
-            app.poll(
-                Instant(22),
-                &mut core::task::Context::from_waker(core::task::Waker::noop()),
-            );
+            endpoint
+                .poll_resources(
+                    Instant(22),
+                    &mut app,
+                    &ProtectedOnly,
+                    &mut core::task::Context::from_waker(core::task::Waker::noop()),
+                )
+                .unwrap();
         }
         let now = Instant(if blocked { 2100 } else { 22 });
         for _ in 0..3 {
             endpoint.poll(now).unwrap();
-            app.poll(
-                now,
-                &mut core::task::Context::from_waker(core::task::Waker::noop()),
-            );
+            endpoint
+                .poll_resources(
+                    now,
+                    &mut app,
+                    &ProtectedOnly,
+                    &mut core::task::Context::from_waker(core::task::Waker::noop()),
+                )
+                .unwrap();
         }
         let replies: Vec<_> = core::iter::from_fn(|| endpoint.pop_outgoing())
             .filter(|out| out.remote == peer)
@@ -782,15 +794,23 @@ fn proxy_retries_a_relay_after_asynchronous_capacity_failure() {
             .message_id();
         separate_ids.push(mid);
     }
-    proxy.poll(
-        Instant(3),
-        &mut core::task::Context::from_waker(core::task::Waker::noop()),
-    );
+    endpoint
+        .poll_resources(
+            Instant(3),
+            &mut proxy,
+            &ProtectedOnly,
+            &mut core::task::Context::from_waker(core::task::Waker::noop()),
+        )
+        .unwrap();
     endpoint.poll(Instant(3)).unwrap();
-    proxy.poll(
-        Instant(3),
-        &mut core::task::Context::from_waker(core::task::Waker::noop()),
-    );
+    endpoint
+        .poll_resources(
+            Instant(3),
+            &mut proxy,
+            &ProtectedOnly,
+            &mut core::task::Context::from_waker(core::task::Waker::noop()),
+        )
+        .unwrap();
     assert!(endpoint.pop_outgoing().is_none());
     let n = MessageBuilder::new(
         &mut bytes,
@@ -811,15 +831,23 @@ fn proxy_retries_a_relay_after_asynchronous_capacity_failure() {
             &ProtectedOnly,
         )
         .unwrap();
-    proxy.poll(
-        Instant(4),
-        &mut core::task::Context::from_waker(core::task::Waker::noop()),
-    );
+    endpoint
+        .poll_resources(
+            Instant(4),
+            &mut proxy,
+            &ProtectedOnly,
+            &mut core::task::Context::from_waker(core::task::Waker::noop()),
+        )
+        .unwrap();
     endpoint.poll(Instant(4)).unwrap();
-    proxy.poll(
-        Instant(4),
-        &mut core::task::Context::from_waker(core::task::Waker::noop()),
-    );
+    endpoint
+        .poll_resources(
+            Instant(4),
+            &mut proxy,
+            &ProtectedOnly,
+            &mut core::task::Context::from_waker(core::task::Waker::noop()),
+        )
+        .unwrap();
     let outgoing = endpoint
         .pop_outgoing()
         .expect("relayed response must survive Capacity");

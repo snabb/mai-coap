@@ -273,7 +273,8 @@ for a custom driver to retry or discard. Never fabricate unspecified local addre
 
 - Transport wrappers forward both halves, the receive-storage hook and both error hooks.
 - `delegate_application!(field, D)` and `delegate_protection!(field, BindingType)`
-  forward everything inside a trait implementation.
+  forward everything inside a trait implementation, including `poll_deferred`
+  when `proxy` is enabled. Manual wrappers must forward that hook explicitly.
 - Add `; except [handle]` or `; except [incoming, outgoing]` before the closing
   parenthesis to override specific methods. Unknown names are compile errors.
 - `Protection::incoming` receives a caller-provided output buffer and returns the
@@ -294,8 +295,9 @@ control. The supported manual methods are `receive`, `poll`, `poll_resources`,
    queued datagram: call `complete_outgoing(now)` with the actual time after the
    transport accepts it, or `discard_outgoing` after a recoverable failure.
 3. Preserve transport metadata, and pass the driver's task context to `poll_resources`.
-   It already includes notification polling, and it lets upstream completions wake a
-   proxy's receiving driver. Call `poll_resources` on every task wake, including wakes
+   It includes notification polling and both application poll hooks, and lets
+   upstream completions wake a proxy's receiving driver. Call `poll_resources` on
+   every task wake, including wakes
    with no new command or expired deadline.
 4. Arrange command wakeups, and honor both endpoint and application deadlines, including
    immediate wakeups.

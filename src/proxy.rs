@@ -1,10 +1,10 @@
 //! Forwarding of opaque datagrams through the endpoint's bounded client machinery.
 use crate::{
-    Error, Packet,
+    Error,
     codec::{Code, MessageBuilder, MessageType, MessageView, OptionNumber},
     endpoint::{
-        Application, Disposition, Handle, Operation, Reply, Request, ResponseOperation,
-        ResponseWriter, Ticket,
+        Application, DeferredResponses, Disposition, Handle, Operation, Request, ResponseWriter,
+        Ticket,
     },
     messaging::TransmissionParameters,
     rate::{Limiter, Limits},
@@ -12,9 +12,7 @@ use crate::{
     uri::Uri,
 };
 use core::{
-    future::Future,
     net::{IpAddr, SocketAddr},
-    pin::Pin,
     task::{Context, Poll},
 };
 
@@ -41,26 +39,14 @@ impl Routing for Deny {
         false
     }
 }
-#[allow(
-    clippy::large_enum_variant,
-    reason = "forwarding slots own one bounded serialized reply"
-)]
-enum State<'a, const DATAGRAM_BYTES: usize, const COMMANDS: usize, const OUTBOUND_COMMANDS: usize> {
+enum State<'a, const DATAGRAM_BYTES: usize, const OUTBOUND_COMMANDS: usize> {
     Waiting(Operation<'a, DATAGRAM_BYTES, OUTBOUND_COMMANDS>),
-    Ready(Packet<DATAGRAM_BYTES>),
-    Sending(
-        ResponseOperation<'a, DATAGRAM_BYTES, COMMANDS>,
-        Packet<DATAGRAM_BYTES>,
-    ),
+    Reply(Operation<'a, DATAGRAM_BYTES, OUTBOUND_COMMANDS>),
+    Status(Code),
 }
-struct Forward<
-    'a,
-    const DATAGRAM_BYTES: usize,
-    const COMMANDS: usize,
-    const OUTBOUND_COMMANDS: usize,
-> {
+struct Forward<'a, const DATAGRAM_BYTES: usize, const OUTBOUND_COMMANDS: usize> {
     ticket: Ticket,
-    state: Option<State<'a, DATAGRAM_BYTES, COMMANDS, OUTBOUND_COMMANDS>>,
+    state: Option<State<'a, DATAGRAM_BYTES, OUTBOUND_COMMANDS>>,
     deadline: Instant,
 }
 /// Application wrapper forwarding up to eight requests by default. It retains no
@@ -76,9 +62,9 @@ pub struct ForwardProxy<
 > {
     inner: A,
     routing: R,
-    handle: Handle<'a, DATAGRAM_BYTES, COMMANDS>,
+    _handle: Handle<'a, DATAGRAM_BYTES, COMMANDS>,
     outbound: Handle<'a, DATAGRAM_BYTES, OUTBOUND_COMMANDS>,
-    forwards: heapless::Vec<Forward<'a, DATAGRAM_BYTES, COMMANDS, OUTBOUND_COMMANDS>, FORWARDS>,
+    forwards: heapless::Vec<Forward<'a, DATAGRAM_BYTES, OUTBOUND_COMMANDS>, FORWARDS>,
     limiter: Limiter<16>,
 }
 impl<'a, A, R, const DATAGRAM_BYTES: usize, const COMMANDS: usize, const FORWARDS: usize>
@@ -104,7 +90,7 @@ impl<
 > ForwardProxy<'a, A, R, DATAGRAM_BYTES, COMMANDS, FORWARDS, OUTBOUND_COMMANDS>
 {
     /// Uses a separate endpoint for upstream traffic. Both endpoint drivers must run.
-    /// Deferred replies are always completed through the receiving endpoint's handle.
+    /// Deferred replies are queued by the receiving driver polling this application.
     pub fn with_outbound(
         inner: A,
         routing: R,
@@ -117,7 +103,7 @@ impl<
         Ok(Self {
             inner,
             routing,
-            handle,
+            _handle: handle,
             outbound,
             forwards: heapless::Vec::new(),
             limiter: Limiter::new(Limits::default())?,
@@ -157,9 +143,7 @@ impl<
         self.inner
             .deadline()
             .into_iter()
-            .chain(self.forwards.iter().filter_map(|forward| {
-                matches!(forward.state, Some(State::Waiting(_))).then_some(forward.deadline)
-            }))
+            .chain(self.forwards.iter().map(|forward| forward.deadline))
             .min()
     }
     fn uses_context(&self, generation: u64) -> bool {
@@ -219,64 +203,75 @@ impl<
     }
     fn poll(&mut self, now: Instant, cx: &mut Context<'_>) {
         self.inner.poll(now, cx);
-        let mut i = 0;
-        while i < self.forwards.len() {
-            let Some(state) = self.forwards[i].state.take() else {
-                self.forwards.swap_remove(i);
+        for forward in &mut self.forwards {
+            if !matches!(forward.state, Some(State::Waiting(_))) {
+                continue;
+            }
+            let Some(State::Waiting(mut operation)) = forward.state.take() else {
                 continue;
             };
-            let next = match state {
-                State::Waiting(mut operation) => match Pin::new(&mut operation).poll(cx) {
-                    Poll::Pending if now >= self.forwards[i].deadline => {
-                        drop(operation);
-                        self.forwards[i].state = Some(State::Ready(status(Code::GATEWAY_TIMEOUT)));
-                        continue;
-                    }
-                    Poll::Pending => State::Waiting(operation),
-                    Poll::Ready(result) => {
-                        self.forwards[i].state = Some(State::Ready(match result {
-                            Ok(reply) => relay(reply),
-                            Err(Error::Timeout) => status(Code::GATEWAY_TIMEOUT),
-                            Err(_) => status(Code::BAD_GATEWAY),
-                        }));
-                        continue;
-                    }
-                },
-                State::Ready(response) => {
-                    match self
-                        .handle
-                        .respond_serialized(self.forwards[i].ticket, &response)
-                    {
-                        Ok(operation) => State::Sending(operation, response),
-                        Err(Error::Capacity) => State::Ready(response),
-                        Err(_) => {
-                            self.forwards.swap_remove(i);
-                            continue;
-                        }
-                    }
+            forward.state = Some(match operation.poll_reply(cx) {
+                Poll::Pending if now < forward.deadline => State::Waiting(operation),
+                Poll::Pending => {
+                    drop(operation);
+                    forward.deadline = now.after(100);
+                    State::Status(Code::GATEWAY_TIMEOUT)
                 }
-                State::Sending(mut operation, response) => {
-                    match Pin::new(&mut operation).poll(cx) {
-                        Poll::Pending => State::Sending(operation, response),
-                        Poll::Ready(Err(Error::Capacity)) => State::Ready(response),
-                        Poll::Ready(_) => {
-                            self.forwards.swap_remove(i);
-                            continue;
-                        }
-                    }
+                Poll::Ready(Ok(())) => {
+                    forward.deadline = now.after(100);
+                    State::Reply(operation)
+                }
+                Poll::Ready(Err(error)) => {
+                    operation.release_reply();
+                    forward.deadline = now.after(100);
+                    State::Status(if error == Error::Timeout {
+                        Code::GATEWAY_TIMEOUT
+                    } else {
+                        Code::BAD_GATEWAY
+                    })
+                }
+            });
+        }
+    }
+    fn poll_deferred(
+        &mut self,
+        now: Instant,
+        cx: &mut Context<'_>,
+        responses: &mut dyn DeferredResponses<DATAGRAM_BYTES>,
+    ) {
+        self.inner.poll_deferred(now, cx, responses);
+        let mut i = 0;
+        while i < self.forwards.len() {
+            let forward = &mut self.forwards[i];
+            let result = match forward.state.as_mut() {
+                Some(State::Reply(operation)) => responses.respond(forward.ticket, &mut |bytes| {
+                    let length = operation.copy_reply(bytes)?;
+                    relay_bytes(bytes, length)
+                }),
+                Some(State::Status(code)) => {
+                    responses.respond(forward.ticket, &mut |bytes| write_status(*code, bytes))
+                }
+                _ => {
+                    i += 1;
+                    continue;
                 }
             };
-            self.forwards[i].state = Some(next);
-            i += 1;
+            if result == Err(Error::Capacity) {
+                // Resource wakes retry immediately; the timer also covers capacity
+                // failures from synchronous protection providers without a waker.
+                forward.deadline = now.after(100);
+                i += 1;
+                continue;
+            }
+            if let Some(State::Reply(operation)) = forward.state.as_mut() {
+                operation.release_reply();
+            }
+            self.forwards.swap_remove(i);
         }
     }
 }
-/// A tokenless reply; the deferred completion binds the requester's type and token.
-fn status<const DATAGRAM_BYTES: usize>(code: Code) -> Packet<DATAGRAM_BYTES> {
-    Packet::encoded(|bytes| {
-        MessageBuilder::new(bytes, MessageType::NonConfirmable, code, 0, &[])?.finish(&[])
-    })
-    .unwrap_or_default()
+fn write_status(code: Code, bytes: &mut [u8]) -> Result<usize, Error> {
+    MessageBuilder::new(bytes, MessageType::NonConfirmable, code, 0, &[])?.finish(&[])
 }
 fn relayable(message: MessageView<'_>) -> bool {
     let mut previous = None;
@@ -294,16 +289,26 @@ fn relayable(message: MessageView<'_>) -> bool {
     }
     true
 }
-fn relay<const DATAGRAM_BYTES: usize>(mut reply: Reply<DATAGRAM_BYTES>) -> Packet<DATAGRAM_BYTES> {
-    if reply.message().is_ok_and(relayable)
-        && reply
-            .packet
-            .reheader(MessageType::NonConfirmable, 0, &[])
-            .is_ok()
+fn relay_bytes(bytes: &mut [u8], length: usize) -> Result<usize, Error> {
+    if MessageView::parse(bytes.get(..length).ok_or(Error::Capacity)?).is_ok_and(relayable)
+        && let Ok(length) =
+            crate::codec::reheader(bytes, length, MessageType::NonConfirmable, 0, &[])
     {
-        return reply.packet;
+        return Ok(length);
     }
-    status(Code::BAD_GATEWAY)
+    write_status(Code::BAD_GATEWAY, bytes)
+}
+#[cfg(test)]
+fn relay<const D: usize>(reply: crate::endpoint::Reply<D>) -> crate::Packet<D> {
+    crate::Packet::encoded(|bytes| {
+        let input = reply.packet.as_slice();
+        bytes
+            .get_mut(..input.len())
+            .ok_or(Error::Capacity)?
+            .copy_from_slice(input);
+        relay_bytes(bytes, input.len())
+    })
+    .unwrap()
 }
 /// Normalizes a forward request while preserving opaque option values and payload.
 /// Errors are the response status the proxy should return to its requester.

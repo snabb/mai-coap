@@ -12,7 +12,7 @@ MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 ROWS = [
     f"proxy: security={mode} D=1152 forwards=2 payload=1024 incoming_future=1440 "
-    "outgoing_future=1440 painted=20000 capacity=50000"
+    "outgoing_future=1440 application_bytes=3000 painted=20000 capacity=50000"
     for mode in ("plain", "secure")
 ]
 PASS = "mai-coap proxy runtime: PASS"

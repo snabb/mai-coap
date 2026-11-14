@@ -469,10 +469,7 @@ fn observe() {
 #[cfg(feature = "proxy")]
 #[inline(never)]
 fn proxy() {
-    use mai_coap::{
-        endpoint::Application,
-        proxy::{ForwardProxy, Routing},
-    };
+    use mai_coap::proxy::{ForwardProxy, Routing};
     struct Route;
     impl Routing for Route {
         fn allow(&self, _: core::net::SocketAddr, _: &str, _: u16) -> bool {
@@ -529,15 +526,23 @@ fn proxy() {
             &PublicPaths(&[]),
         )
         .unwrap();
-    app.poll(
-        Instant(1),
-        &mut core::task::Context::from_waker(core::task::Waker::noop()),
-    );
+    endpoint
+        .poll_resources(
+            Instant(1),
+            &mut app,
+            &PublicPaths(&[]),
+            &mut core::task::Context::from_waker(core::task::Waker::noop()),
+        )
+        .unwrap();
     endpoint.poll(Instant(1)).unwrap();
-    app.poll(
-        Instant(1),
-        &mut core::task::Context::from_waker(core::task::Waker::noop()),
-    );
+    endpoint
+        .poll_resources(
+            Instant(1),
+            &mut app,
+            &PublicPaths(&[]),
+            &mut core::task::Context::from_waker(core::task::Waker::noop()),
+        )
+        .unwrap();
     assert!(endpoint.pop_outgoing().is_some());
 }
 
