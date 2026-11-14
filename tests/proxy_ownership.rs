@@ -28,6 +28,10 @@ fn address(last: u8) -> SocketAddr {
 }
 
 fn forward_request(token: u8) -> mai_coap::Packet<256> {
+    forward_request_to(token, b"coap://192.0.2.9/x")
+}
+
+fn forward_request_to(token: u8, uri: &[u8]) -> mai_coap::Packet<256> {
     let mut bytes = [0; 256];
     let mut builder = MessageBuilder::new(
         &mut bytes,
@@ -37,9 +41,7 @@ fn forward_request(token: u8) -> mai_coap::Packet<256> {
         &[token],
     )
     .unwrap();
-    builder
-        .option(OptionNumber::PROXY_URI, b"coap://192.0.2.9/x")
-        .unwrap();
+    builder.option(OptionNumber::PROXY_URI, uri).unwrap();
     let n = builder.finish(&[]).unwrap();
     mai_coap::Packet::copy_from(&bytes[..n]).unwrap()
 }
@@ -345,8 +347,11 @@ fn worker_replies_and_forwards<const COMMANDS: usize, const EXCHANGES: usize>(wo
         );
     }
     assert_eq!(app.inner_mut().0.len(), workers);
-    for (remote, token) in [(address(3), b'f'), (address(4), b'g')] {
-        let request = forward_request(token);
+    for (remote, token, uri) in [
+        (address(3), b'f', b"coap://192.0.2.9/f"),
+        (address(4), b'g', b"coap://192.0.2.9/g"),
+    ] {
+        let request = forward_request_to(token, uri);
         receiving
             .receive(
                 request.as_slice(),
@@ -368,7 +373,12 @@ fn worker_replies_and_forwards<const COMMANDS: usize, const EXCHANGES: usize>(wo
         let request = upstream
             .pop_outgoing()
             .expect("upstream NSTART must recover");
-        let reply = origin_response(&request.packet, b"forwarded");
+        let view = MessageView::parse(request.packet.as_slice()).unwrap();
+        let path = view
+            .options()
+            .find(|option| option.number == OptionNumber::URI_PATH)
+            .unwrap();
+        let reply = origin_response(&request.packet, path.value);
         upstream
             .receive(
                 reply.as_slice(),
@@ -410,11 +420,20 @@ fn worker_replies_and_forwards<const COMMANDS: usize, const EXCHANGES: usize>(wo
         let reply = MessageView::parse(packet.packet.as_slice()).unwrap();
         assert_eq!(reply.message_type(), MessageType::Confirmable);
         assert_eq!(reply.code(), Code::CONTENT);
-        assert_eq!(reply.payload(), b"forwarded");
-        forwards.push((packet.remote, reply.token()[0]));
+        forwards.push((
+            packet.remote,
+            reply.token().to_vec(),
+            reply.payload().to_vec(),
+        ));
     }
     forwards.sort_unstable();
-    assert_eq!(forwards, [(address(3), b'f'), (address(4), b'g')]);
+    assert_eq!(
+        forwards,
+        [
+            (address(3), vec![b'f'], vec![b'f']),
+            (address(4), vec![b'g'], vec![b'g']),
+        ]
+    );
     for operation in &mut deliveries {
         assert!(Pin::new(operation).poll(&mut cx).is_pending());
     }

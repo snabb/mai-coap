@@ -1020,7 +1020,7 @@
         "proxy_variant": "cand-proxy",
         "no_proxy_variant": "cand-noproxy",
         "compiler_and_profile": "Same compiler, build host and release profile as downstream_validation.measurement. DIE offsets refer to readelf --debug-dump=info --wide for the corresponding private ELF.",
-        "method": "TaskStorage/POOL symbols and DWARF sizes and disjoint field offsets in each largest suspend state. Alternative coroutine states overlap and are not summed. Matching ELF hashes are in downstream_validation.variants."
+        "method": "TaskStorage/POOL symbols, DWARF sizes and selected disjoint field offsets in each largest suspend state, with explicit residuals for unlisted captures and padding. Alternative coroutine states overlap and are not summed. Matching ELF hashes are in downstream_validation.variants."
       },
       "pool_comparison": {
         "no_proxy": {
@@ -1074,15 +1074,9 @@
             "die": "0x9c226"
           },
           {
-            "item": "additional retained captures",
-            "components_bytes": {
-              "second_seed": 32,
-              "second_socket": 8,
-              "second_iface": 8,
-              "TunnelRouting": 20,
-              "second_transport": 12
-            },
-            "delta_bytes": 80
+            "item": "residual: unlisted captures and padding",
+            "delta_bytes": 80,
+            "evidence": "Computed as the task-pool delta minus the four individually sized components above; not verified field by field."
           }
         ],
         "same_proxy_feature_shared_capacity_comparison": {
@@ -1262,9 +1256,9 @@
         },
         "proxy_minus_no_proxy_bytes": 3120,
         "nested_delta_subledger": {
-          "receiving_endpoint_capacity_change": 912,
           "inner_drive_future": 2176,
-          "Forward_value_vs_Local_ZST": 32
+          "receiving_endpoint_non_command_growth": 912,
+          "residual_unlisted_captures_and_padding": 32
         },
         "ota_run_suspend0": {
           "proxy": {
@@ -1300,7 +1294,7 @@
           },
           "scope": "Both fields are present at distinct offsets in each largest Suspend0 state, and both grow by 1,088 B. Select3.a has the same concrete future type as ota::run.server. The caller passes server by value to select3(server, worker, supervise), so Select3 owns one future slot by value while the enclosing async layout still reserves a distinct server field. This confirms duplicate storage in the future layout; after the move, the source slot may be uninitialized, which DWARF alone cannot establish."
         },
-        "scope": "Nested fields explain the 3,120-byte parent component and are not additional top-level ledger entries. Endpoint and inner-drive fields coexist in the displayed Suspend1; other coroutine states overlap."
+        "scope": "Nested fields explain the 3,120-byte parent component and are not additional top-level ledger entries. Endpoint and inner-drive fields coexist in the displayed Suspend1; other coroutine states overlap. COMMANDS changes Shared storage, not Endpoint size. The 32-byte subledger residual is not field-verified or attributed to a specific value."
       },
       "endpoint_occurrences": {
         "outbound_endpoint": {
@@ -1334,8 +1328,8 @@
           "reason": "Current deferred admission requires nonzero COMMANDS. Driver-pulled delivery uses no free slot but does not remove that admission minimum."
         },
         "validation": {
-          "host": "python3 tools/checks.py --docs --test and focused std,proxy Clippy passed. All four proxy_ownership tests passed after restoring temporary probes.",
-          "mixed_workers": "Two local deferred worker reply commands fill receiving C2 while two forwards hand off; both worker replies then hand off and outbound slots can be reused.",
+          "host": "Full python3 tools/checks.py --docs --test passed before the pairing-oracle followup. The updated four proxy_ownership tests and focused std,proxy Clippy passed after restoring the swapped-payload probe.",
+          "mixed_workers": "Two local deferred worker reply commands fill receiving C2 while two forwards hand off; both worker replies then hand off and outbound slots can be reused. Distinct upstream Uri-Path payloads are checked with their downstream remote and full token to detect swapped results.",
           "without_workers": "A separate-outbound proxy admits and delivers two forwards with receiving C1 and outbound C2/O2.",
           "negative_probes": [
             {
@@ -1345,6 +1339,10 @@
             {
               "change": "Use receiving C0 in the no-worker proxy case",
               "observed": "The response is 5.03 (Code163), not an Empty ACK; deferred proxy admission is disabled."
+            },
+            {
+              "change": "Swap the two upstream Uri-Path payloads before forwarding",
+              "observed": "The mixed-worker test fails its destination/token/payload comparison; restoring the original payloads makes all four tests pass."
             }
           ],
           "boundary": "The tests model deferred local replies, not real upload flash I/O or physical hardware. No library production code changed."
