@@ -336,28 +336,23 @@ pub(crate) mod internal {
                 .find(|e| e.peer == peer && e.local == local && e.id == id && e.until > now)
                 .map(|e| &e.reply)
         }
+        fn core<'a, const D: usize, const N: usize, S: PacketStorage<D, N>>(
+            &'a mut self,
+            pool: &'a mut PacketPool<D, N, S>,
+        ) -> DeduplicationCore<'a> {
+            DeduplicationCore {
+                entries: self.entries.as_mut_view(),
+                cached_replies: CACHED_REPLIES,
+                pool,
+            }
+        }
         /// Releases all records whose duplicate lifetime has ended.
         pub fn expire<const D: usize, const PACKETS: usize, S: PacketStorage<D, PACKETS>>(
             &mut self,
             pool: &mut PacketPool<D, PACKETS, S>,
             now: Instant,
         ) {
-            let mut i = 0;
-            while i < self.entries.len() {
-                if self.entries[i].until <= now {
-                    Self::release_reply(pool, self.entries.remove(i).reply);
-                } else {
-                    i += 1;
-                }
-            }
-        }
-        fn release_reply<const D: usize, const PACKETS: usize, S: PacketStorage<D, PACKETS>>(
-            pool: &mut PacketPool<D, PACKETS, S>,
-            reply: CachedReply,
-        ) {
-            if let CachedReply::Full(packet) = reply {
-                pool.release(packet);
-            }
+            self.core(pool).expire(now);
         }
         /// Drops an eligible full reply, preferring a matching peer and local address.
         pub fn reclaim_reply<const D: usize, const PACKETS: usize, S: PacketStorage<D, PACKETS>>(
@@ -366,27 +361,7 @@ pub(crate) mod internal {
             preferred: Option<(SocketAddr, core::net::IpAddr)>,
             mode: ReplyReclaimMode,
         ) -> bool {
-            let eligible = |entry: &Duplicate| match &entry.reply {
-                CachedReply::Full(packet) => match mode {
-                    ReplyReclaimMode::CacheBudget => true,
-                    ReplyReclaimMode::FreePacket => pool.reference_count(packet) == 1,
-                },
-                _ => false,
-            };
-            let preferred = preferred.map(|(peer, local)| (DuplicatePeer::from(peer), local));
-            let candidate = preferred
-                .and_then(|(peer, local)| {
-                    self.entries.iter().position(|entry| {
-                        entry.peer == peer && entry.local == local && eligible(entry)
-                    })
-                })
-                .or_else(|| self.entries.iter().position(eligible));
-            let Some(index) = candidate else {
-                return false;
-            };
-            let reply = core::mem::replace(&mut self.entries[index].reply, CachedReply::Dropped);
-            Self::release_reply(pool, reply);
-            true
+            self.core(pool).reclaim_reply(preferred, mode)
         }
         /// Counts cached replies whose sole reference can be reclaimed for admission.
         #[cfg(any(feature = "server", feature = "client"))]
@@ -425,19 +400,95 @@ pub(crate) mod internal {
             reply: CachedReply,
             now: Instant,
         ) -> Result<CachePressure, Error> {
-            if DEDUP_ENTRIES == 0 || CACHED_REPLIES == 0 && matches!(reply, CachedReply::Full(_)) {
-                Self::release_reply(pool, reply);
+            self.core(pool).remember(peer, local, id, until, reply, now)
+        }
+    }
+    trait CachedPackets {
+        fn release(&mut self, packet: PacketRef);
+        fn reference_count(&self, packet: &PacketRef) -> usize;
+    }
+    impl<const D: usize, const N: usize, S: PacketStorage<D, N>> CachedPackets for PacketPool<D, N, S> {
+        fn release(&mut self, packet: PacketRef) {
+            PacketPool::release(self, packet);
+        }
+        fn reference_count(&self, packet: &PacketRef) -> usize {
+            PacketPool::reference_count(self, packet)
+        }
+    }
+    fn release_reply(pool: &mut dyn CachedPackets, reply: CachedReply) {
+        if let CachedReply::Full(packet) = reply {
+            pool.release(packet);
+        }
+    }
+    // Share cache admission across endpoint types while retaining their bounded storage.
+    struct DeduplicationCore<'a> {
+        entries: &'a mut heapless::VecView<Duplicate>,
+        cached_replies: usize,
+        pool: &'a mut dyn CachedPackets,
+    }
+    impl DeduplicationCore<'_> {
+        fn expire(&mut self, now: Instant) {
+            let mut i = 0;
+            while i < self.entries.len() {
+                if self.entries[i].until <= now {
+                    release_reply(self.pool, self.entries.remove(i).reply);
+                } else {
+                    i += 1;
+                }
+            }
+        }
+        fn reclaim_reply(
+            &mut self,
+            preferred: Option<(SocketAddr, core::net::IpAddr)>,
+            mode: ReplyReclaimMode,
+        ) -> bool {
+            let eligible = |entry: &Duplicate| match &entry.reply {
+                CachedReply::Full(packet) => match mode {
+                    ReplyReclaimMode::CacheBudget => true,
+                    ReplyReclaimMode::FreePacket => self.pool.reference_count(packet) == 1,
+                },
+                _ => false,
+            };
+            let preferred = preferred.map(|(peer, local)| (DuplicatePeer::from(peer), local));
+            let candidate = preferred
+                .and_then(|(peer, local)| {
+                    self.entries.iter().position(|entry| {
+                        entry.peer == peer && entry.local == local && eligible(entry)
+                    })
+                })
+                .or_else(|| self.entries.iter().position(eligible));
+            let Some(index) = candidate else {
+                return false;
+            };
+            let reply = core::mem::replace(&mut self.entries[index].reply, CachedReply::Dropped);
+            release_reply(self.pool, reply);
+            true
+        }
+        #[inline(never)]
+        fn remember(
+            &mut self,
+            peer: SocketAddr,
+            local: core::net::IpAddr,
+            id: u16,
+            until: Instant,
+            reply: CachedReply,
+            now: Instant,
+        ) -> Result<CachePressure, Error> {
+            if self.entries.capacity() == 0
+                || self.cached_replies == 0 && matches!(reply, CachedReply::Full(_))
+            {
+                release_reply(self.pool, reply);
                 return Err(Error::Capacity);
             }
             let canonical_peer = DuplicatePeer::from(peer);
-            self.expire(pool, now);
+            self.expire(now);
             let existing = self
                 .entries
                 .iter()
                 .position(|e| e.peer == canonical_peer && e.local == local && e.id == id);
             let mut pressure = CachePressure::default();
             if existing.is_none() && self.entries.is_full() {
-                Self::release_reply(pool, self.entries.remove(0).reply);
+                release_reply(self.pool, self.entries.remove(0).reply);
                 pressure.record_evicted = true;
             }
             if matches!(reply, CachedReply::Full(_)) {
@@ -448,10 +499,9 @@ pub(crate) mod internal {
                     .iter()
                     .filter(|entry| matches!(entry.reply, CachedReply::Full(_)))
                     .count();
-                if !replaces_full && full_count >= CACHED_REPLIES {
-                    if !self.reclaim_reply(pool, Some((peer, local)), ReplyReclaimMode::CacheBudget)
-                    {
-                        Self::release_reply(pool, reply);
+                if !replaces_full && full_count >= self.cached_replies {
+                    if !self.reclaim_reply(Some((peer, local)), ReplyReclaimMode::CacheBudget) {
+                        release_reply(self.pool, reply);
                         return Err(Error::Capacity);
                     }
                     pressure.reply_dropped = true;
@@ -466,7 +516,7 @@ pub(crate) mod internal {
             };
             if let Some(i) = existing {
                 let old = core::mem::replace(&mut self.entries[i], entry);
-                Self::release_reply(pool, old.reply);
+                release_reply(self.pool, old.reply);
             } else {
                 self.entries.push(entry).map_err(|_| Error::Capacity)?;
             }
