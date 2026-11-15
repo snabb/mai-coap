@@ -12,6 +12,7 @@ byte counts live in generated reports, not here:
 | [xarxa-resources.json](xarxa-resources.json) | Owned-packet workload stack, futures, static RAM and component breakdown |
 | [proxy-resources.json](proxy-resources.json) | Matched two-endpoint role experiment at D=1152 and two 1,024-byte replies |
 | [proxy-ownership-resources.json](proxy-ownership-resources.json) | Matched driver-pulled reply comparison, application storage and stack/flash trade-off |
+| [shared-dedup-resources.json](shared-dedup-resources.json) | Shared duplicate-cache prototype, matched proxy/standard workload sizes and small-profile growth |
 
 These cover reference fixtures, ABI layouts and exercised QEMU peaks, not complete
 firmware on real boards.

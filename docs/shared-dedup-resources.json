@@ -1,0 +1,993 @@
+{
+  "experiment": "Private capacity-erased duplicate-cache admission/expiry/reclamation",
+  "baseline_revision": "9aed6d3427edeeb26c8152613b41959407063d7f",
+  "candidate_code_revision": "1538a63d9a1a55b2e8859f89c61cf0b029f90cf2",
+  "status": "Local validated prototype; downstream matched S3 builds pending. Not merged or pushed. Small-profile growth and unmeasured CPU cost remain trade-offs.",
+  "implementation": "A temporary borrowed VecView and two-method packet-reference view share cache policy across const-generic owners. The stored table/pool fields, every capacity, public API, feature and dependency remain unchanged. No allocator, unsafe code or persistent allocation is introduced.",
+  "m4_two_endpoint_proxy": {
+    "before": {
+      "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+      "build_host": "aarch64-unknown-linux-gnu",
+      "source_revision": "9aed6d3427edeeb26c8152613b41959407063d7f",
+      "git_dirty": false,
+      "source_sha256": "81871e82f478382bb25b26b77fddeb9b7064833b71a74af1e48cca3afca8c56f",
+      "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+      "fixture_sha256": {
+        "proxy_main.rs": "dc47ce8f2bfc3db63873a48a9e57f393c07662599d9055cd018d3574d96f1831",
+        "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+        "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+      },
+      "target": "thumbv7em-none-eabihf",
+      "profile": "release opt-level=s, LTO, codegen-units=1",
+      "features": "proxy-roles",
+      "datagram_bytes": 1152,
+      "forwards": 2,
+      "payload_bytes": 1024,
+      "elf_sha256": "8c0a72c5ea56e7fdea4cfc0f839d314f64a893d4aa8b0a76134710129e0a204b",
+      "roles": true,
+      "flash_bytes": 197372,
+      "static_ram_bytes": 24232,
+      "scenarios": {
+        "plain": {
+          "incoming_future": 1440,
+          "outgoing_future": 1440,
+          "application_bytes": 664,
+          "painted": 24468,
+          "capacity": 106840
+        },
+        "secure": {
+          "incoming_future": 1440,
+          "outgoing_future": 1440,
+          "application_bytes": 664,
+          "painted": 24660,
+          "capacity": 106840
+        }
+      },
+      "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+    },
+    "after": {
+      "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+      "build_host": "aarch64-unknown-linux-gnu",
+      "source_revision": "9aed6d3427edeeb26c8152613b41959407063d7f",
+      "git_dirty": true,
+      "source_sha256": "136b93a6f252cbc739c60ebc6cf6072d0f2cbbca48e09217d93c8fbc839073d7",
+      "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+      "fixture_sha256": {
+        "proxy_main.rs": "dc47ce8f2bfc3db63873a48a9e57f393c07662599d9055cd018d3574d96f1831",
+        "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+        "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+      },
+      "target": "thumbv7em-none-eabihf",
+      "profile": "release opt-level=s, LTO, codegen-units=1",
+      "features": "proxy-roles",
+      "datagram_bytes": 1152,
+      "forwards": 2,
+      "payload_bytes": 1024,
+      "elf_sha256": "44259497e8a1af3d7c4e30b8f2ee1ab5461e3412551c144a537efeb2ee7cf701",
+      "roles": true,
+      "flash_bytes": 196120,
+      "static_ram_bytes": 24232,
+      "scenarios": {
+        "plain": {
+          "incoming_future": 1440,
+          "outgoing_future": 1440,
+          "application_bytes": 664,
+          "painted": 24468,
+          "capacity": 106840
+        },
+        "secure": {
+          "incoming_future": 1440,
+          "outgoing_future": 1440,
+          "application_bytes": 664,
+          "painted": 24660,
+          "capacity": 106840
+        }
+      },
+      "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+    },
+    "flash_delta_bytes": -1252,
+    "static_ram_delta_bytes": 0,
+    "source_provenance": "The remote checkout was synced before committing the candidate: both raw reports name9aed6d3, with the after snapshot dirty. The parent verified that the after source digest matches committed candidate1538a63, all fixture hashes agree, and both ELF hashes match their reports. Raw compiled-snapshot metadata is retained rather than rewritten.",
+    "boundary": "Both variants use the same compiler host, toolchain, fixture and capacities. Static RAM and nested application/driver sizes are not extra allocations. Stack paint is an exercised QEMU measurement, excludes construction peak and does not establish hardware/worst-case behavior. CPU and call overhead are unmeasured."
+  },
+  "m4_standard_controls": {
+    "measurement_before": {
+      "date": "2026-11-15",
+      "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+      "build_host": "aarch64-unknown-linux-gnu",
+      "target": "thumbv7em-none-eabihf",
+      "profile": "release opt-level=s, LTO, codegen-units=1",
+      "boundary": "Reachable test workloads, not whole-feature upper bounds. Static RAM excludes stack. Two-role EDHOC and protocol tables use stack storage; this is not a peak RAM measurement."
+    },
+    "measurement_after": {
+      "date": "2026-11-15",
+      "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+      "build_host": "aarch64-unknown-linux-gnu",
+      "target": "thumbv7em-none-eabihf",
+      "profile": "release opt-level=s, LTO, codegen-units=1",
+      "boundary": "Reachable test workloads, not whole-feature upper bounds. Static RAM excludes stack. Two-role EDHOC and protocol tables use stack storage; this is not a peak RAM measurement."
+    },
+    "profiles": {
+      "base": {
+        "features": "client,test-support",
+        "before": {
+          "features": "client,test-support",
+          "flash_bytes": 52740,
+          "static_ram_bytes": 296
+        },
+        "after": {
+          "features": "client,test-support",
+          "flash_bytes": 53044,
+          "static_ram_bytes": 296
+        },
+        "flash_delta_bytes": 304,
+        "static_ram_delta_bytes": 0,
+        "before_elf_sha256": "19043c0201fee04acf86589d9afa8ecf2e6ab2edb696cd1e930e57071037fc25",
+        "after_elf_sha256": "25cb7ae678ca8a6667054a872f9890238dc7a35e3e4221e884c50135aa51a8b5"
+      },
+      "block": {
+        "features": "client,test-support,block",
+        "before": {
+          "features": "client,test-support,block",
+          "flash_bytes": 60408,
+          "static_ram_bytes": 296
+        },
+        "after": {
+          "features": "client,test-support,block",
+          "flash_bytes": 60708,
+          "static_ram_bytes": 296
+        },
+        "flash_delta_bytes": 300,
+        "static_ram_delta_bytes": 0,
+        "before_elf_sha256": "b634241a362d1618ba941e448834ef0c740f732628d0cb03f3c9c0e2ee7093a6",
+        "after_elf_sha256": "cf22aae146958b9add3b3158d14bc068bf1be0a30fff4ba0beb05a988c9bdca2"
+      },
+      "block1": {
+        "features": "client,test-support,block1",
+        "before": {
+          "features": "client,test-support,block1",
+          "flash_bytes": 53940,
+          "static_ram_bytes": 304
+        },
+        "after": {
+          "features": "client,test-support,block1",
+          "flash_bytes": 54244,
+          "static_ram_bytes": 304
+        },
+        "flash_delta_bytes": 304,
+        "static_ram_delta_bytes": 0,
+        "before_elf_sha256": "41804200478e8f79289b5b04ec4183359ceb274402a56ae0691250ac5b62feaf",
+        "after_elf_sha256": "8b66660a001b4b8c2be0021b7837810aee56f407496608f6db3acfac293ac26a"
+      },
+      "observe": {
+        "features": "client,test-support,observe",
+        "before": {
+          "features": "client,test-support,observe",
+          "flash_bytes": 64672,
+          "static_ram_bytes": 368
+        },
+        "after": {
+          "features": "client,test-support,observe",
+          "flash_bytes": 64892,
+          "static_ram_bytes": 368
+        },
+        "flash_delta_bytes": 220,
+        "static_ram_delta_bytes": 0,
+        "before_elf_sha256": "b7a71d94a3f22d01f2151191e80767d81c708c910d155095de26a6a173984ad5",
+        "after_elf_sha256": "e14e6c104f9afdc24d64cc61461d2e18d48009724132c13f1d570b6c5095f6ac"
+      },
+      "oscore": {
+        "features": "client,test-support,oscore",
+        "before": {
+          "features": "client,test-support,oscore",
+          "flash_bytes": 77380,
+          "static_ram_bytes": 296
+        },
+        "after": {
+          "features": "client,test-support,oscore",
+          "flash_bytes": 77696,
+          "static_ram_bytes": 296
+        },
+        "flash_delta_bytes": 316,
+        "static_ram_delta_bytes": 0,
+        "before_elf_sha256": "94037dd1729266da0cb2c7f336fb86824c7dd1618543aa52d2b2ab413243b4a5",
+        "after_elf_sha256": "2b519d6e8eee2d4718b2e3a40a6995f04976d5fae449a76ebe4c5b8453c03b5e"
+      },
+      "edhoc": {
+        "features": "client,test-support,edhoc",
+        "before": {
+          "features": "client,test-support,edhoc",
+          "flash_bytes": 131836,
+          "static_ram_bytes": 296
+        },
+        "after": {
+          "features": "client,test-support,edhoc",
+          "flash_bytes": 132144,
+          "static_ram_bytes": 296
+        },
+        "flash_delta_bytes": 308,
+        "static_ram_delta_bytes": 0,
+        "before_elf_sha256": "0812586b03aff64edc5ac1bc80a5dcf8c4be919c24605dc5afeb3eb5002cdcec",
+        "after_elf_sha256": "0c4dfac87bf25598d2c17da012182d10cf97508d06e7b0e182c50acbdec75f35"
+      },
+      "proxy": {
+        "features": "client,test-support,proxy",
+        "before": {
+          "features": "client,test-support,proxy",
+          "flash_bytes": 106480,
+          "static_ram_bytes": 1920
+        },
+        "after": {
+          "features": "client,test-support,proxy",
+          "flash_bytes": 105540,
+          "static_ram_bytes": 1920
+        },
+        "flash_delta_bytes": -940,
+        "static_ram_delta_bytes": 0,
+        "before_elf_sha256": "5e79406d38889618b11e0f7b6b1e5bb4dafbb08f59e6efdd8c0073aa384b9268",
+        "after_elf_sha256": "783ffdbe557bc2ecd6036adc2d429751ef31bf01d7b01d966c985003bd9bd69c"
+      },
+      "discovery": {
+        "features": "client,test-support,discovery",
+        "before": {
+          "features": "client,test-support,discovery",
+          "flash_bytes": 97368,
+          "static_ram_bytes": 296
+        },
+        "after": {
+          "features": "client,test-support,discovery",
+          "flash_bytes": 96544,
+          "static_ram_bytes": 296
+        },
+        "flash_delta_bytes": -824,
+        "static_ram_delta_bytes": 0,
+        "before_elf_sha256": "39a190afe1974a13f5cda97ee94ee52c236381a3ea8862612006ba29b60c1891",
+        "after_elf_sha256": "0ad819a42b4ba75216da7b2a982e2a8f6d69af45a247dcce668fe3ee4b11b6ac"
+      },
+      "full-block1": {
+        "features": "client,test-support,edhoc,block1,observe,proxy,discovery,multicast",
+        "before": {
+          "features": "client,test-support,edhoc,block1,observe,proxy,discovery,multicast",
+          "flash_bytes": 273152,
+          "static_ram_bytes": 12856
+        },
+        "after": {
+          "features": "client,test-support,edhoc,block1,observe,proxy,discovery,multicast",
+          "flash_bytes": 270820,
+          "static_ram_bytes": 12856
+        },
+        "flash_delta_bytes": -2332,
+        "static_ram_delta_bytes": 0,
+        "before_elf_sha256": "73db58380d4c9553fa42dae7d4bc981fa8cffdce677842a4a66ebaf717abcd1b",
+        "after_elf_sha256": "81524ddbca6d2416e4d025b75d4615c85340ad54accf5fa029b92f17073ae8e6"
+      },
+      "get-server": {
+        "features": "get-server",
+        "before": {
+          "features": "get-server",
+          "flash_bytes": 50140,
+          "static_ram_bytes": 24
+        },
+        "after": {
+          "features": "get-server",
+          "flash_bytes": 50308,
+          "static_ram_bytes": 24
+        },
+        "flash_delta_bytes": 168,
+        "static_ram_delta_bytes": 0,
+        "before_elf_sha256": "8b1ed291ccd5c6047f36ce5ab688d9cc7b196217bbb19419e83f4cc4544f61c5",
+        "after_elf_sha256": "277c25eefa6a20a8b78dd3a02563dac1baa04c20c480dc1ce33b8b9ab8911dd8"
+      },
+      "get-server-shared-counters": {
+        "features": "get-server,shared-counters",
+        "before": {
+          "features": "get-server,shared-counters",
+          "flash_bytes": 51832,
+          "static_ram_bytes": 144
+        },
+        "after": {
+          "features": "get-server,shared-counters",
+          "flash_bytes": 51996,
+          "static_ram_bytes": 144
+        },
+        "flash_delta_bytes": 164,
+        "static_ram_delta_bytes": 0,
+        "before_elf_sha256": "77c44319541f22ed672620712b684563585414ef8c903ecb558923b82c08117f",
+        "after_elf_sha256": "cc7180ccc4e6a0e2c6df8c8b48c802c4fd39ff0641168f79ed111f269b167480"
+      },
+      "get-server-block1": {
+        "features": "get-server-block1",
+        "before": {
+          "features": "get-server-block1",
+          "flash_bytes": 64468,
+          "static_ram_bytes": 24
+        },
+        "after": {
+          "features": "get-server-block1",
+          "flash_bytes": 64644,
+          "static_ram_bytes": 24
+        },
+        "flash_delta_bytes": 176,
+        "static_ram_delta_bytes": 0,
+        "before_elf_sha256": "c35bbc3d0504a3b63c00302e4e43b5b1c7d38674a89150e143a906a4caef8540",
+        "after_elf_sha256": "4ec27e17f6950762126aeb9095577dc79ff3b7106619a0f7115bee6d65ddaac6"
+      }
+    },
+    "boundary": "These are matched linked reference workloads with unchanged features and capacities per pair. Positive flash deltas in small workloads remain part of the trade-off; no budget is raised."
+  },
+  "m4_symbol_attribution": {
+    "method": "Sized t/T/r/R symbols from nm -S --radix=d -C; sizes parsed as decimal. Function paths grouped with generic arguments stripped. Anonymous rodata names are unstable across builds and are not individually attributed.",
+    "total_sized_symbol_delta_bytes": -1256,
+    "largest_nonanonymous_changes": [
+      {
+        "symbol": "<mai_coap::messaging::internal::Deduplication>::reclaim_reply::",
+        "before_bytes": 1124,
+        "after_bytes": 0,
+        "before_copies": 2,
+        "after_copies": 0,
+        "delta_bytes": -1124
+      },
+      {
+        "symbol": "<mai_coap::messaging::internal::DeduplicationCore>::remember",
+        "before_bytes": 0,
+        "after_bytes": 948,
+        "before_copies": 0,
+        "after_copies": 1,
+        "delta_bytes": 948
+      },
+      {
+        "symbol": "<mai_coap::messaging::internal::Deduplication>::remember::",
+        "before_bytes": 940,
+        "after_bytes": 0,
+        "before_copies": 1,
+        "after_copies": 0,
+        "delta_bytes": -940
+      },
+      {
+        "symbol": "<mai_coap::endpoint::Endpoint>::remember",
+        "before_bytes": 2296,
+        "after_bytes": 1532,
+        "before_copies": 3,
+        "after_copies": 3,
+        "delta_bytes": -764
+      },
+      {
+        "symbol": "<mai_coap::messaging::internal::DeduplicationCore>::reclaim_reply",
+        "before_bytes": 0,
+        "after_bytes": 522,
+        "before_copies": 0,
+        "after_copies": 1,
+        "delta_bytes": 522
+      },
+      {
+        "symbol": "<mai_coap::messaging::internal::Deduplication>::expire::",
+        "before_bytes": 168,
+        "after_bytes": 0,
+        "before_copies": 2,
+        "after_copies": 0,
+        "delta_bytes": -168
+      },
+      {
+        "symbol": "<heapless::vec::VecInner>::remove",
+        "before_bytes": 268,
+        "after_bytes": 134,
+        "before_copies": 2,
+        "after_copies": 1,
+        "delta_bytes": -134
+      },
+      {
+        "symbol": "<mai_coap::messaging::internal::DeduplicationCore>::expire",
+        "before_bytes": 0,
+        "after_bytes": 92,
+        "before_copies": 0,
+        "after_copies": 1,
+        "delta_bytes": 92
+      },
+      {
+        "symbol": "<mai_coap::endpoint::Endpoint>::expire_cached_packets",
+        "before_bytes": 276,
+        "after_bytes": 360,
+        "before_copies": 3,
+        "after_copies": 3,
+        "delta_bytes": 84
+      },
+      {
+        "symbol": "<mai_coap::endpoint::Endpoint>::reserve_packet",
+        "before_bytes": 720,
+        "after_bytes": 784,
+        "before_copies": 3,
+        "after_copies": 3,
+        "delta_bytes": 64
+      },
+      {
+        "symbol": ".Lswitch.table._RNvXsr_CseJjzMuoNHAV_13lakers_sharedNtB5_10EDHOCErrorNtNtCs2Y5aVkZPKTG_4core3fmt5Debug3fmt.619",
+        "before_bytes": 56,
+        "after_bytes": 0,
+        "before_copies": 1,
+        "after_copies": 0,
+        "delta_bytes": -56
+      },
+      {
+        "symbol": ".Lswitch.table._RNvXsr_CseJjzMuoNHAV_13lakers_sharedNtB5_10EDHOCErrorNtNtCs2Y5aVkZPKTG_4core3fmt5Debug3fmt.625",
+        "before_bytes": 0,
+        "after_bytes": 56,
+        "before_copies": 0,
+        "after_copies": 1,
+        "delta_bytes": 56
+      },
+      {
+        "symbol": ".Lswitch.table._RNvXsr_CseJjzMuoNHAV_13lakers_sharedNtB5_10EDHOCErrorNtNtCs2Y5aVkZPKTG_4core3fmt5Debug3fmt.134.621",
+        "before_bytes": 56,
+        "after_bytes": 0,
+        "before_copies": 1,
+        "after_copies": 0,
+        "delta_bytes": -56
+      },
+      {
+        "symbol": ".Lswitch.table._RNvXsr_CseJjzMuoNHAV_13lakers_sharedNtB5_10EDHOCErrorNtNtCs2Y5aVkZPKTG_4core3fmt5Debug3fmt.134.627",
+        "before_bytes": 0,
+        "after_bytes": 56,
+        "before_copies": 0,
+        "after_copies": 1,
+        "delta_bytes": 56
+      }
+    ],
+    "scope": "Grouped symbol totals explain copy changes, not independent partitions of the complete section allocation. Named and section deltas are reported separately."
+  },
+  "validation": {
+    "focused": "17 messaging unit/model tests and std,proxy Clippy passed remotely; formatter and whitespace checks pass.",
+    "review": "Claude Opus5.5, medium, read-only source review of1538a63: no substantive findings. No builds/tests/measurements were run by the reviewer.",
+    "downstream": "Four-arm S3 proxy-on/off comparison requested in Rustastic message0147-shared-duplicate-cache-flash-prototype.md, clarified in0148. No firmware saving or physical validation is claimed yet.",
+    "completed": "Full python3 tools/checks.py --docs --test and Cortex-M0 feature checks pass. M4/M33 stack and owned-xarxa gates pass without budget changes; paired M33 proxy measurements agree with M4.",
+    "packet_interface_mutations": [
+      {
+        "change": "Forward reference_count as constant1",
+        "killed_by": "pool_pressure_reclaims_oldest_unshared_reply_with_same_sender_preference",
+        "observed": "The pinned reply is incorrectly dropped; the runtime assertion fails."
+      },
+      {
+        "change": "Omit forwarding PacketPool::release",
+        "killed_by": "rel_3_byte_exact_cached_reply_and_expiry_release_the_cache_reference",
+        "observed": "Only one pool slot is available after expiry instead of two; the runtime assertion fails."
+      }
+    ],
+    "restored": "Both mutations were restored; all17 messaging tests pass afterwards.",
+    "fuzz": {
+      "endpoint": {
+        "seconds": 31,
+        "runs": 60969,
+        "result": "pass"
+      },
+      "client_transfer": {
+        "seconds": 31,
+        "runs": 165245,
+        "result": "pass"
+      },
+      "boundary": "Existing targets/seeds and oracles, 30-second requested limits; no new network-input surface or harness was added."
+    },
+    "resource_gates": {
+      "stack-thumbv7em-none-eabihf.json": {
+        "target": "thumbv7em-none-eabihf",
+        "date": "2026-11-15",
+        "flash_bytes": 209228,
+        "static_ram_bytes": 38368,
+        "machine": "netduinoplus2",
+        "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+        "build_host": "aarch64-unknown-linux-gnu",
+        "features": "stack-profile (EDHOC, Block1, Observe, proxy, discovery, multicast)",
+        "profile": "release opt-level=s, LTO, codegen-units=1",
+        "id_context_bytes": 255,
+        "boundary": "Two endpoint drivers and operation futures on the fixture stack; endpoints and Shared storage are static. Phases exclude credential setup and reporting. Paint observes writes; reserved but unwritten space may be missed. These exercised peaks do not establish worst-case bounds or physical-board headroom.",
+        "budget_enforced": true,
+        "budgets": {
+          "combined/handshake": 26368,
+          "combined/traffic": 16384,
+          "sequential/handshake": 26368,
+          "sequential/traffic": 16384
+        },
+        "scenarios": {
+          "combined/handshake": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 25824,
+            "peak_bytes": 25824,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "combined/traffic": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 15856,
+            "peak_bytes": 15856,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "sequential/handshake": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 25824,
+            "peak_bytes": 25824,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "sequential/traffic": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 15856,
+            "peak_bytes": 15856,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          }
+        }
+      },
+      "stack-thumbv8m.main-none-eabihf.json": {
+        "target": "thumbv8m.main-none-eabihf",
+        "date": "2026-11-15",
+        "flash_bytes": 210344,
+        "static_ram_bytes": 38368,
+        "machine": "mps2-an505",
+        "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+        "build_host": "aarch64-unknown-linux-gnu",
+        "features": "stack-profile (EDHOC, Block1, Observe, proxy, discovery, multicast)",
+        "profile": "release opt-level=s, LTO, codegen-units=1",
+        "id_context_bytes": 255,
+        "boundary": "Two endpoint drivers and operation futures on the fixture stack; endpoints and Shared storage are static. Phases exclude credential setup and reporting. Paint observes writes; reserved but unwritten space may be missed. These exercised peaks do not establish worst-case bounds or physical-board headroom.",
+        "budget_enforced": true,
+        "budgets": {
+          "combined/handshake": 26368,
+          "combined/traffic": 16384,
+          "sequential/handshake": 26368,
+          "sequential/traffic": 16384
+        },
+        "scenarios": {
+          "combined/handshake": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 25816,
+            "peak_bytes": 25816,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "combined/traffic": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 15856,
+            "peak_bytes": 15856,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "sequential/handshake": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 25816,
+            "peak_bytes": 25816,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "sequential/traffic": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 15856,
+            "peak_bytes": 15856,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          }
+        }
+      },
+      "xarxa-thumbv7em-none-eabihf.json": {
+        "target": "thumbv7em-none-eabihf",
+        "date": "2026-11-15",
+        "flash_bytes": 209668,
+        "static_ram_bytes": 35964,
+        "machine": "netduinoplus2",
+        "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+        "build_host": "aarch64-unknown-linux-gnu",
+        "features": "xarxa-profile (native xarxa, EDHOC/OSCORE, 1024-byte bodies)",
+        "profile": "release opt-level=s, LTO, codegen-units=1",
+        "id_context_bytes": 0,
+        "boundary": "Two endpoint drivers and operation futures on stack; both endpoints, Shared, network stacks, raw-IP drivers and all 16 network buffers are static. Storage component sizes are totals for both peers and already included in static RAM. Mode send counts repeat across phases. Phases exclude setup/reporting; paint observes writes and is an exercised QEMU peak, not a hardware bound.",
+        "budget_enforced": true,
+        "budgets": {
+          "plain/handshake": 18944,
+          "plain/traffic": 18944,
+          "plain/non": 18944,
+          "combined/handshake": 31488,
+          "combined/traffic": 21760,
+          "combined/non": 21760,
+          "sequential/handshake": 31488,
+          "sequential/traffic": 21760,
+          "sequential/non": 21760
+        },
+        "scenarios": {
+          "plain/handshake": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 18352,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 6,
+            "peak_bytes": 18352
+          },
+          "plain/traffic": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 18352,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 6,
+            "peak_bytes": 18352
+          },
+          "plain/non": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 18352,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 6,
+            "peak_bytes": 18352
+          },
+          "combined/handshake": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 30928,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 8,
+            "peak_bytes": 30928
+          },
+          "combined/traffic": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 8,
+            "peak_bytes": 21168
+          },
+          "combined/non": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 8,
+            "peak_bytes": 21168
+          },
+          "sequential/handshake": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 30928,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 10,
+            "peak_bytes": 30928
+          },
+          "sequential/traffic": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 10,
+            "peak_bytes": 21168
+          },
+          "sequential/non": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 10,
+            "peak_bytes": 21168
+          }
+        },
+        "dependencies": {
+          "xarxa": "8f6f33b131deb9ff3290e0e01079537e1ed7b2ad"
+        },
+        "static_accounting": {
+          "accounted_bytes": 35964,
+          "residual_bytes": 0
+        },
+        "resource_budgets": {
+          "driver_future_bytes": 512,
+          "static_ram_bytes": 36608
+        }
+      },
+      "xarxa-thumbv8m.main-none-eabihf.json": {
+        "target": "thumbv8m.main-none-eabihf",
+        "date": "2026-11-15",
+        "flash_bytes": 210724,
+        "static_ram_bytes": 35964,
+        "machine": "mps2-an505",
+        "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+        "build_host": "aarch64-unknown-linux-gnu",
+        "features": "xarxa-profile (native xarxa, EDHOC/OSCORE, 1024-byte bodies)",
+        "profile": "release opt-level=s, LTO, codegen-units=1",
+        "id_context_bytes": 0,
+        "boundary": "Two endpoint drivers and operation futures on stack; both endpoints, Shared, network stacks, raw-IP drivers and all 16 network buffers are static. Storage component sizes are totals for both peers and already included in static RAM. Mode send counts repeat across phases. Phases exclude setup/reporting; paint observes writes and is an exercised QEMU peak, not a hardware bound.",
+        "budget_enforced": true,
+        "budgets": {
+          "plain/handshake": 18944,
+          "plain/traffic": 18944,
+          "plain/non": 18944,
+          "combined/handshake": 31488,
+          "combined/traffic": 21760,
+          "combined/non": 21760,
+          "sequential/handshake": 31488,
+          "sequential/traffic": 21760,
+          "sequential/non": 21760
+        },
+        "scenarios": {
+          "plain/handshake": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 18352,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 6,
+            "peak_bytes": 18352
+          },
+          "plain/traffic": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 18352,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 6,
+            "peak_bytes": 18352
+          },
+          "plain/non": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 18352,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 6,
+            "peak_bytes": 18352
+          },
+          "combined/handshake": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 30920,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 8,
+            "peak_bytes": 30920
+          },
+          "combined/traffic": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 8,
+            "peak_bytes": 21168
+          },
+          "combined/non": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 8,
+            "peak_bytes": 21168
+          },
+          "sequential/handshake": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 30920,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 10,
+            "peak_bytes": 30920
+          },
+          "sequential/traffic": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 10,
+            "peak_bytes": 21168
+          },
+          "sequential/non": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 10,
+            "peak_bytes": 21168
+          }
+        },
+        "dependencies": {
+          "xarxa": "8f6f33b131deb9ff3290e0e01079537e1ed7b2ad"
+        },
+        "static_accounting": {
+          "accounted_bytes": 35964,
+          "residual_bytes": 0
+        },
+        "resource_budgets": {
+          "driver_future_bytes": 512,
+          "static_ram_bytes": 36608
+        }
+      }
+    }
+  },
+  "m33_two_endpoint_proxy": {
+    "before": {
+      "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+      "build_host": "aarch64-unknown-linux-gnu",
+      "source_revision": "1538a63d9a1a55b2e8859f89c61cf0b029f90cf2",
+      "git_dirty": true,
+      "source_sha256": "81871e82f478382bb25b26b77fddeb9b7064833b71a74af1e48cca3afca8c56f",
+      "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+      "fixture_sha256": {
+        "proxy_main.rs": "dc47ce8f2bfc3db63873a48a9e57f393c07662599d9055cd018d3574d96f1831",
+        "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+        "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+      },
+      "target": "thumbv8m.main-none-eabihf",
+      "profile": "release opt-level=s, LTO, codegen-units=1",
+      "features": "proxy-roles",
+      "datagram_bytes": 1152,
+      "forwards": 2,
+      "payload_bytes": 1024,
+      "elf_sha256": "470eb8977ddbb2d1bcc045c391de27de4d0b1df79e5fbd968f24524fa46ea624",
+      "roles": true,
+      "flash_bytes": 198188,
+      "static_ram_bytes": 24232,
+      "scenarios": {
+        "plain": {
+          "incoming_future": 1440,
+          "outgoing_future": 1440,
+          "application_bytes": 664,
+          "painted": 24468,
+          "capacity": 106840
+        },
+        "secure": {
+          "incoming_future": 1440,
+          "outgoing_future": 1440,
+          "application_bytes": 664,
+          "painted": 24660,
+          "capacity": 106840
+        }
+      },
+      "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+    },
+    "after": {
+      "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+      "build_host": "aarch64-unknown-linux-gnu",
+      "source_revision": "1538a63d9a1a55b2e8859f89c61cf0b029f90cf2",
+      "git_dirty": false,
+      "source_sha256": "136b93a6f252cbc739c60ebc6cf6072d0f2cbbca48e09217d93c8fbc839073d7",
+      "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+      "fixture_sha256": {
+        "proxy_main.rs": "dc47ce8f2bfc3db63873a48a9e57f393c07662599d9055cd018d3574d96f1831",
+        "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+        "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+      },
+      "target": "thumbv8m.main-none-eabihf",
+      "profile": "release opt-level=s, LTO, codegen-units=1",
+      "features": "proxy-roles",
+      "datagram_bytes": 1152,
+      "forwards": 2,
+      "payload_bytes": 1024,
+      "elf_sha256": "f720f700cd7145fd929bb8e69c76ffe817c9014d42fecc445a7aa749e403dffd",
+      "roles": true,
+      "flash_bytes": 196936,
+      "static_ram_bytes": 24232,
+      "scenarios": {
+        "plain": {
+          "incoming_future": 1440,
+          "outgoing_future": 1440,
+          "application_bytes": 664,
+          "painted": 24468,
+          "capacity": 106840
+        },
+        "secure": {
+          "incoming_future": 1440,
+          "outgoing_future": 1440,
+          "application_bytes": 664,
+          "painted": 24660,
+          "capacity": 106840
+        }
+      },
+      "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+    },
+    "flash_delta_bytes": -1252,
+    "static_ram_delta_bytes": 0,
+    "source_provenance": "Both raw reports name candidate1538a63; the before snapshot temporarily restores9aed6d3 source and is dirty. Its source digest matches the M4 baseline, and the after digest matches the committed candidate. Fixture/ELF hashes and matched controls were independently checked.",
+    "boundary": "Both variants use the same compiler host, toolchain, fixture and capacities. Static RAM and nested application/driver sizes are not extra allocations. Stack paint is an exercised QEMU measurement, excludes construction peak and does not establish hardware/worst-case behavior. CPU and call overhead are unmeasured."
+  }
+}
