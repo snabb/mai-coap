@@ -130,8 +130,11 @@ nested future storage and explicitly labelled residuals for unlisted captures an
 padding. Nested fields and overlapping states are not extra allocations. The
 receiving-command comparison includes matched linked OTA and no-OTA firmware
 builds that confirm the static reduction, with the no-OTA code growth recorded as
-a trade-off. Physical concurrency, recovery and stack qualification for that
-capacity change remain pending.
+a trade-off. Its physical qualification covers two forwards overlapping one
+flash-writing upload, expected refusal of a second upload, expiry and slot recovery,
+and upload activation. The upload worker permits one active upload; two simultaneous
+flash-writing uploads were not exercised. Stack paint excludes boot and the
+activation phase and does not establish a repeatable stack reduction.
 
 ## Endpoint layouts
 

@@ -1314,7 +1314,7 @@
         "scope": "The receiver Endpoint is already contained in nested drive future 31,832; do not add it again to the 12,984-byte delta ledger."
       },
       "command_capacity_probe": {
-        "status": "Matched linked builds verified; physical concurrency, recovery and stack qualification requested in Rustastic message 0138, results pending.",
+        "status": "Matched linked builds and downstream physical qualification passed for the supported single-active-upload workflow. No library production source changed.",
         "change": "For a separately driven proxy, retain receiving command slots for local worker/client operations; remove the two extra receiving reply-submission slots. Keep outbound Shared and all exchange/deferred/body/packet capacities unchanged.",
         "with_two_workers": {
           "receiving_commands_before": 4,
@@ -1347,7 +1347,7 @@
           ],
           "boundary": "The tests model deferred local replies, not real upload flash I/O or physical hardware. No library production code changed."
         },
-        "boundary": "The same-feature Shared-size prediction is confirmed by matched linked task-pool and .bss reductions: 2592 bytes with OTA and 1296 without OTA. Stack use, construction peak and whole-program worst-case RAM remain unmeasured for the probe. The earlier 2760-byte proxy-vs-no-proxy receiving Shared delta also includes 168 bytes of feature-dependent slot/metadata growth.",
+        "boundary": "The same-feature Shared-size prediction is confirmed by matched linked task-pool and .bss reductions: 2592 bytes with OTA and 1296 without OTA. Physical tests cover one flash-writing upload at a time; a second is rejected by the existing upload worker policy. Stack paint covers the stated workload phases only; construction peak, boot and whole-program worst-case RAM are unmeasured. The earlier 2760-byte proxy-vs-no-proxy receiving Shared delta also includes 168 bytes of feature-dependent slot/metadata growth.",
         "linked_measurement": {
           "date": "2026-11-14",
           "source_report": "Rustastic coordination report 0137",
@@ -1516,8 +1516,111 @@
             },
             "interpretation": "The downstream report observes opposite movements in several of the same functions in the OTA pair and suggests capacity-dependent code generation. That cause is a hypothesis, not an independently established attribution; the measured no-OTA .text growth remains a trade-off."
           },
-          "physical_validation": "Not run by these builds. Concurrent upload/forward progress, recovery and measured stack/headroom remain pending under request 0138.",
+          "physical_validation": "The exact control/probe ELFs were subsequently tested on hardware; hardware_validation records workload, outcomes and stack boundaries separately from these linked sizes.",
           "private_artifacts": "Saved downstream ELF, nm and build-log artifacts stay outside Git; no provisioned binaries or device settings are published here."
+        },
+        "hardware_validation": {
+          "date": "2026-11-15",
+          "source_report": "Rustastic coordination report 0139, in response to 0138",
+          "board": "XIAO ESP32-S3",
+          "images_from_linked_measurement_variants": [
+            "ctrl-proxy",
+            "probe-proxy",
+            "probe-proxy-noota"
+          ],
+          "flash_and_identity": "The downstream report records wired flashes of the exact 0137 ELFs with otadata erased. Each boot answered info over OSCORE; completed uploads used that run's own image, so activation returned to the same firmware.",
+          "controls": "Same workload, protection, datagram size, network and all other capacities for OTA C4 and C2. The unchanged LoRa origin ran the earlier split-role library image. No hardware throughput or latency improvement is inferred.",
+          "workload": {
+            "upload": "OSCORE Block1 with 1024-byte payloads; the first upload is cancelled while open, and a later fresh upload completes, activates and is confirmed after trial reboot.",
+            "forwarding": "Two opaque OSCORE forwards over LoRa overlap the flash-writing upload. Local protected status requests also complete.",
+            "second_upload": "A different client attempts a second upload during the active upload and again after cancellation but before its 120-second expiry.",
+            "recovery": "After the cancelled upload expires, local requests and two forwards succeed, then a new full upload completes. Post-reboot local requests and forwarding succeed."
+          },
+          "ota_outcomes": {
+            "control_and_probe": "Both pass all listed completion/recovery cases. The second upload receives 5.03 at block zero in both variants, both before and after the first upload's client cancellation; it writes nothing.",
+            "policy_limit": "UploadWorker permits one active flash-writing upload and refuses other active remotes with 5.03. Two simultaneous flash-writing uploads were not exercised; this is not evidence for that workload.",
+            "overlap_witness": "For every successful forward in the upload-overlap phases, captures contain datagrams over 1000 bytes from the upload client to the receiver between forward start and its 2.05. Counts include retransmissions.",
+            "control_upload_datagrams_per_forward": {
+              "cancelled_upload_phase": [
+                901,
+                901
+              ],
+              "completed_upload_phase": [
+                501,
+                1027
+              ]
+            },
+            "probe_upload_datagrams_per_forward": {
+              "cancelled_upload_phase": [
+                335,
+                745
+              ],
+              "completed_upload_phase": [
+                261,
+                974
+              ]
+            },
+            "cancelled_upload_written_KiB": {
+              "control": 896,
+              "probe": 704
+            },
+            "completed_upload": "Both variants write the complete image, check it, activate it and confirm it; subsequent info, status and forward requests return 2.05.",
+            "coap_counters_after_recovery_phase": {
+              "ctrl": {
+                "retransmissions": 3,
+                "send_failures": 0,
+                "dropped_messages": 0,
+                "oversized": 0,
+                "local_send_timeouts": 0,
+                "rate_limited": 0
+              },
+              "probe": {
+                "retransmissions": 6,
+                "send_failures": 0,
+                "dropped_messages": 0,
+                "oversized": 0,
+                "local_send_timeouts": 0,
+                "rate_limited": 0
+              }
+            },
+            "counter_boundary": "These are CoAP endpoint counters, not all radio/network counters. Captured upload datagram counts and elapsed times are overlap witnesses rather than throughput comparisons."
+          },
+          "ota_stack": {
+            "control": {
+              "painted_peak_bytes": 53088,
+              "region_bytes": 85200,
+              "headroom_bytes": 32112
+            },
+            "probe": {
+              "painted_peak_bytes": 52544,
+              "region_bytes": 87792,
+              "headroom_bytes": 35248
+            },
+            "boundary": "Painted after boot and measured after cancellation, expiry and forwarding recovery (phases A-C). Boot, successful full upload/activation and post-reboot phases D-E are excluded. These are exercised high-water marks, not worst-case bounds.",
+            "headroom_gain_bytes": 3136,
+            "gain_from_larger_stack_region_bytes": 2592,
+            "observed_peak_difference_bytes": -544,
+            "interpretation": "The larger region is the freed .bss allocation, not an additional RAM saving. The lower observed peak does not establish a repeatable stack reduction; there is no matched repeated distribution for both variants."
+          },
+          "no_ota_smoke": {
+            "receiving_commands": 1,
+            "results": "Two forwards plus a local request all return 2.05. With three simultaneous forwards, one gets immediate piggybacked 5.03 at the configured FORWARDS=2 limit; the other two and local request succeed. A following forward and local request succeed.",
+            "stack": {
+              "painted_peak_bytes": 28576,
+              "region_bytes": 112912,
+              "headroom_bytes": 84336
+            },
+            "stack_boundary": "Painted after boot for this no-upload smoke workload. No matched no-OTA control run exists; this is not an OTA comparison or a measured C1 stack reduction.",
+            "code_tradeoff": "The independently verified +1020-byte .text cost versus the no-OTA C2 control remains recorded in linked_measurement."
+          },
+          "excluded_attempts": {
+            "reason": "Earlier attempts on both variants exhausted the LoRa origin's rolling transmit budget and had 5.04/client timeouts; those artifacts are retained separately and are not included in the passing table.",
+            "passing_run_control": "Both reported passing runs started with at least 129 seconds of transmit budget; one workload uses about 120 of the available 180 seconds. Every forward in those runs succeeded.",
+            "boundary": "This is qualification within the available radio budget, not evidence that forwarding succeeds after that external budget is exhausted."
+          },
+          "verification": "The parent read the downstream report and independently checked all three saved stack records and both OTA CoAP counter snapshots. Earlier linked verification checked these ELF hashes and section/task-pool sizes. Capture-level overlap and upload activation observations are downstream-reported, not independently replayed here.",
+          "final_state": "The downstream report leaves the node running the OTA C2 probe and responding over OSCORE; wired recovery and the LoRa origin are unchanged. This is the reported end state, not a fresh live-device query.",
+          "private_artifacts": "Per-run captures, client output, events, stack records and activation records remain private and outside Git."
         }
       }
     }
