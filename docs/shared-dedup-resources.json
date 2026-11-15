@@ -2,7 +2,7 @@
   "experiment": "Private capacity-erased duplicate-cache admission/expiry/reclamation",
   "baseline_revision": "9aed6d3427edeeb26c8152613b41959407063d7f",
   "candidate_code_revision": "1538a63d9a1a55b2e8859f89c61cf0b029f90cf2",
-  "status": "Local validated prototype; downstream matched S3 builds pending. Not merged or pushed. Small-profile growth and unmeasured CPU cost remain trade-offs.",
+  "status": "Validated local prototype with a confirmed S3 proxy flash reduction and no-proxy growth. Not merged or pushed; S3 runtime stack/CPU/hardware qualification is not established.",
   "implementation": "A temporary borrowed VecView and two-method packet-reference view share cache policy across const-generic owners. The stored table/pool fields, every capacity, public API, feature and dependency remain unchanged. No allocator, unsafe code or persistent allocation is introduced.",
   "m4_two_endpoint_proxy": {
     "before": {
@@ -437,7 +437,7 @@
   "validation": {
     "focused": "17 messaging unit/model tests and std,proxy Clippy passed remotely; formatter and whitespace checks pass.",
     "review": "Claude Opus5.5, medium, read-only source review of1538a63: no substantive findings. No builds/tests/measurements were run by the reviewer.",
-    "downstream": "Four-arm S3 proxy-on/off comparison requested in Rustastic message0147-shared-duplicate-cache-flash-prototype.md, clarified in0148. No firmware saving or physical validation is claimed yet.",
+    "downstream": "Four-arm S3 linked comparison in report0150 confirms -1744 bytes in the proxy build, +268 without proxy and -2012 in incremental proxy overhead. No S3 physical or CPU claim.",
     "completed": "Full python3 tools/checks.py --docs --test and Cortex-M0 feature checks pass. M4/M33 stack and owned-xarxa gates pass without budget changes; paired M33 proxy measurements agree with M4.",
     "packet_interface_mutations": [
       {
@@ -989,5 +989,121 @@
     "static_ram_delta_bytes": 0,
     "source_provenance": "Both raw reports name candidate1538a63; the before snapshot temporarily restores9aed6d3 source and is dirty. Its source digest matches the M4 baseline, and the after digest matches the committed candidate. Fixture/ELF hashes and matched controls were independently checked.",
     "boundary": "Both variants use the same compiler host, toolchain, fixture and capacities. Static RAM and nested application/driver sizes are not extra allocations. Stack paint is an exercised QEMU measurement, excludes construction peak and does not establish hardware/worst-case behavior. CPU and call overhead are unmeasured."
+  },
+  "s3_four_arm": {
+    "date": "2026-11-15",
+    "source_report": "Rustastic coordination report0150",
+    "firmware_revision": "b3187868",
+    "baseline_revision": "9aed6d3427edeeb26c8152613b41959407063d7f",
+    "candidate_code_revision": "1538a63d9a1a55b2e8859f89c61cf0b029f90cf2",
+    "board": "XIAO ESP32-S3",
+    "target": "xtensa-esp32s3-none-elf",
+    "build_host": "AWS m7g aarch64-unknown-linux-gnu, one run for all four arms",
+    "toolchain": "rustc1.97.0-nightly (8ea53bcd7), esp toolchain, LLVM21.1.3",
+    "profile": "release, fat LTO, opt-level=s, codegen-units=1",
+    "controls": "Equal-length baseline/candidate library paths; unchanged firmware/configuration and capacities within each on/off pair. D1152, forwards2, OTA, proxy receiving C2. No opt-level=z or firmware-side call-boundary change is combined with this prototype.",
+    "variants": {
+      "mc-ctrl-noproxy": {
+        "elf_sha256": "23c265bf4b5e4787d5beb6cea4eaa40e9af8255e74d0e4dbe939aedc364acaf1",
+        "sections_bytes": {
+          ".text": 857897,
+          ".rodata": 113552,
+          ".data": 20912,
+          ".bss": 176728,
+          ".stack": 98184
+        },
+        "coap_task_pool": {
+          "symbol": "node_xiao_esp32s3::coap::POOL",
+          "bytes": 31696
+        },
+        "selected_text_rodata_bytes": 971449
+      },
+      "mc-ctrl-proxy": {
+        "elf_sha256": "f1b5117db5a211d689a551d7a2a93c6ee91414a7d0b1732c1adf840a89efc38e",
+        "sections_bytes": {
+          ".text": 916977,
+          ".rodata": 115456,
+          ".data": 20912,
+          ".bss": 187120,
+          ".stack": 87792
+        },
+        "coap_task_pool": {
+          "symbol": "node_xiao_esp32s3::coap_proxy::POOL",
+          "bytes": 42088
+        },
+        "selected_text_rodata_bytes": 1032433
+      },
+      "mc-cand-noproxy": {
+        "elf_sha256": "98959b7b6c6a5f06ae9e7ecaf2ba2000e6a2980523315cb7dc98aa460bb0e438",
+        "sections_bytes": {
+          ".text": 858125,
+          ".rodata": 113592,
+          ".data": 20912,
+          ".bss": 176728,
+          ".stack": 98184
+        },
+        "coap_task_pool": {
+          "symbol": "node_xiao_esp32s3::coap::POOL",
+          "bytes": 31696
+        },
+        "selected_text_rodata_bytes": 971717
+      },
+      "mc-cand-proxy": {
+        "elf_sha256": "94dddf789fec8d119dc424e4884a3591aab88cdddcd894f59ad1aa86a18fdd24",
+        "sections_bytes": {
+          ".text": 915209,
+          ".rodata": 115480,
+          ".data": 20912,
+          ".bss": 187120,
+          ".stack": 87792
+        },
+        "coap_task_pool": {
+          "symbol": "node_xiao_esp32s3::coap_proxy::POOL",
+          "bytes": 42088
+        },
+        "selected_text_rodata_bytes": 1030689
+      }
+    },
+    "candidate_minus_control": {
+      "proxy": {
+        "selected_text_rodata_bytes": -1744,
+        "changed_non_debug_sections_bytes": {
+          ".rodata": 24,
+          ".text": -1768
+        },
+        "static_ram_delta_bytes": 0,
+        "task_pool_delta_bytes": 0
+      },
+      "noproxy": {
+        "selected_text_rodata_bytes": 268,
+        "changed_non_debug_sections_bytes": {
+          ".rodata": 40,
+          ".text": 228
+        },
+        "static_ram_delta_bytes": 0,
+        "task_pool_delta_bytes": 0
+      }
+    },
+    "proxy_incremental_overhead_bytes": {
+      "before": 60984,
+      "after": 58972,
+      "delta": -2012
+    },
+    "shared_policy_symbols": {
+      "remember": {
+        "copies": 1,
+        "bytes": 1220
+      },
+      "reclaim_reply": {
+        "copies": 1,
+        "bytes": 702
+      },
+      "expire": {
+        "copies": 1,
+        "bytes": 120
+      }
+    },
+    "verification": "Parent independently read full hashes, all section sizes and task-pool symbols from the four saved ELFs; inspected shared-core symbol counts/sizes in the saved candidate nm report. Only .text and .rodata sizes change within either control/candidate pair.",
+    "boundary": "Selected flash means .text + .rodata, not absolute programming-image size. All other non-debug section sizes, static storage, task pools and reserved stack regions are unchanged within each pair. S3 runtime stack, CPU and hardware behavior were not measured; these are linked build results. Private ELFs and provisioning remain outside Git."
   }
 }
