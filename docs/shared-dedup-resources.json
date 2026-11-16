@@ -2,7 +2,7 @@
   "experiment": "Private capacity-erased duplicate-cache admission/expiry/reclamation",
   "baseline_revision": "9aed6d3427edeeb26c8152613b41959407063d7f",
   "candidate_code_revision": "1538a63d9a1a55b2e8859f89c61cf0b029f90cf2",
-  "status": "Validated local prototype with a confirmed S3 proxy flash reduction and no-proxy growth. Not merged or pushed; S3 runtime stack/CPU/hardware qualification is not established.",
+  "status": "User accepted retaining the change. Local validation, matched S3 linked measurements and downstream hardware qualification pass within their documented scopes. Ready for merge preparation; not merged or pushed.",
   "implementation": "A temporary borrowed VecView and two-method packet-reference view share cache policy across const-generic owners. The stored table/pool fields, every capacity, public API, feature and dependency remain unchanged. No allocator, unsafe code or persistent allocation is introduced.",
   "m4_two_endpoint_proxy": {
     "before": {
@@ -1105,5 +1105,163 @@
     },
     "verification": "Parent independently read full hashes, all section sizes and task-pool symbols from the four saved ELFs; inspected shared-core symbol counts/sizes in the saved candidate nm report. Only .text and .rodata sizes change within either control/candidate pair.",
     "boundary": "Selected flash means .text + .rodata, not absolute programming-image size. All other non-debug section sizes, static storage, task pools and reserved stack regions are unchanged within each pair. S3 runtime stack, CPU and hardware behavior were not measured; these are linked build results. Private ELFs and provisioning remain outside Git."
+  },
+  "hardware_validation": {
+    "date": "2026-11-16",
+    "source_report": "Rustastic coordination report0153, replying to0152",
+    "result": "Pass within the stated local matched and candidate-only radio/upload scopes.",
+    "firmware_revision": "b3187868",
+    "reported_firmware_stamp": "b3187868-dirty; the downstream report attributes dirty state to the build-host Cargo.lock path patch.",
+    "library_revisions": {
+      "control": "9aed6d3427edeeb26c8152613b41959407063d7f",
+      "candidate": "1538a63d9a1a55b2e8859f89c61cf0b029f90cf2"
+    },
+    "images": {
+      "ctrl": {
+        "elf_sha256": "8e3fd107b696c295dfe92c26ff2f11a16f5f6995b9280a8968e29ea4d925b2e1",
+        "sections_bytes": {
+          ".data": 20912,
+          ".bss": 187120,
+          ".rodata": 115456,
+          ".text": 916977,
+          ".stack": 87792
+        },
+        "embedded_build_time": "2026-11-16T17:33:45Z"
+      },
+      "cand": {
+        "elf_sha256": "9b7f7727f36ad519f466b821a38a1e172b633c3bdf702719007b154b4ecb1c60",
+        "sections_bytes": {
+          ".data": 20912,
+          ".bss": 187120,
+          ".rodata": 115480,
+          ".text": 915209,
+          ".stack": 87792
+        },
+        "embedded_build_time": "2026-11-16T17:35:34Z"
+      }
+    },
+    "rebuilt_image_provenance": "The downstream report says the original0150 ELFs were deleted during cleanup and these images were rebuilt with the same script, host type, toolchain and library clones. Parent verified that their selected section sizes match the recorded0150 proxy arms. These new full hashes identify the hardware-tested snapshots; equal sizes do not prove byte-identical binaries or that build time is the only changed content.",
+    "configuration": "XIAO ESP32-S3, OSCORE, D1152, forwards2, OTA, receiving C2; all capacities and settings unchanged.",
+    "matched_local_workload": {
+      "arm_order": [
+        "ctrl",
+        "cand",
+        "ctrl2",
+        "cand2"
+      ],
+      "setup": "Each run freshly wired-flashed. Local cache phases L1-L4 and stack use the same workload and instrumentation.",
+      "L1": "Protected info, peers (14890-byte Block2 body with1024-byte blocks), log and status pass in all four runs.",
+      "L2": "Identical protected request resent three times from the same port:3/3 byte-exact replies in every run.",
+      "L3": "40 unprotected CON requests from four ports, with two protected overlapping requests, exercise duplicate replay, record eviction and reply drop in every run. Responses under pressure vary with timing on both builds.",
+      "flood_reply_counts": [
+        16,
+        17,
+        19,
+        14
+      ],
+      "newest_resend_results": [
+        "4.01",
+        "no reply, reclaimed-reply miss",
+        "no reply, reclaimed-reply miss",
+        "4.01"
+      ],
+      "oldest_resend_results": [
+        "4.01",
+        "4.01",
+        "4.01",
+        "4.01"
+      ],
+      "counters_in_arm_order": {
+        "duplicates": [
+          3,
+          4,
+          6,
+          3
+        ],
+        "record_evictions": [
+          45,
+          45,
+          47,
+          43
+        ],
+        "reply_drops": [
+          51,
+          51,
+          53,
+          49
+        ],
+        "reply_misses": [
+          0,
+          1,
+          1,
+          0
+        ],
+        "dropped_messages": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "rate_limited": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "protection_failures": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "counter_boundary": "A reclaimed-reply miss occurs once on each build across the repeated runs. Unanswered flood requests are not all reflected in dropped_messages or rate_limited; zero counters are not proof of loss-free service.",
+      "L4": "Protected info and peers recovery succeeds in all four runs.",
+      "stack": {
+        "ctrl": {
+          "painted_peak_bytes": 52544,
+          "region_bytes": 87792,
+          "headroom_bytes": 35248
+        },
+        "cand": {
+          "painted_peak_bytes": 52544,
+          "region_bytes": 87792,
+          "headroom_bytes": 35248
+        },
+        "ctrl2": {
+          "painted_peak_bytes": 52544,
+          "region_bytes": 87792,
+          "headroom_bytes": 35248
+        },
+        "cand2": {
+          "painted_peak_bytes": 52544,
+          "region_bytes": 87792,
+          "headroom_bytes": 35248
+        }
+      },
+      "stack_boundary": "Painted after boot, covering local L1-L4 only. Same deepest write and observed peak in all four runs; no measured regression in this workload. Boot, construction and worst-case whole-program stack are not covered."
+    },
+    "candidate_radio_upload_workload": {
+      "scope": "Candidate only. The earlier0139 control-source run used a different ELF/build/path, so it is historical functional context and not a matched stack or performance comparison.",
+      "outcomes": "Two opaque LoRa forwards succeed while upload U1 writes flash. A second upload is refused with the existing5.03 one-active-upload rule; a local request succeeds. After client cancellation, another upload is refused while the first context remains open, while forwarding and local requests succeed. After120-second expiry, two forwards and local requests succeed. A later complete upload under two forwards activates and confirms after reboot, followed by successful local requests and forwarding.",
+      "radio_budget": "The downstream report records144.5 seconds of available origin transmit budget before the passing run; no radio tuning change is part of the comparison.",
+      "stack": {
+        "painted_peak_bytes": 52736,
+        "region_bytes": 87792,
+        "headroom_bytes": 35056
+      },
+      "stack_boundary": "Post-boot paint covers phases A-C only. Phases D-E (complete upload/activation and post-reboot traffic) are excluded. The192-byte difference from the earlier control-source observation is from unmatched builds and is not attributed to this change.",
+      "activation_scope": "The candidate was confirmed from ota_1 at the end of the upload run. This does not describe the later final freshly flashed state."
+    },
+    "unmeasured": [
+      "Matched control radio/upload run",
+      "Stack during boot and phases D-E",
+      "Matched radio-stack difference",
+      "CPU or latency/throughput change",
+      "Two simultaneous flash-writing uploads, which the worker policy does not permit"
+    ],
+    "verification": "Parent independently read both rebuilt hardware ELF hashes and their selected section sizes, plus all five saved stack records and headroom arithmetic. Wire replay, traffic/counter and activation outcomes are downstream-reported; captures were not independently replayed here.",
+    "reported_final_state": "Candidate flashed last in cand2, responding over OSCORE with build2026-11-16T17:35:34Z and usb-uart reset. That final wired flash erased otadata, so it boots through the factory/ota_0 path. Wired recovery/probe and the LoRa origin remain intact. This is the reported end state, not a fresh live-device query.",
+    "private_artifacts": "Rebuilt ELFs, captures, replay scripts, client output and stack/activation records remain private and outside Git."
   }
 }
