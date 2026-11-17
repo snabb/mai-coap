@@ -36,8 +36,9 @@ encodings. Pre-shared contexts are test fixtures. Follow-up work is in the
   `ctutils` 0.4.8 and `inout` 0.2.6, which carry upstream arithmetic, constant-time
   and reserved-buffer aliasing fixes, including 32-bit, Thumb-1 and RISC-V code
   generation. Applications must update
-  their own lockfiles to receive them. Validation covers the host matrix, Rust 1.97, four
-  no_std targets with QEMU fixtures, fuzz smoke tests and aiocoap interoperability. The
+  their own lockfiles to receive them. The [refresh report](dependency-refresh-resources.json)
+  records the host matrix, Rust 1.97, four no_std targets with QEMU fixtures, fuzz smoke
+  tests and aiocoap interoperability. The
   M0 EDHOC fixture exercises initiator startup; larger targets run both roles.
   Functional checks don't establish constant-time execution on every target.
 - **AES version:** lockfiles hold `aes` 0.9.3. Version 0.9.4 stores a smaller key schedule
@@ -49,8 +50,8 @@ encodings. Pre-shared contexts are test fixtures. Follow-up work is in the
 - **Logging:** features are mutually exclusive, and dependency logging stays disabled.
 - **Git network adapters:** xarxa and xarxa-backed Embassy remain pinned to the
   compatible revisions in the manifests until a published pair provides their shared
-  owned-packet and interface-binding APIs. Both adapters use the released Embassy
-  time driver through the existing patch.
+  owned-packet and interface-binding APIs. The existing patch makes the Git Embassy
+  adapter share the released `embassy-time` dependency with the registry Embassy adapter.
 
 ## Public API boundary
 

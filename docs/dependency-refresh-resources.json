@@ -1,0 +1,1911 @@
+{
+  "date": "2026-11-17",
+  "baseline_revision": "e36044e8780089ebafb2f9806e394de87cd8b94b",
+  "candidate_dependency_revision": "9309db744f65d50532974f962a84ee33ec78e66d",
+  "scope": "All five Cargo workspaces and repository-managed developer/CI pins were checked against current stable metadata. Compatible registry dependencies and lockfiles were refreshed; documented compatibility/performance pins remain. No Rust implementation, API, feature, MSRV or resource-budget change.",
+  "registry_inventory": {
+    "aes": {
+      "latest_stable": "0.9.4",
+      "rust_version": "1.89",
+      "repository": "https://github.com/RustCrypto/block-ciphers",
+      "published": "2026-11-02T12:21:29.388533Z"
+    },
+    "async-io": {
+      "latest_stable": "2.6.0",
+      "rust_version": "1.71",
+      "repository": "https://github.com/smol-rs/async-io",
+      "published": "2025-09-14T14:03:50.201510Z"
+    },
+    "async-signal": {
+      "latest_stable": "0.2.14",
+      "rust_version": "1.85",
+      "repository": "https://github.com/smol-rs/async-signal",
+      "published": "2026-04-07T11:50:26.817406Z"
+    },
+    "blocking": {
+      "latest_stable": "1.7.0",
+      "rust_version": "1.68",
+      "repository": "https://github.com/smol-rs/blocking",
+      "published": "2026-08-23T09:00:11.479384Z"
+    },
+    "ccm": {
+      "latest_stable": "0.6.1",
+      "rust_version": "1.85",
+      "repository": "https://github.com/RustCrypto/AEADs",
+      "published": "2026-08-21T21:00:12.811531Z"
+    },
+    "clap": {
+      "latest_stable": "4.6.8",
+      "rust_version": "1.85",
+      "repository": "https://github.com/clap-rs/clap",
+      "published": "2026-11-16T23:54:39.221728Z"
+    },
+    "cortex-m": {
+      "latest_stable": "0.7.10",
+      "rust_version": "1.85",
+      "repository": "https://github.com/rust-embedded/cortex-m",
+      "published": "2026-10-22T23:07:38.594146Z"
+    },
+    "cortex-m-rt": {
+      "latest_stable": "0.7.7",
+      "rust_version": "1.85",
+      "repository": "https://github.com/rust-embedded/cortex-m",
+      "published": "2026-09-24T19:33:52.601307Z"
+    },
+    "critical-section": {
+      "latest_stable": "1.2.0",
+      "rust_version": null,
+      "repository": "https://github.com/rust-embedded/critical-section",
+      "published": "2024-10-16T13:28:54.130490Z"
+    },
+    "defmt": {
+      "latest_stable": "1.2.0",
+      "rust_version": "1.81",
+      "repository": "https://github.com/knurling-rs/defmt",
+      "published": "2026-10-15T14:45:39.202211Z"
+    },
+    "digest": {
+      "latest_stable": "0.11.3",
+      "rust_version": "1.85",
+      "repository": "https://github.com/RustCrypto/traits",
+      "published": "2026-05-03T12:54:48.023505Z"
+    },
+    "embassy-net": {
+      "latest_stable": "0.9.1",
+      "rust_version": null,
+      "repository": "https://github.com/embassy-rs/embassy",
+      "published": "2026-04-16T15:20:48.262419Z"
+    },
+    "embassy-time": {
+      "latest_stable": "0.5.1",
+      "rust_version": null,
+      "repository": "https://github.com/embassy-rs/embassy",
+      "published": "2026-03-20T14:16:19.292901Z"
+    },
+    "futures-lite": {
+      "latest_stable": "2.6.1",
+      "rust_version": "1.60",
+      "repository": "https://github.com/smol-rs/futures-lite",
+      "published": "2025-08-04T00:29:25.672150Z"
+    },
+    "heapless": {
+      "latest_stable": "0.9.3",
+      "rust_version": "1.87",
+      "repository": "https://github.com/rust-embedded/heapless",
+      "published": "2026-04-30T21:21:52.310678Z"
+    },
+    "hkdf": {
+      "latest_stable": "0.13.0",
+      "rust_version": "1.85",
+      "repository": "https://github.com/RustCrypto/KDFs/",
+      "published": "2026-03-30T14:36:50.965552Z"
+    },
+    "lakers": {
+      "latest_stable": "0.8.0",
+      "rust_version": null,
+      "repository": "https://github.com/openwsn-berkeley/lakers/",
+      "published": "2025-02-06T12:04:59.086424Z"
+    },
+    "libfuzzer-sys": {
+      "latest_stable": "0.4.13",
+      "rust_version": null,
+      "repository": "https://github.com/rust-fuzz/libfuzzer",
+      "published": "2026-06-04T18:55:34.718132Z"
+    },
+    "log": {
+      "latest_stable": "0.4.35",
+      "rust_version": "1.71.0",
+      "repository": "https://github.com/rust-lang/log",
+      "published": "2026-10-30T21:36:19.748360Z"
+    },
+    "nix": {
+      "latest_stable": "0.32.0",
+      "rust_version": "1.69",
+      "repository": "https://github.com/nix-rust/nix",
+      "published": "2026-11-14T19:28:01.519938Z"
+    },
+    "p256": {
+      "latest_stable": "0.14.0",
+      "rust_version": "1.85",
+      "repository": "https://github.com/RustCrypto/elliptic-curves",
+      "published": "2026-07-03T17:56:52.396813Z"
+    },
+    "proptest": {
+      "latest_stable": "1.12.0",
+      "rust_version": "1.88",
+      "repository": "https://github.com/proptest-rs/proptest",
+      "published": "2026-10-10T18:18:05.623491Z"
+    },
+    "rand": {
+      "latest_stable": "0.10.4",
+      "rust_version": "1.85",
+      "repository": "https://github.com/rust-random/rand",
+      "published": "2026-11-15T13:54:26.803018Z"
+    },
+    "rand_core": {
+      "latest_stable": "0.10.1",
+      "rust_version": "1.85",
+      "repository": "https://github.com/rust-lang-nursery/rand",
+      "published": "2026-04-13T15:26:43.049921Z"
+    },
+    "riscv": {
+      "latest_stable": "0.16.1",
+      "rust_version": "1.81",
+      "repository": "https://github.com/rust-embedded/riscv",
+      "published": "2026-05-28T08:39:04.630274Z"
+    },
+    "riscv-rt": {
+      "latest_stable": "0.18.0",
+      "rust_version": "1.81",
+      "repository": "https://github.com/rust-embedded/riscv",
+      "published": "2026-05-28T08:40:59.794834Z"
+    },
+    "semihosting": {
+      "latest_stable": "0.1.25",
+      "rust_version": "1.64",
+      "repository": "https://github.com/taiki-e/semihosting",
+      "published": "2026-03-08T08:24:15.277952Z"
+    },
+    "sha2": {
+      "latest_stable": "0.11.1",
+      "rust_version": "1.88",
+      "repository": "https://github.com/RustCrypto/hashes",
+      "published": "2026-10-12T18:58:22.836567Z"
+    },
+    "xarxa": {
+      "latest_stable": "0.0.0",
+      "rust_version": null,
+      "repository": null,
+      "published": "2026-07-27T14:55:24.683537Z"
+    },
+    "zeroize": {
+      "latest_stable": "1.9.2",
+      "rust_version": "1.85",
+      "repository": "https://github.com/RustCrypto/utils",
+      "published": "2026-11-17T14:47:39.506189Z"
+    }
+  },
+  "lockfile_changes": {
+    "Cargo.lock": [
+      {
+        "package": "bit-vec",
+        "before": "0.10.1",
+        "after": "0.10.2"
+      },
+      {
+        "package": "bumpalo",
+        "before": "3.20.3",
+        "after": "3.20.4"
+      },
+      {
+        "package": "const-oid",
+        "before": "0.10.2",
+        "after": "0.10.3"
+      },
+      {
+        "package": "crypto-bigint",
+        "before": "0.7.10",
+        "after": "0.7.11"
+      },
+      {
+        "package": "errno",
+        "before": "0.3.14",
+        "after": "0.3.15"
+      },
+      {
+        "package": "inout",
+        "before": "0.2.5",
+        "after": "0.2.6"
+      },
+      {
+        "package": "itoa",
+        "before": "1.0.18",
+        "after": "1.0.19"
+      },
+      {
+        "package": "nix",
+        "before": "0.31.3",
+        "after": "0.32.0"
+      },
+      {
+        "package": "rand",
+        "before": "0.10.3",
+        "after": "0.10.4"
+      },
+      {
+        "package": "syn",
+        "before": "3.0.9",
+        "after": "3.0.10"
+      },
+      {
+        "package": "toml_datetime",
+        "before": "1.1.2+spec-1.1.0",
+        "after": "1.1.3+spec-1.1.0"
+      },
+      {
+        "package": "toml_edit",
+        "before": "0.25.18+spec-1.1.0",
+        "after": "0.25.19+spec-1.1.0"
+      },
+      {
+        "package": "uuid",
+        "before": "1.29.0",
+        "after": "1.29.3"
+      },
+      {
+        "package": "zeroize",
+        "before": "1.9.1",
+        "after": "1.9.2"
+      }
+    ],
+    "cli/Cargo.lock": [
+      {
+        "package": "bumpalo",
+        "before": "3.20.3",
+        "after": "3.20.4"
+      },
+      {
+        "package": "clap",
+        "before": "4.6.7",
+        "after": "4.6.8"
+      },
+      {
+        "package": "clap_derive",
+        "before": "4.6.7",
+        "after": "4.6.8"
+      },
+      {
+        "package": "clap_lex",
+        "before": "1.1.1",
+        "after": "1.1.2"
+      },
+      {
+        "package": "const-oid",
+        "before": "0.10.2",
+        "after": "0.10.3"
+      },
+      {
+        "package": "crypto-bigint",
+        "before": "0.7.10",
+        "after": "0.7.11"
+      },
+      {
+        "package": "errno",
+        "before": "0.3.14",
+        "after": "0.3.15"
+      },
+      {
+        "package": "inout",
+        "before": "0.2.5",
+        "after": "0.2.6"
+      },
+      {
+        "package": "itoa",
+        "before": "1.0.18",
+        "after": "1.0.19"
+      },
+      {
+        "package": "nix",
+        "before": "0.31.3",
+        "after": "0.32.0"
+      },
+      {
+        "package": "rand",
+        "before": "0.10.3",
+        "after": "0.10.4"
+      },
+      {
+        "package": "syn",
+        "before": "3.0.9",
+        "after": "3.0.10"
+      },
+      {
+        "package": "uuid",
+        "before": "1.29.0",
+        "after": "1.29.3"
+      },
+      {
+        "package": "zeroize",
+        "before": "1.9.1",
+        "after": "1.9.2"
+      }
+    ],
+    "embedded-example/Cargo.lock": [
+      {
+        "package": "zeroize",
+        "before": "1.9.1",
+        "after": "1.9.2"
+      }
+    ],
+    "fuzz/Cargo.lock": [
+      {
+        "package": "bumpalo",
+        "before": "3.20.3",
+        "after": "3.20.4"
+      },
+      {
+        "package": "cc",
+        "before": "1.11.0",
+        "after": "1.11.2"
+      },
+      {
+        "package": "const-oid",
+        "before": "0.10.2",
+        "after": "0.10.3"
+      },
+      {
+        "package": "crypto-bigint",
+        "before": "0.7.10",
+        "after": "0.7.11"
+      },
+      {
+        "package": "errno",
+        "before": "0.3.14",
+        "after": "0.3.15"
+      },
+      {
+        "package": "inout",
+        "before": "0.2.5",
+        "after": "0.2.6"
+      },
+      {
+        "package": "itoa",
+        "before": "1.0.18",
+        "after": "1.0.19"
+      },
+      {
+        "package": "nix",
+        "before": "0.31.3",
+        "after": "0.32.0"
+      },
+      {
+        "package": "rand",
+        "before": "0.10.3",
+        "after": "0.10.4"
+      },
+      {
+        "package": "syn",
+        "before": "3.0.9",
+        "after": "3.0.10"
+      },
+      {
+        "package": "uuid",
+        "before": "1.29.0",
+        "after": "1.29.3"
+      },
+      {
+        "package": "zeroize",
+        "before": "1.9.1",
+        "after": "1.9.2"
+      }
+    ],
+    "target-tests/Cargo.lock": [
+      {
+        "package": "bumpalo",
+        "before": "3.20.3",
+        "after": "3.20.4"
+      },
+      {
+        "package": "const-oid",
+        "before": "0.10.2",
+        "after": "0.10.3"
+      },
+      {
+        "package": "crypto-bigint",
+        "before": "0.7.10",
+        "after": "0.7.11"
+      },
+      {
+        "package": "inout",
+        "before": "0.2.5",
+        "after": "0.2.6"
+      },
+      {
+        "package": "itoa",
+        "before": "1.0.18",
+        "after": "1.0.19"
+      },
+      {
+        "package": "syn",
+        "before": "3.0.9",
+        "after": "3.0.10"
+      },
+      {
+        "package": "uuid",
+        "before": "1.29.0",
+        "after": "1.29.3"
+      },
+      {
+        "package": "zeroize",
+        "before": "1.9.1",
+        "after": "1.9.2"
+      }
+    ]
+  },
+  "development_tools": {
+    "ruff": {
+      "before": "0.17.3",
+      "after": "0.17.5",
+      "source": "https://github.com/astral-sh/ruff/releases/tag/0.17.5"
+    },
+    "unchanged_current_stable": {
+      "aiocoap": "0.4.17",
+      "cargo-fuzz": "0.13.2",
+      "kani-verifier": "0.68.0",
+      "actionlint": "1.7.12"
+    },
+    "github_actions": "Existing checkout7.0.1, setup-uv10.3.3, rust-cache2.9.3, cache6.1.0 and upload-artifact7.0.2 pins were checked against official release metadata and retained."
+  },
+  "retained_exceptions": {
+    "aes": "Locks retain0.9.3: the documented0.9.4 schedule reconstruction cost flash and stack in this provider. Existing manifest range and fresh-downstream-lock guidance remain unchanged.",
+    "digest-legacy": "0.10.7 matches the pinned Lakers streaming-hash API; this is not a second RNG major.",
+    "lakers": "Git de1bf6bdb562eda7e29db47ec8540e759e68375d retains the required public API; published0.8.0 is not a compatible replacement.",
+    "network_adapters": "xarxa8f6f33b131deb9ff3290e0e01079537e1ed7b2ad and Embassy8a940dab0d56a910277b816987e45315ca7979aa remain the coherent unpublished owned-packet/interface-binding pair. The registry xarxa0.0.0 entry is not a suitable replacement.",
+    "embassy-time": "The existing0.5.1 patch keeps Git and registry Embassy adapters on one released global time driver."
+  },
+  "upstream_fix_sources": {
+    "crypto-bigint0.7.11": "https://github.com/RustCrypto/crypto-bigint/pull/1391",
+    "inout0.2.6": "https://github.com/RustCrypto/utils/pull/1591"
+  },
+  "notices": "Regenerated through tools/notices.py --refresh; --check and generator tests pass.129 runtime package notices. Parent reviewed the diff: package-version labels and lockfile fingerprint change; upstream attribution/license texts are preserved.",
+  "paired_source_controls": "Both arms use the same host, compiler, source path, fixtures and capacities. The before arm restores baseline root/target-test manifests and lockfiles; candidate inputs are restored afterwards. Raw proxy report Git metadata names the candidate checkout while the before input snapshot is dirty. Package inputs/source digests and ELF hashes, rather than that raw Git label alone, identify the arms.",
+  "standard_measurement_before": {
+    "date": "2026-11-17",
+    "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+    "build_host": "aarch64-unknown-linux-gnu",
+    "target": "thumbv7em-none-eabihf",
+    "profile": "release opt-level=s, LTO, codegen-units=1",
+    "boundary": "Reachable test workloads, not whole-feature upper bounds. Static RAM excludes stack. Two-role EDHOC and protocol tables use stack storage; this is not a peak RAM measurement."
+  },
+  "standard_measurement_after": {
+    "date": "2026-11-17",
+    "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+    "build_host": "aarch64-unknown-linux-gnu",
+    "target": "thumbv7em-none-eabihf",
+    "profile": "release opt-level=s, LTO, codegen-units=1",
+    "boundary": "Reachable test workloads, not whole-feature upper bounds. Static RAM excludes stack. Two-role EDHOC and protocol tables use stack storage; this is not a peak RAM measurement."
+  },
+  "m4_standard_workloads": {
+    "base": {
+      "features": "client,test-support",
+      "before": {
+        "features": "client,test-support",
+        "flash_bytes": 53044,
+        "static_ram_bytes": 296
+      },
+      "after": {
+        "features": "client,test-support",
+        "flash_bytes": 53164,
+        "static_ram_bytes": 296
+      },
+      "flash_delta_bytes": 120,
+      "static_ram_delta_bytes": 0,
+      "before_elf_sha256": "25cb7ae678ca8a6667054a872f9890238dc7a35e3e4221e884c50135aa51a8b5",
+      "after_elf_sha256": "f2c7b2ac5c77259ae5b0ce4a38316811ae19b847fb2583cca2235a311fa68821"
+    },
+    "block": {
+      "features": "client,test-support,block",
+      "before": {
+        "features": "client,test-support,block",
+        "flash_bytes": 60708,
+        "static_ram_bytes": 296
+      },
+      "after": {
+        "features": "client,test-support,block",
+        "flash_bytes": 60828,
+        "static_ram_bytes": 296
+      },
+      "flash_delta_bytes": 120,
+      "static_ram_delta_bytes": 0,
+      "before_elf_sha256": "cf22aae146958b9add3b3158d14bc068bf1be0a30fff4ba0beb05a988c9bdca2",
+      "after_elf_sha256": "b0d0748975e74f91640b947a504a73006e93ce7c4ee982b8b67fb5f91956bd64"
+    },
+    "block1": {
+      "features": "client,test-support,block1",
+      "before": {
+        "features": "client,test-support,block1",
+        "flash_bytes": 54244,
+        "static_ram_bytes": 304
+      },
+      "after": {
+        "features": "client,test-support,block1",
+        "flash_bytes": 54364,
+        "static_ram_bytes": 304
+      },
+      "flash_delta_bytes": 120,
+      "static_ram_delta_bytes": 0,
+      "before_elf_sha256": "8b66660a001b4b8c2be0021b7837810aee56f407496608f6db3acfac293ac26a",
+      "after_elf_sha256": "84cd3dd0190fb5c59966acc7bf5abd085e90a2a711cee05f47223885f418e7ea"
+    },
+    "observe": {
+      "features": "client,test-support,observe",
+      "before": {
+        "features": "client,test-support,observe",
+        "flash_bytes": 64892,
+        "static_ram_bytes": 368
+      },
+      "after": {
+        "features": "client,test-support,observe",
+        "flash_bytes": 65056,
+        "static_ram_bytes": 368
+      },
+      "flash_delta_bytes": 164,
+      "static_ram_delta_bytes": 0,
+      "before_elf_sha256": "e14e6c104f9afdc24d64cc61461d2e18d48009724132c13f1d570b6c5095f6ac",
+      "after_elf_sha256": "81d38aae6b6668441276f8426afdfee0abe60cec0d63f6a15fde1ca511f750bc"
+    },
+    "oscore": {
+      "features": "client,test-support,oscore",
+      "before": {
+        "features": "client,test-support,oscore",
+        "flash_bytes": 77696,
+        "static_ram_bytes": 296
+      },
+      "after": {
+        "features": "client,test-support,oscore",
+        "flash_bytes": 77788,
+        "static_ram_bytes": 296
+      },
+      "flash_delta_bytes": 92,
+      "static_ram_delta_bytes": 0,
+      "before_elf_sha256": "2b519d6e8eee2d4718b2e3a40a6995f04976d5fae449a76ebe4c5b8453c03b5e",
+      "after_elf_sha256": "2eaf5b462bd77ffab09a95695ec7f7ec1ef27b1b2b0ec401c5003a4ff64a22f0"
+    },
+    "edhoc": {
+      "features": "client,test-support,edhoc",
+      "before": {
+        "features": "client,test-support,edhoc",
+        "flash_bytes": 132144,
+        "static_ram_bytes": 296
+      },
+      "after": {
+        "features": "client,test-support,edhoc",
+        "flash_bytes": 134140,
+        "static_ram_bytes": 296
+      },
+      "flash_delta_bytes": 1996,
+      "static_ram_delta_bytes": 0,
+      "before_elf_sha256": "0c4dfac87bf25598d2c17da012182d10cf97508d06e7b0e182c50acbdec75f35",
+      "after_elf_sha256": "0f89d10a0bfdd3965593535e8e5e49056324323065d723a2fad588e8c1c49218"
+    },
+    "proxy": {
+      "features": "client,test-support,proxy",
+      "before": {
+        "features": "client,test-support,proxy",
+        "flash_bytes": 105540,
+        "static_ram_bytes": 1920
+      },
+      "after": {
+        "features": "client,test-support,proxy",
+        "flash_bytes": 105768,
+        "static_ram_bytes": 1920
+      },
+      "flash_delta_bytes": 228,
+      "static_ram_delta_bytes": 0,
+      "before_elf_sha256": "783ffdbe557bc2ecd6036adc2d429751ef31bf01d7b01d966c985003bd9bd69c",
+      "after_elf_sha256": "fd6560bad614e98eed1487ad8f9507ce7eb2fefbe48fd2bfb27de08b1bcc0fef"
+    },
+    "discovery": {
+      "features": "client,test-support,discovery",
+      "before": {
+        "features": "client,test-support,discovery",
+        "flash_bytes": 96544,
+        "static_ram_bytes": 296
+      },
+      "after": {
+        "features": "client,test-support,discovery",
+        "flash_bytes": 96752,
+        "static_ram_bytes": 296
+      },
+      "flash_delta_bytes": 208,
+      "static_ram_delta_bytes": 0,
+      "before_elf_sha256": "0ad819a42b4ba75216da7b2a982e2a8f6d69af45a247dcce668fe3ee4b11b6ac",
+      "after_elf_sha256": "0edae81ee4c5e49d58db7a9d8d59c44680d4b74c9fdb15d6dfbea283cabcb411"
+    },
+    "full-block1": {
+      "features": "client,test-support,edhoc,block1,observe,proxy,discovery,multicast",
+      "before": {
+        "features": "client,test-support,edhoc,block1,observe,proxy,discovery,multicast",
+        "flash_bytes": 270820,
+        "static_ram_bytes": 12856
+      },
+      "after": {
+        "features": "client,test-support,edhoc,block1,observe,proxy,discovery,multicast",
+        "flash_bytes": 273152,
+        "static_ram_bytes": 12856
+      },
+      "flash_delta_bytes": 2332,
+      "static_ram_delta_bytes": 0,
+      "before_elf_sha256": "81524ddbca6d2416e4d025b75d4615c85340ad54accf5fa029b92f17073ae8e6",
+      "after_elf_sha256": "f51e8de54ac8c8f7abc4444d39b6d19c30a0e7c5ac4412a7b40d3da779d56443"
+    },
+    "get-server": {
+      "features": "get-server",
+      "before": {
+        "features": "get-server",
+        "flash_bytes": 50308,
+        "static_ram_bytes": 24
+      },
+      "after": {
+        "features": "get-server",
+        "flash_bytes": 50360,
+        "static_ram_bytes": 24
+      },
+      "flash_delta_bytes": 52,
+      "static_ram_delta_bytes": 0,
+      "before_elf_sha256": "277c25eefa6a20a8b78dd3a02563dac1baa04c20c480dc1ce33b8b9ab8911dd8",
+      "after_elf_sha256": "87f6533c5947caedfd57d787c28204e902394c805cf529d5269bd38219bd436c"
+    },
+    "get-server-shared-counters": {
+      "features": "get-server,shared-counters",
+      "before": {
+        "features": "get-server,shared-counters",
+        "flash_bytes": 51996,
+        "static_ram_bytes": 144
+      },
+      "after": {
+        "features": "get-server,shared-counters",
+        "flash_bytes": 52020,
+        "static_ram_bytes": 144
+      },
+      "flash_delta_bytes": 24,
+      "static_ram_delta_bytes": 0,
+      "before_elf_sha256": "cc7180ccc4e6a0e2c6df8c8b48c802c4fd39ff0641168f79ed111f269b167480",
+      "after_elf_sha256": "f76061a804f8140dce2928076e1d82efbffc92772211700c7c603b03b43def59"
+    },
+    "get-server-block1": {
+      "features": "get-server-block1",
+      "before": {
+        "features": "get-server-block1",
+        "flash_bytes": 64644,
+        "static_ram_bytes": 24
+      },
+      "after": {
+        "features": "get-server-block1",
+        "flash_bytes": 64704,
+        "static_ram_bytes": 24
+      },
+      "flash_delta_bytes": 60,
+      "static_ram_delta_bytes": 0,
+      "before_elf_sha256": "4ec27e17f6950762126aeb9095577dc79ff3b7106619a0f7115bee6d65ddaac6",
+      "after_elf_sha256": "51a99f9cc8996c726dd031ca8c6de8d34aa10ad22c73bd081eadcff68912db56"
+    }
+  },
+  "two_endpoint_proxy": {
+    "thumbv7em-none-eabihf": {
+      "before": {
+        "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+        "build_host": "aarch64-unknown-linux-gnu",
+        "source_revision": "9309db744f65d50532974f962a84ee33ec78e66d",
+        "git_dirty": true,
+        "source_sha256": "136b93a6f252cbc739c60ebc6cf6072d0f2cbbca48e09217d93c8fbc839073d7",
+        "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+        "fixture_sha256": {
+          "proxy_main.rs": "dc47ce8f2bfc3db63873a48a9e57f393c07662599d9055cd018d3574d96f1831",
+          "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+          "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+        },
+        "target": "thumbv7em-none-eabihf",
+        "profile": "release opt-level=s, LTO, codegen-units=1",
+        "features": "proxy-roles",
+        "datagram_bytes": 1152,
+        "forwards": 2,
+        "payload_bytes": 1024,
+        "elf_sha256": "44259497e8a1af3d7c4e30b8f2ee1ab5461e3412551c144a537efeb2ee7cf701",
+        "roles": true,
+        "flash_bytes": 196120,
+        "static_ram_bytes": 24232,
+        "scenarios": {
+          "plain": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 664,
+            "painted": 24468,
+            "capacity": 106840
+          },
+          "secure": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 664,
+            "painted": 24660,
+            "capacity": 106840
+          }
+        },
+        "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+      },
+      "after": {
+        "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+        "build_host": "aarch64-unknown-linux-gnu",
+        "source_revision": "9309db744f65d50532974f962a84ee33ec78e66d",
+        "git_dirty": false,
+        "source_sha256": "b5834fadbe9a3241fea79323d595e598459262ef2504751c9c3176d37c308950",
+        "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+        "fixture_sha256": {
+          "proxy_main.rs": "dc47ce8f2bfc3db63873a48a9e57f393c07662599d9055cd018d3574d96f1831",
+          "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+          "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+        },
+        "target": "thumbv7em-none-eabihf",
+        "profile": "release opt-level=s, LTO, codegen-units=1",
+        "features": "proxy-roles",
+        "datagram_bytes": 1152,
+        "forwards": 2,
+        "payload_bytes": 1024,
+        "elf_sha256": "0bf2650de3b791bc2d6b2fbdfde9efb4ad8618778b26720a3310c595603d4771",
+        "roles": true,
+        "flash_bytes": 198412,
+        "static_ram_bytes": 24232,
+        "scenarios": {
+          "plain": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 664,
+            "painted": 24468,
+            "capacity": 106840
+          },
+          "secure": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 664,
+            "painted": 24660,
+            "capacity": 106840
+          }
+        },
+        "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+      },
+      "flash_delta_bytes": 2292,
+      "static_ram_delta_bytes": 0
+    },
+    "thumbv8m.main-none-eabihf": {
+      "before": {
+        "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+        "build_host": "aarch64-unknown-linux-gnu",
+        "source_revision": "9309db744f65d50532974f962a84ee33ec78e66d",
+        "git_dirty": true,
+        "source_sha256": "136b93a6f252cbc739c60ebc6cf6072d0f2cbbca48e09217d93c8fbc839073d7",
+        "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+        "fixture_sha256": {
+          "proxy_main.rs": "dc47ce8f2bfc3db63873a48a9e57f393c07662599d9055cd018d3574d96f1831",
+          "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+          "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+        },
+        "target": "thumbv8m.main-none-eabihf",
+        "profile": "release opt-level=s, LTO, codegen-units=1",
+        "features": "proxy-roles",
+        "datagram_bytes": 1152,
+        "forwards": 2,
+        "payload_bytes": 1024,
+        "elf_sha256": "f720f700cd7145fd929bb8e69c76ffe817c9014d42fecc445a7aa749e403dffd",
+        "roles": true,
+        "flash_bytes": 196936,
+        "static_ram_bytes": 24232,
+        "scenarios": {
+          "plain": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 664,
+            "painted": 24468,
+            "capacity": 106840
+          },
+          "secure": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 664,
+            "painted": 24660,
+            "capacity": 106840
+          }
+        },
+        "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+      },
+      "after": {
+        "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+        "build_host": "aarch64-unknown-linux-gnu",
+        "source_revision": "9309db744f65d50532974f962a84ee33ec78e66d",
+        "git_dirty": false,
+        "source_sha256": "b5834fadbe9a3241fea79323d595e598459262ef2504751c9c3176d37c308950",
+        "source_digest_boundary": "Sorted relative path, NUL, file bytes, NUL for src/**/*.rs, target-tests/src/**/*.rs, both Cargo manifests/lockfiles, target-tests/build.rs, rust-toolchain.toml and tests/fixtures/{i,r}.ccs when present.",
+        "fixture_sha256": {
+          "proxy_main.rs": "dc47ce8f2bfc3db63873a48a9e57f393c07662599d9055cd018d3574d96f1831",
+          "stack.rs": "1af8874bf45ecb118889768254d363095e1b71b55cf4e1125012f1023fe516fe",
+          "rng.rs": "df34665ec6da212484ebc27b8026ef4050d035410cbab895c1ae1ab87b528871"
+        },
+        "target": "thumbv8m.main-none-eabihf",
+        "profile": "release opt-level=s, LTO, codegen-units=1",
+        "features": "proxy-roles",
+        "datagram_bytes": 1152,
+        "forwards": 2,
+        "payload_bytes": 1024,
+        "elf_sha256": "e8d7a7806a1fa0429d8ce4d066800c3e0e94b5d2f7d6db02c368404b48b60bf7",
+        "roles": true,
+        "flash_bytes": 199492,
+        "static_ram_bytes": 24232,
+        "scenarios": {
+          "plain": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 664,
+            "painted": 24468,
+            "capacity": 106840
+          },
+          "secure": {
+            "incoming_future": 1440,
+            "outgoing_future": 1440,
+            "application_bytes": 664,
+            "painted": 24660,
+            "capacity": 106840
+          }
+        },
+        "boundary": "Two simultaneous opaque forwards with 1024-byte origin payloads and a public local GET, with plain and secure-capable receiving endpoints and an unsecured outbound endpoint. Origin replies are scripted; this does not establish protected local interoperability or hardware behavior. Endpoints/Shared are static; driver futures, proxy and simulated link are on the measured stack. Endpoint construction precedes painting and its peak is unmeasured. Stack paint is an exercised-write measurement, not a worst-case bound. CPU and physical hardware are not measured."
+      },
+      "flash_delta_bytes": 2556,
+      "static_ram_delta_bytes": 0
+    }
+  },
+  "resource_gates": {
+    "stack-thumbv7em-none-eabihf": {
+      "target": "thumbv7em-none-eabihf",
+      "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+      "build_host": "aarch64-unknown-linux-gnu",
+      "profile": "release opt-level=s, LTO, codegen-units=1",
+      "features": "stack-profile (EDHOC, Block1, Observe, proxy, discovery, multicast)",
+      "flash_before_bytes": 209228,
+      "flash_after_bytes": 211128,
+      "flash_delta_bytes": 1900,
+      "static_ram_before_bytes": 38368,
+      "static_ram_after_bytes": 38368,
+      "static_ram_delta_bytes": 0,
+      "budget_enforced": true,
+      "scenarios": {
+        "combined/handshake": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 25824,
+            "peak_bytes": 25824,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 25824,
+            "peak_bytes": 25824,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 26368,
+          "budget_headroom_bytes": 544
+        },
+        "combined/traffic": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 15856,
+            "peak_bytes": 15856,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 15864,
+            "peak_bytes": 15864,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "painted_delta_bytes": 8,
+          "painted_budget_bytes": 16384,
+          "budget_headroom_bytes": 520
+        },
+        "sequential/handshake": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 25824,
+            "peak_bytes": 25824,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 25824,
+            "peak_bytes": 25824,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 26368,
+          "budget_headroom_bytes": 544
+        },
+        "sequential/traffic": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 15856,
+            "peak_bytes": 15856,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 15864,
+            "peak_bytes": 15864,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "painted_delta_bytes": 8,
+          "painted_budget_bytes": 16384,
+          "budget_headroom_bytes": 520
+        }
+      },
+      "boundary": "Two endpoint drivers and operation futures on the fixture stack; endpoints and Shared storage are static. Phases exclude credential setup and reporting. Paint observes writes; reserved but unwritten space may be missed. These exercised peaks do not establish worst-case bounds or physical-board headroom."
+    },
+    "stack-thumbv8m.main-none-eabihf": {
+      "target": "thumbv8m.main-none-eabihf",
+      "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+      "build_host": "aarch64-unknown-linux-gnu",
+      "profile": "release opt-level=s, LTO, codegen-units=1",
+      "features": "stack-profile (EDHOC, Block1, Observe, proxy, discovery, multicast)",
+      "flash_before_bytes": 210344,
+      "flash_after_bytes": 212264,
+      "flash_delta_bytes": 1920,
+      "static_ram_before_bytes": 38368,
+      "static_ram_after_bytes": 38368,
+      "static_ram_delta_bytes": 0,
+      "budget_enforced": true,
+      "scenarios": {
+        "combined/handshake": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 25816,
+            "peak_bytes": 25816,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 25816,
+            "peak_bytes": 25816,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 26368,
+          "budget_headroom_bytes": 552
+        },
+        "combined/traffic": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 15856,
+            "peak_bytes": 15856,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 15864,
+            "peak_bytes": 15864,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "painted_delta_bytes": 8,
+          "painted_budget_bytes": 16384,
+          "budget_headroom_bytes": 520
+        },
+        "sequential/handshake": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 25816,
+            "peak_bytes": 25816,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 25816,
+            "peak_bytes": 25816,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 26368,
+          "budget_headroom_bytes": 552
+        },
+        "sequential/traffic": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 15856,
+            "peak_bytes": 15856,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 15864,
+            "peak_bytes": 15864,
+            "capacity_bytes": 92704,
+            "client_future_bytes": 1440,
+            "server_future_bytes": 1440
+          },
+          "painted_delta_bytes": 8,
+          "painted_budget_bytes": 16384,
+          "budget_headroom_bytes": 520
+        }
+      },
+      "boundary": "Two endpoint drivers and operation futures on the fixture stack; endpoints and Shared storage are static. Phases exclude credential setup and reporting. Paint observes writes; reserved but unwritten space may be missed. These exercised peaks do not establish worst-case bounds or physical-board headroom."
+    },
+    "xarxa-thumbv7em-none-eabihf": {
+      "target": "thumbv7em-none-eabihf",
+      "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+      "build_host": "aarch64-unknown-linux-gnu",
+      "profile": "release opt-level=s, LTO, codegen-units=1",
+      "features": "xarxa-profile (native xarxa, EDHOC/OSCORE, 1024-byte bodies)",
+      "flash_before_bytes": 209668,
+      "flash_after_bytes": 211508,
+      "flash_delta_bytes": 1840,
+      "static_ram_before_bytes": 35964,
+      "static_ram_after_bytes": 35964,
+      "static_ram_delta_bytes": 0,
+      "budget_enforced": true,
+      "scenarios": {
+        "plain/handshake": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 18352,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 6,
+            "peak_bytes": 18352
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 18352,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 6,
+            "peak_bytes": 18352
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 18944,
+          "budget_headroom_bytes": 592
+        },
+        "plain/traffic": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 18352,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 6,
+            "peak_bytes": 18352
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 18352,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 6,
+            "peak_bytes": 18352
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 18944,
+          "budget_headroom_bytes": 592
+        },
+        "plain/non": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 18352,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 6,
+            "peak_bytes": 18352
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 18352,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 6,
+            "peak_bytes": 18352
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 18944,
+          "budget_headroom_bytes": 592
+        },
+        "combined/handshake": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 30928,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 8,
+            "peak_bytes": 30928
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 30928,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 8,
+            "peak_bytes": 30928
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 31488,
+          "budget_headroom_bytes": 560
+        },
+        "combined/traffic": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 8,
+            "peak_bytes": 21168
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 8,
+            "peak_bytes": 21168
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 21760,
+          "budget_headroom_bytes": 592
+        },
+        "combined/non": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 8,
+            "peak_bytes": 21168
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 8,
+            "peak_bytes": 21168
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 21760,
+          "budget_headroom_bytes": 592
+        },
+        "sequential/handshake": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 30928,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 10,
+            "peak_bytes": 30928
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 30928,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 10,
+            "peak_bytes": 30928
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 31488,
+          "budget_headroom_bytes": 560
+        },
+        "sequential/traffic": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 10,
+            "peak_bytes": 21168
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 10,
+            "peak_bytes": 21168
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 21760,
+          "budget_headroom_bytes": 592
+        },
+        "sequential/non": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 10,
+            "peak_bytes": 21168
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 10,
+            "peak_bytes": 21168
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 21760,
+          "budget_headroom_bytes": 592
+        }
+      },
+      "boundary": "Two endpoint drivers and operation futures on stack; both endpoints, Shared, network stacks, raw-IP drivers and all 16 network buffers are static. Storage component sizes are totals for both peers and already included in static RAM. Mode send counts repeat across phases. Phases exclude setup/reporting; paint observes writes and is an exercised QEMU peak, not a hardware bound."
+    },
+    "xarxa-thumbv8m.main-none-eabihf": {
+      "target": "thumbv8m.main-none-eabihf",
+      "toolchain": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+      "build_host": "aarch64-unknown-linux-gnu",
+      "profile": "release opt-level=s, LTO, codegen-units=1",
+      "features": "xarxa-profile (native xarxa, EDHOC/OSCORE, 1024-byte bodies)",
+      "flash_before_bytes": 210724,
+      "flash_after_bytes": 212576,
+      "flash_delta_bytes": 1852,
+      "static_ram_before_bytes": 35964,
+      "static_ram_after_bytes": 35964,
+      "static_ram_delta_bytes": 0,
+      "budget_enforced": true,
+      "scenarios": {
+        "plain/handshake": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 18352,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 6,
+            "peak_bytes": 18352
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 18352,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 6,
+            "peak_bytes": 18352
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 18944,
+          "budget_headroom_bytes": 592
+        },
+        "plain/traffic": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 18352,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 6,
+            "peak_bytes": 18352
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 18352,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 6,
+            "peak_bytes": 18352
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 18944,
+          "budget_headroom_bytes": 592
+        },
+        "plain/non": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 18352,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 6,
+            "peak_bytes": 18352
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 18352,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 6,
+            "peak_bytes": 18352
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 18944,
+          "budget_headroom_bytes": 592
+        },
+        "combined/handshake": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 30920,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 8,
+            "peak_bytes": 30920
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 30920,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 8,
+            "peak_bytes": 30920
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 31488,
+          "budget_headroom_bytes": 568
+        },
+        "combined/traffic": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 8,
+            "peak_bytes": 21168
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 8,
+            "peak_bytes": 21168
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 21760,
+          "budget_headroom_bytes": 592
+        },
+        "combined/non": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 8,
+            "peak_bytes": 21168
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 8,
+            "peak_bytes": 21168
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 21760,
+          "budget_headroom_bytes": 592
+        },
+        "sequential/handshake": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 30920,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 10,
+            "peak_bytes": 30920
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 30920,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 10,
+            "peak_bytes": 30920
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 31488,
+          "budget_headroom_bytes": 568
+        },
+        "sequential/traffic": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 10,
+            "peak_bytes": 21168
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 10,
+            "peak_bytes": 21168
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 21760,
+          "budget_headroom_bytes": 592
+        },
+        "sequential/non": {
+          "before": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 10,
+            "peak_bytes": 21168
+          },
+          "after": {
+            "datagram_bytes": 1152,
+            "painted_bytes": 21168,
+            "capacity_bytes": 95108,
+            "client_future_bytes": 320,
+            "server_future_bytes": 320,
+            "endpoint_bytes": 5760,
+            "shared_bytes": 2640,
+            "network_pool_bytes": 24980,
+            "network_state_bytes": 2584,
+            "owned_sends": 2,
+            "copied_sends": 10,
+            "peak_bytes": 21168
+          },
+          "painted_delta_bytes": 0,
+          "painted_budget_bytes": 21760,
+          "budget_headroom_bytes": 592
+        }
+      },
+      "boundary": "Two endpoint drivers and operation futures on stack; both endpoints, Shared, network stacks, raw-IP drivers and all 16 network buffers are static. Storage component sizes are totals for both peers and already included in static RAM. Mode send counts repeat across phases. Phases exclude setup/reporting; paint observes writes and is an exercised QEMU peak, not a hardware bound."
+    }
+  },
+  "growth_attribution": {
+    "method": "Sized t/T/r/R symbols, nm --radix=d -C, parsed as decimal and grouped by paths with generic arguments stripped. Anonymous/literal names are excluded from the displayed attribution.",
+    "workloads": {
+      "edhoc": [
+        {
+          "symbol": "p256::arithmetic::field::field_impl::montgomery_reduce",
+          "before_bytes": 616,
+          "after_bytes": 1886,
+          "delta_bytes": 1270
+        },
+        {
+          "symbol": "p256::arithmetic::field::field_impl::add",
+          "before_bytes": 178,
+          "after_bytes": 496,
+          "delta_bytes": 318
+        },
+        {
+          "symbol": "p256::arithmetic::field::field_impl::sub_inner",
+          "before_bytes": 378,
+          "after_bytes": 656,
+          "delta_bytes": 278
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint>::reserve_packet",
+          "before_bytes": 252,
+          "after_bytes": 314,
+          "delta_bytes": 62
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint>::replay_cached",
+          "before_bytes": 706,
+          "after_bytes": 764,
+          "delta_bytes": 58
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint>::answer_retained",
+          "before_bytes": 1106,
+          "after_bytes": 1056,
+          "delta_bytes": -50
+        },
+        {
+          "symbol": "crypto_bigint::modular::safegcd::conditional_negate_in_place_wide::",
+          "before_bytes": 302,
+          "after_bytes": 338,
+          "delta_bytes": 36
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint>::command_respond",
+          "before_bytes": 1346,
+          "after_bytes": 1380,
+          "delta_bytes": 34
+        }
+      ],
+      "full-block1": [
+        {
+          "symbol": "p256::arithmetic::field::field_impl::montgomery_reduce",
+          "before_bytes": 616,
+          "after_bytes": 1886,
+          "delta_bytes": 1270
+        },
+        {
+          "symbol": "p256::arithmetic::field::field_impl::add",
+          "before_bytes": 178,
+          "after_bytes": 496,
+          "delta_bytes": 318
+        },
+        {
+          "symbol": "p256::arithmetic::field::field_impl::sub_inner",
+          "before_bytes": 378,
+          "after_bytes": 656,
+          "delta_bytes": 278
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint>::reserve_packet",
+          "before_bytes": 818,
+          "after_bytes": 1022,
+          "delta_bytes": 204
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint>::replay_cached",
+          "before_bytes": 2216,
+          "after_bytes": 2376,
+          "delta_bytes": 160
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint>::poll_observations::",
+          "before_bytes": 9262,
+          "after_bytes": 9422,
+          "delta_bytes": 160
+        },
+        {
+          "symbol": "core::ptr::drop_glue::",
+          "before_bytes": 626,
+          "after_bytes": 558,
+          "delta_bytes": -68
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint>::command_respond",
+          "before_bytes": 4156,
+          "after_bytes": 4220,
+          "delta_bytes": 64
+        }
+      ],
+      "get-server": [
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint>::reserve_packet",
+          "before_bytes": 260,
+          "after_bytes": 324,
+          "delta_bytes": 64
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint>::replay_cached",
+          "before_bytes": 736,
+          "after_bytes": 794,
+          "delta_bytes": 58
+        },
+        {
+          "symbol": "core::ptr::drop_glue::",
+          "before_bytes": 162,
+          "after_bytes": 128,
+          "delta_bytes": -34
+        },
+        {
+          "symbol": "mai_coap_target_tests::codec_and_endpoint",
+          "before_bytes": 5870,
+          "after_bytes": 5842,
+          "delta_bytes": -28
+        },
+        {
+          "symbol": "<mai_coap::endpoint::Endpoint>::answer_retained",
+          "before_bytes": 1236,
+          "after_bytes": 1214,
+          "delta_bytes": -22
+        },
+        {
+          "symbol": "<mai_coap::packet_pool::PacketPool>::write",
+          "before_bytes": 114,
+          "after_bytes": 122,
+          "delta_bytes": 8
+        },
+        {
+          "symbol": "<mai_coap::packet_pool::PacketPool>::release",
+          "before_bytes": 82,
+          "after_bytes": 84,
+          "delta_bytes": 2
+        },
+        {
+          "symbol": "<mai_coap::packet_pool::PacketPool>::reserve",
+          "before_bytes": 92,
+          "after_bytes": 94,
+          "delta_bytes": 2
+        }
+      ]
+    },
+    "interpretation": "Most added secure-workload code is in P256 field arithmetic: montgomery_reduce+1270, add+318 and sub_inner+278 named bytes in the EDHOC/full fixture. The full dependency refresh was measured as a unit; contributions from individual dependency versions were not isolated. Smaller plain-workload growth also remains visible.",
+    "boundary": "Symbol groups are attribution, not additional allocations or independent complete partitions of linked section totals."
+  },
+  "validation": {
+    "host": "python3 tools/checks.py --docs --test passes, plus CLI all-target Clippy and CLI tests.",
+    "format_lint": "All five workspaces pass cargo fmt; Ruff0.17.5 check/format pass.",
+    "embedded": "Cortex-M0/M4/M33 and RISC-V feature matrices pass. Default EDHOC QEMU runtime passes on all four targets.",
+    "msrv": "Rust1.97 host, M0, owned-adapter and CLI profiles in tools/checks.py --msrv pass.",
+    "resources": "Matched M4 standard workloads and M4/M33 proxy, stack and owned-xarxa gates pass without budget changes. Static RAM is unchanged. Proxy future/app/paint figures are unchanged; slice-driver secured traffic paint rises8bytes on both M4/M33, with other measured phases unchanged.",
+    "interop": "Library/client/server/proxy aiocoap interoperability and CLI combined/sequential/key-exchange cases pass over host networking.",
+    "fuzz": {
+      "codec": {
+        "runs": 407832,
+        "seconds": 31,
+        "result": "pass"
+      },
+      "link_format": {
+        "runs": 1043845,
+        "seconds": 31,
+        "result": "pass"
+      },
+      "oscore": {
+        "runs": 367939,
+        "seconds": 31,
+        "result": "pass"
+      },
+      "edhoc": {
+        "runs": 2560,
+        "seconds": 31,
+        "result": "pass"
+      },
+      "block1": {
+        "runs": 2921633,
+        "seconds": 31,
+        "result": "pass"
+      },
+      "proxy_uri": {
+        "runs": 1542075,
+        "seconds": 31,
+        "result": "pass"
+      },
+      "endpoint": {
+        "runs": 81433,
+        "seconds": 31,
+        "result": "pass"
+      },
+      "response_writer": {
+        "runs": 152145,
+        "seconds": 31,
+        "result": "pass"
+      },
+      "client_transfer": {
+        "runs": 157753,
+        "seconds": 31,
+        "result": "pass"
+      }
+    },
+    "review": "GPT-6.2-Sol, medium, read-only source review of9309db7 found no substantive dependency/API/feature/MSRV/lockfile/license issue. Two documentation findings were addressed: validation now links this completed report, and the time-driver patch names the Git/registry Embassy adapters correctly. Reviewer ran no builds/tests; execution results are the parent's.",
+    "hardware": "Not flashed or physically validated for this refresh. Earlier hardware results for other library/dependency snapshots do not qualify these updates."
+  },
+  "boundary": "Linked Cortex-M/QEMU reference fixtures, not complete device firmware or a worst-case RAM/stack bound. Selected flash/static section sums retain each tool's accounting; nested futures, task pools and stack are not summed twice. No CPU or constant-time-execution claim follows from functional checks. Applications must refresh their own lockfiles to receive transitive fixes."
+}
