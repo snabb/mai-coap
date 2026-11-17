@@ -20,12 +20,12 @@ mai-coap = { path = "..", features = ["std", "client", "block", "block1", "obser
 async-io = "2.6.0"
 async-signal = "0.2.14"
 blocking = "1.7.0"
-clap = { version = "4.6.7", features = ["derive"] }
+clap = { version = "4.6.8", features = ["derive"] }
 futures-lite = "2.6.1"
 log = "0.4.35"
-nix = { version = "0.31.3", default-features = false, features = ["net"] }
-rand = "0.10.3"
-zeroize = "1.9.1"
+nix = { version = "0.32.0", default-features = false, features = ["net"] }
+rand = "0.10.4"
+zeroize = "1.9.2"
 
 [dev-dependencies]
 mai-coap = { path = "..", features = ["server", "proxy", "block"] }

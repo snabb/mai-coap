@@ -32,9 +32,10 @@ encodings. Pre-shared contexts are test fixtures. Follow-up work is in the
 - **Lakers:** pinned to `de1bf6bdb562eda7e29db47ec8540e759e68375d` until a published
   release provides the required public API. Validate dependency changes with regression
   tests, independent interoperability and the embedded target matrix.
-- **Crypto versions:** software-provider lockfiles include `crypto-bigint` 0.7.10,
-  `ctutils` 0.4.8 and `inout` 0.2.5, which carry upstream arithmetic and constant-time
-  fixes, including 32-bit, Thumb-1 and RISC-V code generation. Applications must update
+- **Crypto versions:** software-provider lockfiles include `crypto-bigint` 0.7.11,
+  `ctutils` 0.4.8 and `inout` 0.2.6, which carry upstream arithmetic, constant-time
+  and reserved-buffer aliasing fixes, including 32-bit, Thumb-1 and RISC-V code
+  generation. Applications must update
   their own lockfiles to receive them. Validation covers the host matrix, Rust 1.97, four
   no_std targets with QEMU fixtures, fuzz smoke tests and aiocoap interoperability. The
   M0 EDHOC fixture exercises initiator startup; larger targets run both roles.
@@ -46,6 +47,10 @@ encodings. Pre-shared contexts are test fixtures. Follow-up work is in the
   newer releases, so a fresh application lockfile selects 0.9.4 unless it runs
   `cargo update -p aes --precise 0.9.3`.
 - **Logging:** features are mutually exclusive, and dependency logging stays disabled.
+- **Git network adapters:** xarxa and xarxa-backed Embassy remain pinned to the
+  compatible revisions in the manifests until a published pair provides their shared
+  owned-packet and interface-binding APIs. Both adapters use the released Embassy
+  time driver through the existing patch.
 
 ## Public API boundary
 

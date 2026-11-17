@@ -1,7 +1,7 @@
 Third-party runtime notices
 ===========================
 
-Lockfiles SHA-256: 4d40b278329b9690da248d342fa3d0f1e2420fd80194cc36480b2ee9439c075d
+Lockfiles SHA-256: d8c019c6ce013d818a73408d27516ea4384b5a23957515e96a171c8844f34804
 
 This file covers the union of supported runtime graphs, including host examples
 and emulated firmware. Build-only dependencies and proc macros are excluded.
@@ -74,7 +74,7 @@ DEALINGS IN THE SOFTWARE.
 
 ==============================================================================
 
-anstream 1.0.0, anstyle 1.0.14, anstyle-parse 1.0.0, anstyle-query 1.1.5, clap 4.6.7, clap_builder 4.6.7, clap_lex 1.1.1, colorchoice 1.0.5, is_terminal_polyfill 1.70.2
+anstream 1.0.0, anstyle 1.0.14, anstyle-parse 1.0.0, anstyle-query 1.1.5, clap 4.6.8, clap_builder 4.6.7, clap_lex 1.1.2, colorchoice 1.0.5, is_terminal_polyfill 1.70.2
 Selected license: MIT
 
 Copyright (c) Individual contributors
@@ -356,7 +356,7 @@ THE SOFTWARE.
 
 ==============================================================================
 
-ccm 0.6.1, const-oid 0.10.2, cpufeatures 0.3.1, der 0.8.3
+ccm 0.6.1, const-oid 0.10.3, cpufeatures 0.3.1, der 0.8.3
 Selected license: MIT
 
 Copyright (c) 2020-2026 The RustCrypto Project Developers
@@ -638,7 +638,7 @@ DEALINGS IN THE SOFTWARE.
 
 ==============================================================================
 
-crypto-bigint 0.7.10, sec1 0.8.1
+crypto-bigint 0.7.11, sec1 0.8.1
 Selected license: MIT
 
 Copyright (c) 2021-2026 The RustCrypto Project Developers
@@ -1132,7 +1132,7 @@ DEALINGS IN THE SOFTWARE.
 
 ==============================================================================
 
-errno 0.3.14
+errno 0.3.15
 Selected license: MIT
 
 Copyright (c) 2014 Chris Wong
@@ -1540,7 +1540,7 @@ DEALINGS IN THE SOFTWARE.
 
 ==============================================================================
 
-inout 0.2.5
+inout 0.2.6
 Selected license: MIT
 
 Copyright (c) 2022-2025 The RustCrypto Project Developers
@@ -1680,7 +1680,7 @@ SOFTWARE.
 
 ==============================================================================
 
-nix 0.31.3
+nix 0.32.0
 Selected license: MIT
 
 The MIT License (MIT)
@@ -1784,7 +1784,7 @@ DEALINGS IN THE SOFTWARE.
 
 ==============================================================================
 
-rand 0.10.3
+rand 0.10.4
 Selected license: MIT
 
 Copyright 2018 Developers of the Rand project
@@ -2252,7 +2252,7 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 ==============================================================================
 
-zeroize 1.9.1
+zeroize 1.9.2
 Selected license: MIT
 
 Copyright (c) 2018-2026 The RustCrypto Project Developers

@@ -11,7 +11,7 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4.13"
-rand = "0.10.3"
+rand = "0.10.4"
 mai-coap = { path = "..", features = ["_test-support", "std", "server", "client", "block1", "link-format", "observe", "proxy", "multicast", "edhoc", "software-crypto"] }
 
 [[bin]]

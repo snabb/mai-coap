@@ -42,7 +42,7 @@ its own manifest.
 | Cross checks and QEMU | Rust targets below, `qemu-system-arm`, `qemu-system-riscv32`, binutils |
 | Fuzzing | Nightly Rust, `cargo-fuzz` 0.13.2 |
 | Proofs | `kani-verifier` 0.68.0 (`cargo kani setup` installs its pinned nightly) |
-| Python tool linting | `uv tool run ruff==0.17.3` |
+| Python tool linting | `uv tool run ruff==0.17.5` |
 
 The library builds on stable. Nightly is confined to fuzzing and Kani.
 
