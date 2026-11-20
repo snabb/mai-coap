@@ -2172,6 +2172,7 @@ impl<
         Ok(())
     }
     #[cfg(feature = "proxy")]
+    #[inline(never)] // Share one body between the resource poll and the idle wait.
     fn poll_deferred_responses<A: Application<DATAGRAM_BYTES>>(
         &mut self,
         now: Instant,
