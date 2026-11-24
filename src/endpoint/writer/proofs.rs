@@ -1,7 +1,15 @@
 use super::*;
 
+// The assembly barrier leaves memory unchanged. Keep the real slice fill in the proof.
+#[expect(
+    dead_code,
+    reason = "Kani substitutes the function during verification"
+)]
+fn model_optimization_barrier<T: ?Sized>(_: &T) {}
+
 /// API-1 / BLK-1: preserve the rendered prefix and erase the full offered window.
 #[kani::proof]
+#[kani::stub(zeroize::optimization_barrier, model_optimization_barrier)]
 #[kani::unwind(17)]
 fn response_render_bounds_and_cleanup() {
     let wanted = usize::from(kani::any::<u8>());

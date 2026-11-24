@@ -45,6 +45,8 @@ def main():
     command = [
         "cargo",
         "kani",
+        "-Z",
+        "stubbing",
         "--no-default-features",
         "--features",
         FEATURES,

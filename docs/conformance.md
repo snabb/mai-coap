@@ -771,7 +771,10 @@ representations up to 4096 bytes, and escaped paths up to 5 bytes. Loop-free har
 (option extensions, Block option values and capping, replay window, sequence
 reservation) cover all inputs. Kani models a 64-bit host `usize`, so 16- and 32-bit
 overflow paths aren't covered. Async drivers, shared state and crypto providers are
-outside the harnesses. `tools/kani.py` fails on an unsatisfied `kani::cover!`, which
+outside the harnesses. The response cleanup harness executes the slice fill with
+a memory-preserving model of the `zeroize` optimization barrier. The proof covers
+the bytes erased and preserved. Resistance to dead-store elimination depends on
+the production barrier. `tools/kani.py` fails on an unsatisfied `kani::cover!`, which
 Kani itself reports without failing. Known gaps are in the
 [roadmap](todo.md#proof-and-fuzz-oracle-gaps).
 
